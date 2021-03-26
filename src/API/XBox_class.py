@@ -1,20 +1,15 @@
 import os
 import glob
-from utils.progress_bar import get_bar
 import datetime
-from gc import collect
 from compress_pickle import dump as cpickle_dump
-from utils import logger
 import pandas as pd
 import numpy as np
 import nptdms
+from gc import collect
 from time import time
 from multiprocessing import Pool
-
-#TODO scematic tree (UML ask milosz)
-
-log = logger.logger("dslog", "INFO")
-logger.log_w_tg(log, "INFO")
+from src.utils.logger import logger
+log = logger("DEBUG")
 
 def get_ts(name: str) -> str:
     if os.path.isfile(name):  # if the input is a path
@@ -105,6 +100,8 @@ class XBox2DataSet(XBoxDataSet):
                 add_scaling_prop["NI_Scale[0]_Polynomial_Coefficients[%d]" % i] = ch.properties[
                     "Scale_Coeff_c" + str(i)]
             ch.properties.update(add_scaling_prop)
+
+
 
 class XBoxDataTuple:
     """

@@ -1,4 +1,4 @@
-from XBox_class import *
+from src.API.XBox_class import *
 SHOW_PROGRESS_BAR = "tqdm"
 from time import time
 t0 = time()

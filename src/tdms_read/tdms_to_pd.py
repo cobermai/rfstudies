@@ -2,7 +2,7 @@ import nptdms
 import pandas as pd
 import os.path
 
-def get_pd(path: str, format: str = "matrix_of_vectors", ch_of_interrest: list = None) -> pd.DataFrame:
+def path_to_pd(path: str, format: str = "matrix_of_vectors", ch_of_interrest: list = None) -> pd.DataFrame:
     """
     This function reads a tdms file and calls tdmsfile_to_pd to convert it to a DataFrame.
     The format options are:
