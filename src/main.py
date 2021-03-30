@@ -58,11 +58,11 @@ settings = {
                           'BLM TIA Q',
                           'PSI Pulse Width',
                           'Pulse Count'],
-    "number_of_workers_for_paralell_computation": 4
+    "number_of_workers_for_paralell_computation": 1
 }
 #tdmsfile = nptdms.TdmsFile.read("/home/lfischl/cernbox/CLIC_data_transfert/CLIC_DATA_Xbox2_T24PSI_2/TrendData_20180328.tdms")
 xb2ds = XBox2DataSet(settings)
-xb2ds.transform()
+xb2ds.transform(range(2))
 
     #log.debug("For Day " + data.timestamp + " API took " + str(time.time() - t00) + " sek")  # or use %timeit
 
