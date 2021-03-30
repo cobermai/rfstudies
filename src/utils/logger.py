@@ -2,7 +2,7 @@ import logging
 from datetime import datetime
 from sys import stderr
 
-def logger(logger_name: str = "log", level_console_handler="INFO", level_file_handler=""):
+def logger(level_console_handler: str = "INFO", level_file_handler: str ="DEBUG", logger_name: str = "log"):
     """
     This function returns a custom logger. It writes log outputs in the console and
     a log file and can even write them to Telegram. The format is custom. The warning level is defined by the
@@ -14,7 +14,7 @@ def logger(logger_name: str = "log", level_console_handler="INFO", level_file_ha
     :param level_telegram_handler: string, has to be contained in (DEBUG, INFO, WARNING, ERROR, CRITICAL)
     """
     if level_console_handler not in ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] or \
-            level_file_handler not in ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL", ""]:
+            level_file_handler not in ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL", "", None]:
         raise Exception("The inpus string has to be one of (DEBUG, INFO, WARNING, ERROR, CRITICAL)")
 
     log = logging.getLogger(logger_name)  # create logger
@@ -25,11 +25,11 @@ def logger(logger_name: str = "log", level_console_handler="INFO", level_file_ha
             log.removeHandler(handler)
 
     # FILE log handler: writes log files to a txt file
-    if level_file_handler != "":
+    if level_file_handler != None:
         format_string = "%(asctime)s|%(levelname)-8s|%(filename)-20s|line%(lineno)3s|%(funcName)-15s|%(message)s"
         formatter_fh = logging.Formatter(format_string)  # create formatter
         date = str(datetime.date(datetime.today()))
-        filepath_logfile = "/utils/log_file_"
+        filepath_logfile = "/log_file_"
         fh = logging.FileHandler(filepath_logfile + date + ".txt") # create file handler (written to log file)
         fh.setLevel(level_file_handler)  # set output lvl (DEBUG, INFO, WARNING, ERROR, CRITICAL)
         fh.setFormatter(formatter_fh)  # setting the custom format to the console handler
