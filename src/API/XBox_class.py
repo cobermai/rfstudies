@@ -9,7 +9,8 @@ from gc import collect
 from time import time
 from multiprocessing import Pool
 from src.utils.logger import logger
-log = logger("DEBUG")
+from src.tdms_reader.tdms_to_pd import tdmsgroup_to_pd, tdmsfile_to_pd
+log = logger("DEBUG", None)
 
 def get_ts(name: str) -> str:
     if os.path.isfile(name):  # if the input is a path
@@ -75,11 +76,12 @@ class XBox2DataSet(XBoxDataSet):
 
     def partial_function(self, daystamp) -> None: XBox2DataTuple(self,daystamp).transform()
 
-    def transform(self):
+    def transform(self, proc_list= None):
+        if proc_list != None: self.daystamp_list = [self.daystamp_list[i] for i in proc_list]
         if self.number_of_processes ==1:
             log.debug("serial computing")
             for daystamp in self.daystamp_list:
-                XBox2DataTuple(self, daystamp).main()
+                XBox2DataTuple(self, daystamp).transform()
         elif self.number_of_processes > 1:
             log.debug("computing with " + str(self.number_of_processes) + " processes in paralell")
             with Pool(processes=self.number_of_processes) as pool:
@@ -139,8 +141,6 @@ class XBoxData():
     type: str = None
     ptuple: XBoxDataTuple = None
     pset = None
-    read: bool = None # weather the tdms file should be written or opened
-    get_tdms = None
     def __init__(self, ptuple, type: str):
         if type not in ["Event", "Trend"]:
             log.error("type must be either \"Event\" or \"Trend\" , but " + type + " has been passed to XBoxData.__init__")
@@ -148,12 +148,6 @@ class XBoxData():
             self.type = type
         self.ptuple = ptuple
         self.pset = self.ptuple.pset
-        self.read = True
-        if self.read:
-            self.get_tdms = lambda path: nptdms.TdmsFile.read(path)
-        else:
-            self.get_tdms = lambda path: nptdms.TdmsFile.open(path)
-        t = time()
 
     def get_file_name(self) -> str: return self.type + "Data_" + self.ptuple.daystamp + ".tdms"
     def get_file_path(self) -> str: return self.pset.dir_path + self.get_file_name()
@@ -180,31 +174,41 @@ class EventData(XBoxData):
         self.context_data = self.context_data.merge(additional_df, right_index=True, left_index=True, how="inner")
 
     def API(self, light_memory: bool = True) -> None:
-        with self.get_tdms(self.get_file_path()) as tdmsfile:
+        with nptdms.TdmsFile.read(self.get_file_path()) as tdmsfile:
             log.debug("Finished reading EventData of " + self.ptuple.daystamp)
             self._set_context_data(tdmsfile)  # and index list
 
             data = pd.DataFrame(index=self.index_list, columns=["starttime"])
             data["starttime"] = self.context_data["starttime"]
-            # TODO go through with christoph
             if light_memory:  # faster for big tdms files
                 data["init"] = np.nan
                 for ch_name in self.pset.eds.ch_of_interest:
+                    t0 = time()
                     data.columns = ["starttime", ch_name]
                     data_list = []
                     for grp_name in self.index_list:
                         data_list.append(self._get_data(tdmsfile[grp_name][ch_name]))
                     data[ch_name] = data_list
+                    #data[ch_name] = tdmsfile_to_pd(tdms= tdmsfile,
+                    #                               format= "matrix_of_vectors",
+                    #                               ch_of_interest= [ch_name],
+                    #                               grp_of_interest = self.index_list,
+                    #                               test_tdmsfiledata= False)
                     self._write_cpickle_breakdown(ch_name, data)
                     self._write_cpickle_healthy(ch_name, data)
+                    log.debug(str(time() - t0) + " sek work for " + ch_name)
             else:  # faster for small tmds files
-                data[self.pset.eds.ch_of_interest.copy()] = np.nan
-                for grp_name in self.index_list:
-                    grp = tdmsfile[grp_name]
-                    for ch_name in self.pset.eds.ch_of_interest:
-                        data.loc[grp.name, ch_name] = self._get_data(grp[ch_name])
+                data = tdmsfile_to_pd(tdms= tdmsfile,
+                                      format= "matrix_of_vectors",
+                                      ch_of_interest= self.pset.eds.ch_of_interest,
+                                      grp_of_interest = self.index_list)
+                #data[self.pset.eds.ch_of_interest.copy()] = np.nan
+                #for grp_name in self.index_list:
+                #    grp = tdmsfile[grp_name]
+                #    for ch_name in self.pset.eds.ch_of_interest:
+                #        data.loc[grp.name, ch_name] = self._get_data(grp[ch_name])
 
-                for ch in self.pset.eds.ch_of_interest:
+                for ch_name in self.pset.eds.ch_of_interest:
                     self._write_cpickle_breakdown(ch_name, data)
                     self._write_cpickle_healthy(ch_name, data)
             del data
@@ -240,9 +244,8 @@ class EventData(XBoxData):
 
     def _get_data(self, ch: nptdms.TdmsChannel) -> np.ndarray:
         self.pset._scale_channel(ch)  # some channels are unscaled
-        data = ch.data if (self.read and ch.properties.get("Scale_Type", None) != None) else ch.read_data(
-            scaled=True)
-        return np.array(data)#, "float32")
+        data = ch.data if ch.properties.get("Scale_Type", None) != None else ch.read_data(scaled=True)
+        return np.array(data)
 
     def _write_cpickle_breakdown(self, ch_name, df: pd.DataFrame) -> None:
         ch__name = ch_name.replace(" ", "_")  # we would like to use channel names with underscore
@@ -265,14 +268,15 @@ class ContextData(XBoxData):
         super().__init__(ptuple, "Trend")
 
     def API(self):
-        with self.get_tdms(self.get_file_path()) as tdmsfile:
+        with nptdms.TdmsFile.read(self.get_file_path()) as tdmsfile:
             log.debug("Finished reading TrendData of " + self.ptuple.daystamp)
-            grp = tdmsfile.groups()[0]  # there is only one group in the trend data files
             self.df = pd.DataFrame(columns = self.pset.tds.ch_of_interest)
-            if "Timestamp" not in self.pset.tds.ch_of_interest: log.error("\"Timestamp\" has to be in the td.ch_of_interest")
-            for ch_name in self.pset.tds.ch_of_interest:
-                self.df[ch_name] = grp[ch_name].data if self.read else grp[ch_name].read_data()
-
+            for grp in tdmsfile.groups(): # there is only one group in the trend data files
+                tmpdf = pd.DataFrame(columns = self.pset.tds.ch_of_interest)
+                if "Timestamp" not in self.pset.tds.ch_of_interest: log.error("\"Timestamp\" has to be in the td.ch_of_interest")
+                for ch_name in self.pset.tds.ch_of_interest:
+                    tmpdf[ch_name] = grp[ch_name].data
+                self.df = self.df.append(tmpdf)
             self.df.to_pickle(self.pset.dest_path + "TrendData_" + self.ptuple.daystamp + ".p.gz", "gzip")
 
             ed_starttimes = self.ptuple.ed.context_data["starttime"].to_numpy(dtype=int)
@@ -293,6 +297,7 @@ class ContextData(XBoxData):
             self.df = self.df.merge(context_df.loc[:, context_df.columns != "starttime"].reset_index(), left_index=True, right_index=True, how="inner") # merge with eventdata on the new indices
             self.df.set_index("index", inplace=True)  # use the event data group names as indices
             self.df.rename(columns={name: name.replace(" ", "_") for name in self.df.columns}, inplace=True)  # make _ in clm names
+
             self._write_cpickle_breakdown()
             self._write_cpickle_healthy()
 
