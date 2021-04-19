@@ -3,6 +3,6 @@
 
 
 
-![Alt](./tdms_to_pd.svg)
+![Alt](../../docu/src/tdms_reader/tdms_to_pd.svg)
 
 
