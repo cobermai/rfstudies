@@ -2,6 +2,8 @@ import compress_pickle
 import pandas as pd
 import os
 import glob
+# This python programm checks if the context data output is exactly the same as in the old version of the API.
+# Just a brude force value by value comparison.
 
 new_pickles_dir = "/home/lfischl/cernbox/SWAN_projects/xbox3/data/"
 old_pickles_dir = "/home/lfischl/cernbox/SWAN_projects/xbox3/data/cpickles/"
@@ -12,12 +14,12 @@ print("The symmetric difference of filenames: \n")
 print(set(new_filenames).symmetric_difference(set(old_filenames)))
 print("\n")
 
-
 for filename in set(new_filenames).intersection(set(old_filenames)):
     print("looking at the files with name: " + filename)
     cdold = compress_pickle.load(old_pickles_dir + filename, "gzip")
     cdnew = compress_pickle.load(new_pickles_dir + filename, "gzip")
 
+    #testing if all filenames are equal
     if "context_data" in filename:
         for key in ["name_list", "data_label", "data_type", "timestamp"]:
             if cdold[key] != cdnew[key]:
