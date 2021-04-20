@@ -66,7 +66,7 @@ def tdmsfile_to_pd(tdms:nptdms.TdmsFile,
     elif format == "matrix_of_vectors":  # in xbox, use this for EventData
         # WARNING code is not beautiful, because pd.DataFrames are 2-dim but the data is not. Pandas wants to
         # automate writing in vectors as scalars, so a workaround had to be found.
-        df = pd.DataFrame(index=grp_of_interest, columns=ch_of_interest.union({"tmp"}))  # initializing the DataFrame
+        df = pd.DataFrame(index=grp_of_interest, columns=ch_of_interest.union({"tmp"}), dtype=object)  # initializing the DataFrame
         for grp_name in grp_of_interest:
             if 0 == sum([len(ch.data) for ch in tdms[grp_name].channels()]):
                 actual_channels = list(ch_of_interest.intersection({ch.name for ch in tdms[grp_name].channels()}))
@@ -74,7 +74,7 @@ def tdmsfile_to_pd(tdms:nptdms.TdmsFile,
             else:
                 actual_channels = list(ch_of_interest.intersection({ch.name for ch in tdms[grp_name].channels()}))
                 df.loc[[tdms[grp_name].name], actual_channels + ["tmp"]] = np.array(
-                    [tdms[grp_name][ch_name].data for ch_name in actual_channels] + [np.NaN])
+                    [tdms[grp_name][ch_name].data for ch_name in actual_channels] + [np.NaN], dtype=object)
         df.drop(columns=["tmp"], inplace=True)
     else:
         raise ValueError("The format you have given is unknown.")
