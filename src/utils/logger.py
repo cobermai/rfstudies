@@ -15,8 +15,7 @@ def logger(level_console_handler: str = "INFO", level_file_handler: str ="DEBUG"
 
     log = logging.getLogger(name)  # create logger
     if log.hasHandlers():
-        log.makeRecord(name= "init_logger_msg", level=log.getEffectiveLevel(),
-                       msg= "Info: logger initializer was called and MLOG already existed")
+        log.log(level=log.getEffectiveLevel(), msg= "Info: logger initializer was called and MLOG already existed")
     else:
         log.setLevel("DEBUG")  # when a log file will be created (and next handled by the log handlers) (like a lower boundary)
         # FILE log handler: writes log files to a txt file
