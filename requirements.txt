@@ -1,0 +1,11 @@
+numpy
+nptdms
+pandas
+h5py
+matplotlib
+# progress bar
+tqdm
+# log messages in telegram messenger
+python-telegram-handler
+# display system load information for performance analysis
+psutil
