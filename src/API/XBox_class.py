@@ -8,8 +8,8 @@ import nptdms
 from gc import collect
 from time import time
 from multiprocessing import Pool
-from src.utils.logger import logger
-from src.tdms_reader.tdms_to_pd import tdmsgroup_to_pd, tdmsfile_to_pd
+from src.utils.system.logger import logger
+from src.tdms_reader.tdms_to_pd import tdmsfile_to_pd
 log = logger("DEBUG", None)
 
 def get_ts(name: str) -> str:
