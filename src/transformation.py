@@ -1,24 +1,27 @@
 import os
 import h5py
-from tdms_read import ConverterToHdf
-from filter import Filter
+from src.utils.hdf_utils.tdms_read import Convert
+from src.utils.hdf_utils.filter import Filter
+from src.utils.hdf_utils.virtual_hdf import VirtualHdf
+import glob
 from src.utils.system.logger import logger
 log = logger("DEBUG")
 import numpy as np
 
-def transformation(tdms_dir: str, hdf_dir: str):
-    ## read tdms
-    ConverterToHdf(tdms_dir=tdms_dir,
-                   hdf_dir=hdf_dir,
-                   check_already_converted=True,
-                   num_processes=1).run()
 
-    ## create virtual Event and Trend hdf files
-    td_file_path = hdf_dir + "../" + "TrendDataVirtual.vhdf"
-    #VirtualHdf(td_file_path).add(glob.glob(hdf_dir + "Trend*.hdf"))
+def transform(tdms_dir: str, hdf_dir: str):
+    ## read tdms files and convert them to hdf5
+    Convert(check_already_converted=True, num_processes=1)\
+        .from_tdms(tdms_dir + "/data")\
+        .to_hdf(hdf_dir).run()
+    exit()
+    ## create virtual Event and Trend vhdf files. Combining all Events and TrendData sets into one hdf5 file with
+    ## external links
+    td_file_path = hdf_dir + "TrendDataVirtual.vhdf"
+    VirtualHdf(td_file_path).add(glob.glob(hdf_dir + "Trend*.hdf"))
 
-    ed_file_path = hdf_dir + "../" + "EventDataVirtual.vhdf"
-    #VirtualHdf(ed_file_path).add(glob.glob(hdf_dir + "Event*.hdf"))
+    ed_file_path = hdf_dir + "EventDataVirtual.vhdf"
+    VirtualHdf(ed_file_path).add(glob.glob(hdf_dir + "Event*.hdf"))
 
     ## Filter
     def td_filter_rule(file_path: str, hdf_path: str)->bool:
@@ -81,7 +84,7 @@ def transformation(tdms_dir: str, hdf_dir: str):
 
 
 if __name__=="__main__":
-    transformation(tdms_dir = os.path.expanduser("~/project_data/CLIC_DATA_Xbox2_T24PSI_2/"),
+    transform(tdms_dir = os.path.expanduser("~/project_data/CLIC_DATA_Xbox2_T24PSI_2/"),
                    hdf_dir = os.path.expanduser("~/output_files/unfiltered/"))
     # transformation(tdms_dir = "/eos/project/m/ml-for-alarm-system/private/CLIC_data_transfert/CLIC_DATA_Xbox2_T24PSI_2/",
     #               hdf_dir = "/eos/project/m/ml-for-alarm-system/private/CLIC_data_transfert/Xbox2_hdf/")
