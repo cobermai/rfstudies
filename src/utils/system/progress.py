@@ -12,5 +12,5 @@ def tg_tqdm(iter_obj, desc: str= None):
         raise FileNotFoundError("found no Telegram access information --> Showing Telegram progess bar is not possible")
 
 def working_on(msg: str):
-    sys.stdout.write("\r" + msg)
+    sys.stdout.write(msg + "\r")
     sys.stdout.flush()
