@@ -3,7 +3,7 @@ import pandas as pd
 import nptdms
 import os
 import matplotlib.pyplot as plt
-from src.tdms_reader.tdms_to_pd import tdmsfile_to_pd
+from archive.tdms_reader.tdms_to_pd import tdmsfile_to_pd
 
 class tdms_analysis:
     tdms:nptdms.TdmsFile = None

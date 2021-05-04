@@ -8,6 +8,6 @@ The old transformation code was called API.py and can be found in the old branch
 
 The new transformation is done in a class structure that can be adapted to work on another XBox stand too.
 
-![Alt](../../docu/src/API/class_structure.svg)
+![Alt](../../docu/archive/API/class_structure.svg)
 
 

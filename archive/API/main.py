@@ -1,4 +1,4 @@
-from src.API.XBox_class import *
+from archive.API.XBox_class import *
 import os
 
 settings = {
@@ -56,4 +56,4 @@ settings = {
 }
 
 xb2ds = XBox2DataSet(settings)
-xb2ds.transform(range(2))
+xb2ds.transform(range(2))  # the range is used to define the part of the days to convert.
