@@ -1024,12 +1024,6 @@ def read_a_subset_of_pickles(path, list_of_timestamps_regex,
                 if isinstance(df_new_timestamp[feature].iloc[0], np.ndarray):
                     # if the time series is smaller than 3200 points
                     if len(df_new_timestamp[feature].iloc[0]) < 3200:
-
-                        # we upscale
-
-                        # general way
-
-                        # TODO: some ".apply" function could be used ?! still it's not too slow for now
                         x_low = np.linspace(0, 1, num=len(df_new_timestamp[feature].iloc[0]), endpoint=True)
                         x_high = np.linspace(0, 1, num=3200, endpoint=True)
                         for pulse_id in range(len(df_new_timestamp[feature])):
