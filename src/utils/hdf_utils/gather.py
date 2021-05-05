@@ -1,3 +1,9 @@
+"""
+The gathering module combines/concatenates/groups/glues/sticks together/merges/assembles multible files into one.
+Currently implemented:
+* Gather hdf groups of arbitrary layer scattered on many hdf files with external links (hdf external links).
+  This gathers groups without copying its contents.
+"""
 import os
 from typing import Callable
 import logging
@@ -7,23 +13,37 @@ from multiprocessing.pool import ThreadPool
 from functools import partial
 from collections.abc import Iterable
 import h5py
-from src.utils.system.progress import working_on
-log = logging.getLogger("MLOG")
+log = logging.getLogger("MLOG")  # the standard logger for this machine learning framework, see utils/system/logger.py
 
 
-def _get_ext_link_rek(file_path: str,
+def hdf_path_combine(*argv: str) -> str:
+    """
+    Concatenates hdf path with "/" inbetwen. Works similar to Path(str, str, str) or the / operator for Path objects
+    but for hdf paths (as strings)
+    :param argv: the group names/to concatenate
+    :return: the concatenated path string
+    """
+    path = ""
+    for arg in argv:
+        path += "/" + arg
+    if path[0]!="/":
+        path = "/" + path
+    path.replace("//", "/")
+    path.replace("///", "/")
+    return path
+
+def _get_ext_link_rek(file_path: Path,
                       hdf_path: str,
                       depth_to_go: int,
-                      func_to_fulfill: Callable[[str, str], bool]) -> set:
+                      func_to_fulfill: Callable[[Path, str], bool]) -> set:
     if depth_to_go==0:
         ret = {h5py.ExternalLink(file_path, hdf_path)} if func_to_fulfill(file_path, hdf_path) else set()
     elif depth_to_go>0:
         with h5py.File(file_path, "r") as file:
             ret_set = set({})
             for key in file[hdf_path].keys():
-                working_on("rek: " + file_path + hdf_path + " - " + key)
                 ret_set.update(set(_get_ext_link_rek(file_path=file_path,
-                                                     hdf_path=hdf_path + "/" + key,
+                                                     hdf_path=hdf_path_combine(hdf_path, key),
                                                      depth_to_go=depth_to_go - 1,
                                                      func_to_fulfill= func_to_fulfill)))
             ret = ret_set
@@ -31,92 +51,49 @@ def _get_ext_link_rek(file_path: str,
         raise ValueError("depth_to_go should be a non negative integer")
     return ret
 
-def _hdf_write_ext_links(from_file_path:str,
-                        write_to_file_path: str,
+def _hdf_write_ext_links(from_file_path: Path,
+                        write_to_file_path: Path,
                         lock: mp.Lock,
                         depth: int,
-                        func_to_fulfill: Callable[[str, str], bool]) -> None:
-    data_file_name = Path(from_file_path).name.split(".")[0]
+                        func_to_fulfill: Callable[[Path, str], bool]) -> None:
     ext_link_list = _get_ext_link_rek(file_path=from_file_path,
                                       hdf_path="/",
                                       depth_to_go=depth,
                                       func_to_fulfill=func_to_fulfill)
     with lock:
-        with h5py.File(write_to_file_path, "r+") as write_to_file:
+        with h5py.File(write_to_file_path, "a") as write_to_file:
+            rek_grp_name = lambda x: x + "(new)" if write_to_file.get(x, None) is not None else x
             for link in ext_link_list:
-                grp_name = data_file_name + " - " + link.path.split("/")[-1]
+
+                grp_name = rek_grp_name(from_file_path.stem + " - " + link.path)
                 write_to_file[grp_name] = link
             write_to_file.flush()
 
 
-class Gather():
+class Gather:
     """
     combines hdf groups of many hdf files into one by creating external links that point to the original files
     """
     def __init__(self, depth: int = 1, num_processes: int = None):
         '''
-        initializes a gather object.
         :param depth: the depth of the hdf groups to combine
         :param num_processes: number of processing kernels
         '''
         self.depth = depth
+        self.set_num_processes(num_processes)
+        self.to_file_path = None
+        self.from_file_paths = None
+        self.func_to_fulfill = None
+
+    def set_num_processes(self, num_processes: int) -> None:
+        """Sets the num_processes for the ThreadPool, if None is given its set to the number of logical cpu cores"""
         self.num_processes = os.cpu_count() if num_processes is None else num_processes
 
-    def from_files(self, from_file_paths: Iterable ):
-        return GatherFromHdfFiles(self, from_file_paths)
-
-
-class GatherFromHdfFiles:
-    """
-    Adds from which file type to gather
-    """
-    def __init__(self, combiner:Gather, from_file_paths:Iterable):
-        """
-        :param combiner: The parent Gather object
-        :param from_file_paths: defines the file paths of the hdf files to gather
-        """
-        self.from_file_paths = from_file_paths
-        self.combiner = combiner
-
-    def to_hdf_file(self, to_file_path: str):
-        return GatherFromHdfFilesToHdfFile(self, to_file_path)
-
-
-class GatherFromHdfFilesToHdfFile:
-    """
-    Adds to which file type output should go
-    """
-    def __init__(self, gather_from_hdf_files: GatherFromHdfFiles, to_file_path: str):
-        """
-        :param gather_from_hdf_files: parent gather from hdf fiels class
-        :param to_file_path: defines the hdf file path the gathered data should go to
-        """
-        self.combiner = gather_from_hdf_files.combiner
-        self.from_file_paths = gather_from_hdf_files.from_file_paths
-        h5py.File(to_file_path, "w").close()
-        self.to_file_path = to_file_path
-
-    def if_fulfills(self, func_to_fulfill: Callable[[str, str], bool] = None, on_error: bool = None):
-        return GatherFromHdfFilesToHdfFileIfFulfills(self, func_to_fulfill, on_error)
-
-    def run(self):
-        self.if_fulfills()
-
-class GatherFromHdfFilesToHdfFileIfFulfills():
-    """
-    Adds a filtering mechanism to get rid of corrupt data (ex. Nan values, wrong format etc)
-    """
-    def __init__(self, combine_hdf2hdf: GatherFromHdfFilesToHdfFile,
-                 func_to_fulfill: Callable[[str, str], bool] = None,
-                 on_error: bool = None):
-        """
-        :param combine_hdf2hdf: parent combine from hdf to hdf file class
-        :param func_to_fulfill: the function, the group objects of given depth have to fulfill
-        :param on_error: defines what should be done when the func_to_fulfill has an error. default
-        """
-        self.combiner = combine_hdf2hdf.combiner
-        self.from_file_paths = combine_hdf2hdf.from_file_paths
-        self.to_file_path = combine_hdf2hdf.to_file_path
+    def set_func_to_fulfill(self, func_to_fulfill: Callable[[Path, str], bool], on_error: bool) -> None:
+        """Sets the function_to_fulfill. On True the HdfObject will be added, if False it will not be added.
+        Addidtionally if an error occures the HdfObject will not be added.
+        :param func_to_fulfill: The filtering function/ restriction function/ function to fulfill for an HdfObject to
+        be added to the output."""
         if func_to_fulfill is None:
             func_to_fulfill = lambda str1, str2: True
         def func_to_fulfill_with_error_handling(file_path, hdf_path) -> bool:
@@ -127,12 +104,40 @@ class GatherFromHdfFilesToHdfFileIfFulfills():
                 return on_error
         self.func_to_fulfill = func_to_fulfill_with_error_handling
 
-    def with_external_links(self):
+    def from_files(self, from_file_paths: Iterable):
+        """
+        Sets the source file paths for the gathering
+        :param from_file_paths: Iterable of file paths to be added
+        :return: The Gather object
+        """
+        self.from_file_paths = from_file_paths
+        return self
+
+    def to_hdf_file(self, to_file_path: Path):
+        """
+        Sets the destination file path for the gathering
+        :param from_file_paths: Path of the destination file path
+        :return: The Gather object
+        """
+        self.to_file_path = to_file_path
+        return self
+
+    def if_fulfills(self, func_to_fulfill: Callable[[Path, str], bool] = None, on_error: bool = None):
+        """
+        calls set_function_to_fulfill with the on_error parameter
+        :param from_file_paths: Iterable of file paths to be added
+        :return: The Gather object
+        """
+        self.set_func_to_fulfill(func_to_fulfill, on_error)
+        return self
+
+    def run_with_external_links(self) -> None:
+        """This starts the Gathering by creating hdf ExternalLink objects"""
         multi_proc_func = partial(_hdf_write_ext_links,
                                     write_to_file_path=self.to_file_path,
                                     lock=mp.Lock(),
-                                    depth=self.combiner.depth,
+                                    depth=self.depth,
                                     func_to_fulfill=self.func_to_fulfill)
-        with ThreadPool(self.combiner.num_processes) as pool:
+        with ThreadPool(self.num_processes) as pool:
             pool.map(multi_proc_func, self.from_file_paths)
         log.debug("finished Gathering for %s", self.to_file_path)
