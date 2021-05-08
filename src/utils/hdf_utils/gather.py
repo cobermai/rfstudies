@@ -23,13 +23,11 @@ def hdf_path_combine(*argv: str) -> str:
     :param argv: the group names/to concatenate
     :return: the concatenated path string
     """
-    path = ""
-    for arg in argv:
-        path += "/" + arg
+    path = "/".join(argv)
+    path = path.replace("///", "/")
+    path = path.replace("//", "/")
     if path[0]!="/":
-        path = "/" + path
-    path.replace("//", "/")
-    path.replace("///", "/")
+        path = f"/{path}"
     return path
 
 def _get_ext_link_rek(file_path: Path,
@@ -99,9 +97,9 @@ class Gather:
         def func_to_fulfill_with_error_handling(file_path, hdf_path) -> bool:
             try:
                 return func_to_fulfill(file_path, hdf_path)
-            except:
+            except BaseException:  # pylint does not like this, but ts planed ot be a bare except
                 log.debug("function_to_fulfill error (%s, %s) -> %s", file_path, hdf_path, on_error)
-                return on_error
+            return on_error
         self.func_to_fulfill = func_to_fulfill_with_error_handling
 
     def from_files(self, from_file_paths: Iterable):

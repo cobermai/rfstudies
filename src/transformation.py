@@ -59,7 +59,6 @@ def transform(tdms_dir: Union[Path, str], hdf_dir: Union[Path, str]) -> None:
         .run_with_external_links()
 
 
-
 if __name__=="__main__":
     transform(tdms_dir = Path("~/project_data/CLIC_DATA_Xbox2_T24PSI_2/").expanduser(),
                    hdf_dir = Path("~/output_files/").expanduser())
