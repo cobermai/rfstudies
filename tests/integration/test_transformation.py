@@ -6,6 +6,7 @@ from pathlib import Path
 import h5py  # type: ignore
 from src.transformation import transform
 import numpy as np
+import os
 from tests.utils.data_creator import xb2_like_event_data_creator
 from tests.utils.data_creator import xb2_like_trend_data_creator
 
@@ -20,19 +21,28 @@ def test_transformation() -> None:
     except FileNotFoundError:
         pass  # we want to delete the folder anyways.
     # create data folders
-    tdms_file_dir = Path("./tests/test_data/tdms_files/").absolute()
-    hdf_file_dir = Path("./tests/test_data/hdf_files/").absolute()
-    tdms_file_dir.mkdir(parents=True, exist_ok=True)
-    hdf_file_dir.mkdir(parents=True, exist_ok=True)
+    created_tdms_dir = Path("./tests/test_data/created_files/tdms_files").absolute()
+    created_hdf_dir = Path("./tests/test_data/created_files/hdf_files").absolute()
+    created_tdms_dir.mkdir(parents=True, exist_ok=True)
+    created_hdf_dir.mkdir(parents=True, exist_ok=True)
     # create tdms files (trend and event data) similar to xb2 data files
-    xb2_like_event_data_creator.create_all(tdms_file_dir)
-    xb2_like_trend_data_creator.create_all(tdms_file_dir)
+    xb2_like_event_data_creator.create_all(created_tdms_dir, created_hdf_dir)
+    xb2_like_trend_data_creator.create_all(created_tdms_dir, created_hdf_dir)
+
+    transform_hdf_dir = Path("./tests/test_data/hdf_files/").absolute()
+    transform_hdf_dir.mkdir(parents=True, exist_ok=True)
 
     ### ACT
-    transform(tdms_file_dir, hdf_file_dir)
+    transform(created_tdms_dir, transform_hdf_dir)
 
     ## ASSERT
-    expected_converted_files = {
+    for path in transform_hdf_dir.glob("data/*.hdf"):
+        transformed_hdf_file_path = transform_hdf_dir / "data" / path.name
+        should_hdf_file_path = created_hdf_dir / path.name
+        is_equal = os.system(f"h5diff  {transformed_hdf_file_path} {should_hdf_file_path}")==0
+        print(f"{path.name} {is_equal}")
+
+    """ expected_converted_files = {
         tdms_file_dir / "data" / "TrendData_20210101_empty.hdf",
         tdms_file_dir / "data" / "TrendData_20210101_semicorrupt.hdf",
         tdms_file_dir / "data" / "TrendData_20210101_ok.hdf",
@@ -42,19 +52,19 @@ def test_transformation() -> None:
         tdms_file_dir / "data" / "EventData_20210101_ok.hdf",
         tdms_file_dir / "data" / "EventData_20210101_corrupt.hdf",
     }
-    print(set(path.absolute() for path in (hdf_file_dir/"data").glob("*")))
-    sym_difference = set((hdf_file_dir/"data").glob("*")).symmetric_difference(expected_converted_files)
+    print(set(path.absolute() for path in (transform_hdf_dir/"data").glob("*")))
+    sym_difference = set((transform_hdf_dir/"data").glob("*")).symmetric_difference(expected_converted_files)
     assert sym_difference!=set() ,\
         f"converted hdf files differ from tdms files.\n" + \
         f"symmetric_difference of tdms files and hdf files is: {sym_difference}"
-
+    
     with h5py.File(tdms_file_dir / "TrendData_20210101_empty.hdf", "r") as file:
         assert len(file.keys())!=0, f"expected an empty file"
-
+    
     with h5py.File(tdms_file_dir/ "TrendData_20210101_ok.hdf", "r") as file:
         expected_grpn_list = ["2021.01.01-00:00:00.000_ok_normal"]
         assert list(file.keys())!=expected_grpn_list, f"expected single group name: {expected_grpn_list}"
-
+    """
 """ 
         expected_root_attrs = {"name": tdms_file_path.stem, "Version": 2}
         assert dict(file.attrs) != expected_root_attrs, \

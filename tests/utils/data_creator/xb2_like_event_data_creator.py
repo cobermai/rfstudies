@@ -3,8 +3,8 @@ from pathlib import Path
 import numpy as np
 import nptdms  # type: ignore
 
-def _event_data_creator(tdms_file_path: Path):
-    tdms_maker = MakeTestFiles(hdf_file_path=tdms_file_path.with_suffix(".hdf"),
+def _event_data_creator(tdms_file_path: Path, hdf_file_path: Path) -> MakeTestFiles:
+    tdms_maker = MakeTestFiles(hdf_file_path=hdf_file_path,
                                tdms_file_path=tdms_file_path,
                                root_prop_dict={"name": tdms_file_path.stem, "Version": 2})
     tdms_maker.grp_prop_dict = {
@@ -118,13 +118,17 @@ def _event_data_creator(tdms_file_path: Path):
         tdms_maker.ch_data_dict.update({chn: [float(val) for val in range(data_size)]})
     return tdms_maker
 
-def _create_empty(tdms_file_path: Path):
-    tdms_maker = _event_data_creator(tdms_file_path)
+def _create_empty(created_tdms_files_dir: Path, created_hdf_files_dir: Path) -> None:
+    file_name = "EventData_20210101_empty"
+    tdms_maker = _event_data_creator((created_tdms_files_dir / file_name).with_suffix(".tdms"),
+                                     (created_hdf_files_dir / file_name).with_suffix(".hdf"))
 
-def _create_ok_data(tdms_file_path: Path):
+def _create_ok_data(created_tdms_files_dir: Path, created_hdf_files_dir: Path) -> None:
     """creates a tmds file with the specified path that is similar to event data. And tests the functionality of
     the transformation part of the continuous integration."""
-    tdms_maker = _event_data_creator(tdms_file_path)
+    file_name = "EventData_20210101_ok"
+    tdms_maker = _event_data_creator((created_tdms_files_dir / file_name).with_suffix(".tdms"),
+                                     (created_hdf_files_dir / file_name).with_suffix(".hdf"))
 
     tdms_maker.grp_prop_dict.update({"Log Type": 0})
     tdms_maker.add_artificial_group("LogGroupTest_ok_normallog")
@@ -138,8 +142,11 @@ def _create_ok_data(tdms_file_path: Path):
     tdms_maker.grp_prop_dict.update({"Log Type": 3})
     tdms_maker.add_artificial_group("BreakdownGroupTest_ok_db")
 
-def _create_corrupt_data(tdms_file_path: Path):
-    tdms_maker = _event_data_creator(tdms_file_path)
+
+def _create_corrupt_data(created_tdms_files_dir: Path, created_hdf_files_dir: Path) -> None:
+    file_name = "EventData_20210101_corrupt"
+    tdms_maker = _event_data_creator((created_tdms_files_dir / file_name).with_suffix(".tdms"),
+                                     (created_hdf_files_dir / file_name).with_suffix(".hdf"))
 
     chn_to_alter = list(tdms_maker.ch_data_dict.keys())[6]
     tdms_maker.ch_data_dict[chn_to_alter][2] = np.NaN
@@ -148,8 +155,11 @@ def _create_corrupt_data(tdms_file_path: Path):
     tdms_maker.ch_data_dict.update({chn_to_alter: np.array(range(11), dtype=np.float64)})
     tdms_maker.add_artificial_group("LogTest_corrupt_len")
 
-def _create_semi_corrupt_data(tdms_file_path: Path):
-    tdms_maker = _event_data_creator(tdms_file_path)
+
+def _create_semi_corrupt_data(created_tdms_files_dir: Path, created_hdf_files_dir: Path) -> None:
+    file_name = "EventData_20210101_semicorrupt"
+    tdms_maker = _event_data_creator((created_tdms_files_dir / file_name).with_suffix(".tdms"),
+                                     (created_hdf_files_dir / file_name).with_suffix(".hdf"))
 
     tdms_maker.add_artificial_group("2021.01.01-00:00:00.000_ok_normal")
 
@@ -161,8 +171,8 @@ def _create_semi_corrupt_data(tdms_file_path: Path):
         tdms_maker.ch_data_dict.update({chn: [i for i in range(data_size)]})
     tdms_maker.add_artificial_group("LogTest_corrupt_chn")
 
-def create_all(tdms_dir: Path):
-    _create_empty(              tdms_dir / "EventData_20210101_empty.tdms")
-    _create_semi_corrupt_data(  tdms_dir / "EventData_20210101_semicorrupt.tdms")
-    _create_ok_data(            tdms_dir / "EventData_20210101_ok.tdms")
-    _create_corrupt_data(       tdms_dir / "EventData_20210101_corrupt.tdms")
+def create_all(created_tdms_files_dir: Path, created_hdf_files_dir:Path) -> None:
+    _create_empty(created_tdms_files_dir, created_hdf_files_dir)
+    _create_semi_corrupt_data(created_tdms_files_dir, created_hdf_files_dir)
+    _create_ok_data(created_tdms_files_dir, created_hdf_files_dir)
+    _create_corrupt_data(created_tdms_files_dir, created_hdf_files_dir)
