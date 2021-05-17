@@ -8,7 +8,9 @@ class MakeTestFiles(MakeTdmsFile):
     def __init__(self, hdf_file_path: Path, tdms_file_path: Path, root_prop_dict: dict):
         super().__init__(tdms_file_path = tdms_file_path,
                          tdms_root_properties = root_prop_dict)
-        h5py.File(hdf_file_path, "w").close()
+        with h5py.File(hdf_file_path, "w") as file:
+            for key in root_prop_dict.keys():
+                file.attrs.create(key, root_prop_dict[key])
         self.hdf_file_path = hdf_file_path
         self.ch_prop_dict: dict = {}
         self.ch_data_dict: dict = {}
@@ -37,7 +39,6 @@ class MakeTestFiles(MakeTdmsFile):
         with h5py.File(self.hdf_file_path, "a") as file:
             file.create_group(grp_name)
             for chn in ch_set:
-                print(chn)
                 file[grp_name].create_dataset(name=chn,
                                     data=self.ch_data_dict[chn])
                 for key in self.ch_prop_dict[chn].keys():
