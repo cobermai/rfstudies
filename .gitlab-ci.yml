@@ -7,8 +7,17 @@ variables:
   PY_VERSION: "3.8"
 
 stages:
+  - linter
   - type_checking
   - test_dev
+
+linter:
+  image: python:${PY_VERSION}
+  stage: linter
+  script:
+    - pip3 install pylint
+    - pylint --max-line-length=120 src
+  allow failure: true
 
 type_checking:
   image: python:${PY_VERSION}
