@@ -1,4 +1,4 @@
-import h5py
+import h5py   # type: ignore
 import typing
 import logging
 log = logging.getLogger("MLOG")
