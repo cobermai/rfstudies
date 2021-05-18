@@ -1,6 +1,25 @@
+import datetime
+
 from tests.utils.data_creator.tdms_file_creator import MakeTdmsFile
 from pathlib import Path
 import h5py  #type: ignore
+import numpy as np
+
+def _hdf_array(data):
+    """ Convert data array into a format suitable for initialising HDF data
+    """
+    if isinstance(data[0], np.datetime64):
+        string_data = np.datetime_as_string(data, unit='us', timezone='UTC')
+        return [s.encode('ascii') for s in string_data]
+    return data
+
+
+def _hdf_attr_value(value):
+    """ Convert a value into a format suitable for an HDF attribute
+    """
+    if isinstance(value, np.datetime64):
+        return np.string_(np.datetime_as_string(value, unit='us', timezone='UTC'))
+    return value
 
 
 class MakeTestFiles(MakeTdmsFile):
@@ -10,7 +29,7 @@ class MakeTestFiles(MakeTdmsFile):
                          tdms_root_properties = root_prop_dict)
         with h5py.File(hdf_file_path, "w") as file:
             for key in root_prop_dict.keys():
-                file.attrs.create(key, root_prop_dict[key])
+                file.attrs.create(key, _hdf_attr_value(root_prop_dict[key]))
         self.hdf_file_path = hdf_file_path
         self.ch_prop_dict: dict = {}
         self.ch_data_dict: dict = {}
@@ -38,12 +57,10 @@ class MakeTestFiles(MakeTdmsFile):
         # create hdf group
         with h5py.File(self.hdf_file_path, "a") as file:
             file.create_group(grp_name)
+            for key in self.grp_prop_dict.keys():
+                file[grp_name].attrs.create(key, _hdf_attr_value(self.grp_prop_dict[key]))
             for chn in ch_set:
                 file[grp_name].create_dataset(name=chn,
-                                    data=self.ch_data_dict[chn])
+                                    data=_hdf_array(self.ch_data_dict[chn]))
                 for key in self.ch_prop_dict[chn].keys():
-                    if key=="wf_start_time" or key=="Timestamp":
-                        data = f"{self.ch_prop_dict[chn][key]}"  #h5py does not like datetime
-                    else:
-                        data = self.ch_prop_dict[chn][key]
-                    file[grp_name].attrs.create(key, data)
+                    file[grp_name][chn].attrs.create(key, _hdf_attr_value(self.ch_prop_dict[chn][key]))

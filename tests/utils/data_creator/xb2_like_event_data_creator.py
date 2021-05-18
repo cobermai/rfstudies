@@ -115,7 +115,7 @@ def _event_data_creator(tdms_file_path: Path, hdf_file_path: Path) -> MakeTestFi
     tdms_maker.ch_data_dict = {}
     for chn in tdms_maker.ch_prop_dict.keys():
         data_size = int(tdms_maker.ch_prop_dict[chn]["wf_samples"])
-        tdms_maker.ch_data_dict.update({chn: [float(val) for val in range(data_size)]})
+        tdms_maker.ch_data_dict.update({chn: [float(val) for val in range(2**32, 2**32+data_size)]})
     return tdms_maker
 
 def _create_empty(created_tdms_files_dir: Path, created_hdf_files_dir: Path) -> None:
@@ -168,7 +168,7 @@ def _create_semi_corrupt_data(created_tdms_files_dir: Path, created_hdf_files_di
     tdms_maker.ch_data_dict = {}
     for chn in chn_list:
         data_size = tdms_maker.ch_prop_dict[chn]["wf_samples"]
-        tdms_maker.ch_data_dict.update({chn: [i for i in range(data_size)]})
+        tdms_maker.ch_data_dict.update({chn: [i for i in range(2**32, 2**32 + data_size)]})
     tdms_maker.add_artificial_group("LogTest_corrupt_chn")
 
 def create_all(created_tdms_files_dir: Path, created_hdf_files_dir:Path) -> None:
