@@ -7,29 +7,14 @@ variables:
   PY_VERSION: "3.8"
 
 stages:
-  - linter
   - type_checking
   - test_dev
-  - sonar
-
-linter:
-  image: python:${PY_VERSION}
-  stage: linter
-  before_script:
-    - pip3 install pylint
-    - pip3 install -r requirements.txt
-  script:
-    - pylint -j 2 --rcfile .pylintrc src
-  allow_failure: true
 
 type_checking:
   image: python:${PY_VERSION}
   stage: type_checking
-  before_script: 
-    - pip3 install mypy
-#    - mypy --install-types  #this would be a better way of dealing with missing imports
-    - pip3 install -r requirements.txt
   script:
+    - pip3 install mypy
     - mypy --ignore-missing-imports src
   allow_failure: true
 
@@ -41,14 +26,6 @@ test_dev:
     paths:
       - cov.xml
     expire_in: 1 day
-  script: 
-    - apt update
-    - apt install hdf5-tools -y
-    - pytest ${project_root}/tests --junitxml=report.xml
-    - pytest --cov-report xml:cov.xml --cov=${project_root}/src
-
-sonar:
-  image: java:8
-  stage: sonar
   script:
-    - bash CI/sonar.sh
+    - pytest ${project_root}/tests --cov=${project_name} --junitxml=report.xml
+    - pytest --cov-report xml:cov.xml --cov=${project_name} ${project_root}/tests
