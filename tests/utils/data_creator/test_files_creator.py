@@ -48,11 +48,11 @@ class MakeTestFiles(MakeTdmsFile):
     def add_artificial_group(self, grp_name) -> None:
         ch_set = self.test_ch_prop_and_data()
         # create tdms group
-        self.add_tdms_grp(grp_name=grp_name, grp_properties=self.grp_prop_dict)
+        self.add_tdms_grp(grp_name=grp_name, grp_properties=self.grp_prop_dict.copy())
         for chn in ch_set:
             self.add_tdms_ch(grp_name=grp_name,
                              ch_name=chn,
-                             ch_properties=self.ch_prop_dict[chn],
+                             ch_properties=self.ch_prop_dict[chn].copy(),
                              data=self.ch_data_dict[chn])
         # create hdf group
         with h5py.File(self.hdf_file_path, "a") as file:
@@ -60,7 +60,6 @@ class MakeTestFiles(MakeTdmsFile):
             for key in self.grp_prop_dict.keys():
                 file[grp_name].attrs.create(key, _hdf_attr_value(self.grp_prop_dict[key]))
             for chn in ch_set:
-                file[grp_name].create_dataset(name=chn,
-                                    data=_hdf_array(self.ch_data_dict[chn]))
+                file[grp_name].create_dataset(name=chn, data=_hdf_array(self.ch_data_dict[chn]))
                 for key in self.ch_prop_dict[chn].keys():
                     file[grp_name][chn].attrs.create(key, _hdf_attr_value(self.ch_prop_dict[chn][key]))
