@@ -17,7 +17,7 @@ linter:
   script:
     - pip3 install pylint
     - pylint --max-line-length=120 src
-  allow failure: true
+  allow_failure: true
 
 type_checking:
   image: python:${PY_VERSION}
