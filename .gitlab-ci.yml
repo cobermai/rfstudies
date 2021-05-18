@@ -1,0 +1,31 @@
+include:
+  - project: acc-co/devops/python/acc-py-devtools
+    file: acc_py_devtools/templates/gitlab-ci/python.yml
+
+variables:
+  project_name: mlframework
+  PY_VERSION: "3.8"
+
+stages:
+  - type_checking
+  - test_dev
+
+type_checking:
+  image: python:${PY_VERSION}
+  stage: type_checking
+  script:
+    - pip3 install mypy
+    - mypy --ignore-missing-imports src
+  allow_failure: true
+
+test_dev:
+  stage: test_dev
+  extends: .acc_py_dev_test
+  artifacts:
+    untracked: true
+    paths:
+      - cov.xml
+    expire_in: 1 day
+  script:
+    - pytest ${project_root}/tests --cov=${project_name} --junitxml=report.xml
+    - pytest --cov-report xml:cov.xml --cov=${project_name} ${project_root}/tests
