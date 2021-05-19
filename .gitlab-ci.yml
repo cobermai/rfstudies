@@ -36,6 +36,6 @@ test_dev:
       - cov.xml
     expire_in: 1 day
   script:
-    - apk add hdf5-tools
+    - yum install hdf5-tools
     - pytest ${project_root}/tests --cov=${project_name} --junitxml=report.xml
     - pytest --cov-report xml:cov.xml --cov=${project_name} ${project_root}/tests
