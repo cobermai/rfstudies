@@ -56,11 +56,12 @@ def logger(level_console_handler: str = "INFO", level_file_handler: str ="DEBUG"
             log.addHandler(console_handler)  # add this handler to the logger
     return log
 
-def logger_add_tg(log: logging.Logger, level_telegram_handler: str) -> None:
+#def logger_add_tg(log: logging.Logger, level_telegram_handler: str) -> None:
     """
     This will add a log handler to log that will write logs to telegram.
     You need to have a telegram bot setup with access informatino located in the right folder.
     """
+"""
     format_string = "%(levelname)-5s[line%(lineno)3s|%(funcName)-15s]:\n<b>%(message)s</b>"
     path = os.path.expanduser("~/.config/telegram_bot/tg_tqdm.txt")
     with open(path) as file:
@@ -71,3 +72,4 @@ def logger_add_tg(log: logging.Logger, level_telegram_handler: str) -> None:
                                                disable_notification=True)
         tgh.setFormatter(formatter_tg)
         log.addHandler(tgh)
+"""
