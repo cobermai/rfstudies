@@ -10,12 +10,12 @@ REQUIREMENTS: dict = {
         "h5py",
         "psutil",
         "tqdm",
+        "telegram-handler",
     ],
     'test': [
         'pytest',
     ],
     'dev': [
-        "telegram-handler",
     ],
     'doc': [  # sphinx
     ],
