@@ -24,7 +24,7 @@ type_checking:
   stage: type_checking
   script:
     - pip3 install mypy
-    - mypy --conf-file mypy.ini src 
+    - mypy --config-file mypy.ini src 
   allow_failure: true
 
 test_dev:
