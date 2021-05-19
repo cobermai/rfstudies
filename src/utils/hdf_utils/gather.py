@@ -51,7 +51,7 @@ def _get_ext_link_rek(file_path: Path,
 
 def _hdf_write_ext_links(from_file_path: Path,
                         write_to_file_path: Path,
-                        lock: mp.Lock,
+                        lock: mp.synchronize.Lock,
                         depth: int,
                         func_to_fulfill: Callable[[Path, str], bool]) -> None:
     ext_link_list = _get_ext_link_rek(file_path=from_file_path,
@@ -75,31 +75,36 @@ class Gather:
     def __init__(self, depth: int = 1, num_processes: int = None):
         '''
         :param depth: the depth of the hdf groups to combine
-        :param num_processes: number of processing kernels
+        :param num_processes: number of processing kernels, None -> os.cpu_count
         '''
-        self.depth = depth
+        self.depth: int = depth
         self.set_num_processes(num_processes)
-        self.to_file_path = None
-        self.from_file_paths = None
-        self.func_to_fulfill = None
+        self.to_file_path: Path
+        self.from_file_paths: Iterable
+        self.func_to_fulfill: Callable[[Path, str], bool]
 
-    def set_num_processes(self, num_processes: int) -> None:
+    def set_num_processes(self, num_processes: int = None) -> None:
         """Sets the num_processes for the ThreadPool, if None is given its set to the number of logical cpu cores"""
-        self.num_processes = os.cpu_count() if num_processes is None else num_processes
+        self.num_processes: int = os.cpu_count() or 1 if num_processes is None else num_processes
 
-    def set_func_to_fulfill(self, func_to_fulfill: Callable[[Path, str], bool], on_error: bool) -> None:
+    def set_func_to_fulfill(self, on_error: bool, func_to_fulfill: Callable[[Path, str], bool] = None) -> None:
         """Sets the function_to_fulfill. On True the HdfObject will be added, if False it will not be added.
         Addidtionally if an error occures the HdfObject will not be added.
         :param func_to_fulfill: The filtering function/ restriction function/ function to fulfill for an HdfObject to
         be added to the output."""
-        if func_to_fulfill is None:
-            func_to_fulfill = lambda str1, str2: True
-        def func_to_fulfill_with_error_handling(file_path, hdf_path) -> bool:
+        def func_to_fulfill_with_error_handling(file_path:Path, hdf_path: str) -> bool:
             try:
-                return func_to_fulfill(file_path, hdf_path)
-            except BaseException:  # pylint does not like this, but ts planed ot be a bare except
+                if func_to_fulfill is None:
+                    ret = True
+                else:
+                    ret = func_to_fulfill(file_path, hdf_path)
+            except (KeyError,ValueError, SystemError, ArithmeticError, AttributeError, LookupError, NotImplementedError,
+                    RuntimeError) :
                 log.debug("function_to_fulfill error (%s, %s) -> %s", file_path, hdf_path, on_error)
-            return on_error
+                ret = on_error
+            else:
+                raise RuntimeWarning("An unexpected Error occurred in func_to_fulfill")
+            return ret
         self.func_to_fulfill = func_to_fulfill_with_error_handling
 
     def from_files(self, from_file_paths: Iterable):
@@ -120,13 +125,13 @@ class Gather:
         self.to_file_path = to_file_path
         return self
 
-    def if_fulfills(self, func_to_fulfill: Callable[[Path, str], bool] = None, on_error: bool = None):
+    def if_fulfills(self, func_to_fulfill: Callable[[Path, str], bool] = None, on_error: bool = False):
         """
         calls set_function_to_fulfill with the on_error parameter
         :param from_file_paths: Iterable of file paths to be added
         :return: The Gather object
         """
-        self.set_func_to_fulfill(func_to_fulfill, on_error)
+        self.set_func_to_fulfill(on_error, func_to_fulfill)
         return self
 
     def run_with_external_links(self) -> None:

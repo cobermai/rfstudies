@@ -1,7 +1,7 @@
-from tests.utils.data_creator.test_files_creator import CreatorTestFiles
+"""creating XBox2 like trend data for testing"""
 from pathlib import Path
 import numpy as np
-import nptdms  # type: ignore
+from tests.utils.data_creator.test_files_creator import CreatorTestFiles
 
 
 def _trend_data_creator(tdms_file_path: Path, hdf_file_path: Path) -> CreatorTestFiles:
@@ -21,7 +21,7 @@ def _trend_data_creator(tdms_file_path: Path, hdf_file_path: Path) -> CreatorTes
 
 def _create_empty(created_tdms_files_dir: Path, created_hdf_files_dir: Path) -> None:
     file_name = "TrendData_20210101_empty"
-    tdms_creator = _trend_data_creator((created_tdms_files_dir / file_name).with_suffix(".tdms"),
+    _trend_data_creator((created_tdms_files_dir / file_name).with_suffix(".tdms"),
                                      (created_hdf_files_dir / file_name).with_suffix(".hdf"))
 
 def _create_ok_data(created_tdms_files_dir: Path, created_hdf_files_dir: Path) -> None:
@@ -60,6 +60,11 @@ def _create_corrupt_data(created_tdms_files_dir: Path, created_hdf_files_dir: Pa
     tdms_creator.add_artificial_group("2021.01.01-00:00:00.000_corrupt_chn")
 
 def create_all(created_tdms_files_dir: Path, created_hdf_files_dir:Path) -> None:
+    """
+    runs all the trend data creators and creates tdms and hdf files for testing in the specified directories
+    :param created_tdms_files_dir: the destination directory for the tdms files
+    :param created_hdf_files_dir: the destination directory for the hdf files
+    """
     _create_empty(created_tdms_files_dir, created_hdf_files_dir)
     _create_semi_corrupt_data(created_tdms_files_dir, created_hdf_files_dir)
     _create_ok_data(created_tdms_files_dir, created_hdf_files_dir)
