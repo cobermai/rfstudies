@@ -16,7 +16,7 @@ linter:
   stage: linter
   script:
     - pip3 install pylint
-    - pylint --max-line-length=120 src
+    - pylint -j 4 --rcfile .pylintrc src
   allow_failure: true
 
 type_checking:
@@ -24,7 +24,7 @@ type_checking:
   stage: type_checking
   script:
     - pip3 install mypy
-    - mypy --ignore-missing-imports src
+    - mypy --conf-file mypy.ini src 
   allow_failure: true
 
 test_dev:
