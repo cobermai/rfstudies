@@ -11,6 +11,7 @@ REQUIREMENTS: dict = {
         "psutil",
         "tqdm",
         "telegram-handler",
+        "requests"
     ],
     'test': [
         'pytest',
