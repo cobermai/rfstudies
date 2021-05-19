@@ -15,7 +15,7 @@ REQUIREMENTS: dict = {
         'pytest',
     ],
     'dev': [
-        "python-telegram-handler",
+        "telegram-handler",
     ],
     'doc': [  # sphinx
     ],
