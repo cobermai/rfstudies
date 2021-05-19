@@ -10,7 +10,8 @@ from tests.utils.data_creator import xb2_like_trend_data_creator
 
 def test_transformation() -> None:
     """
-    creates tdms files, applies the transformation and tests its output
+    creates tdms files and hdf5 files that we want, applies the transformation and tests its output to the created
+    hdf5 files
     """
     ### ARRANGE
     # delete old test data
