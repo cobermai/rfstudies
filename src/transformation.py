@@ -11,7 +11,7 @@ from src.utils.system.logger import logger
 from src.utils.system.logger import logger_add_tg
 
 log = logger("DEBUG")
-logger_add_tg(log, "INFO")
+#logger_add_tg(log, "INFO")
 
 
 def transform(tdms_dir: Union[Path, str], hdf_dir: Union[Path, str]) -> None:
