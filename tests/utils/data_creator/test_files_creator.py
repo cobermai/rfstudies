@@ -1,6 +1,6 @@
 import datetime
 
-from tests.utils.data_creator.tdms_file_creator import MakeTdmsFile
+from tests.utils.data_creator.tdms_file_creator import CreatorTdmsFile
 from pathlib import Path
 import h5py  #type: ignore
 import numpy as np
@@ -22,7 +22,7 @@ def _hdf_attr_value(value):
     return value
 
 
-class MakeTestFiles(MakeTdmsFile):
+class CreatorTestFiles(CreatorTdmsFile):
     """Used to create a XBox2 like tdms file. Can be set up to either be similar to event or trend data."""
     def __init__(self, hdf_file_path: Path, tdms_file_path: Path, root_prop_dict: dict):
         super().__init__(tdms_file_path = tdms_file_path,

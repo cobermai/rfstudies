@@ -1,8 +1,8 @@
 from typing import Union, Set
 from pathlib import Path
-import nptdms  # type: ignore
+import nptdms  #type: ignore
 
-class MakeTdmsFile():
+class CreatorTdmsFile():
     """A tool to make creating tdms files easier."""
     tdms_file_path: Path
     tdms_object_set: Set[Union[nptdms.RootObject, nptdms.GroupObject, nptdms.ChannelObject]]
@@ -14,7 +14,7 @@ class MakeTdmsFile():
 
     def add_tdms_grp(self, grp_name: str, grp_properties: dict) -> None:
         """
-        add a group object to the segment set that will eventually be written out
+        add a group object to the segment set that will eventually be added to the tdms object
         :param grp_name: name of the group to add
         :param grp_properties: a dictonary of the gorup properties
         """
