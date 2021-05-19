@@ -38,10 +38,9 @@ def test_transformation() -> None:
     for path in transform_hdf_dir.glob("data/*.hdf"):
         transformed_hdf_file_path = transform_hdf_dir / "data" / path.name
         should_hdf_file_path = created_hdf_dir / path.name
-        is_equal = os.system(f"h5diff  {transformed_hdf_file_path} {should_hdf_file_path}")==0
-        print(f"{path.name} {is_equal}")
+        is_equal = os.system(f"h5diff  {transformed_hdf_file_path} {should_hdf_file_path}") == 0
         assert is_equal
 
 
-if __name__=="__main__":
+if __name__ == "__main__":
     test_transformation()

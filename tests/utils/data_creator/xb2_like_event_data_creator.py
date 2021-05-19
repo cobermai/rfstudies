@@ -1,7 +1,7 @@
-from tests.utils.data_creator.test_files_creator import CreatorTestFiles
+"""creating XBox2 like event data for testing"""
 from pathlib import Path
 import numpy as np
-import nptdms  # type: ignore
+from tests.utils.data_creator.test_files_creator import CreatorTestFiles
 
 def _event_data_creator(tdms_file_path: Path, hdf_file_path: Path) -> CreatorTestFiles:
     tdms_creator = CreatorTestFiles(hdf_file_path=hdf_file_path,
@@ -21,28 +21,28 @@ def _event_data_creator(tdms_file_path: Path, hdf_file_path: Path) -> CreatorTes
         "Breakdown Flags": 0,
         "Log Type": 0,
     }
-    """
-        import numpy as np
-        f = nptdms.TdmsFile("/home/lfischl/project_data/CLIC_DATA_Xbox2_T24PSI_2/EventData_20180410.tdms")
-        dict_str="{\n"
-        for ch in f['Breakdown_2018.04.10-02:33:54.997'].channels():
-            dict_str += "\"" + ch.name  + "\" : {"
-            for item in ch.properties.items():
-                if isinstance(item[1], np.datetime64):
-                    pre = "np.datetime64(\""
-                    post = "\")"
-                elif isinstance(item[1], str):
-                    pre  = "\""
-                    post = "\""
-                else:
-                    pre  = ""
-                    post = ""
-                dict_str += "\"" + item[0] + "\" : " + pre + str(item[1]) + post + ", "
-            dict_str += "}, \n"
-        dict_str += "}"
-        print(dict_str)
-        f.close()
-    """
+
+    #import numpy as np
+    #f = nptdms.TdmsFile("/home/lfischl/project_data/CLIC_DATA_Xbox2_T24PSI_2/EventData_20180410.tdms")
+    #dict_str="{\n"
+    #for ch in f['Breakdown_2018.04.10-02:33:54.997'].channels():
+    #    dict_str += "\"" + ch.name  + "\" : {"
+    #    for item in ch.properties.items():
+    #        if isinstance(item[1], np.datetime64):
+    #            pre = "np.datetime64(\""
+    #            post = "\")"
+    #        elif isinstance(item[1], str):
+    #            pre  = "\""
+    #            post = "\""
+    #        else:
+    #            pre  = ""
+    #            post = ""
+    #        dict_str += "\"" + item[0] + "\" : " + pre + str(item[1]) + post + ", "
+    #    dict_str += "}, \n"
+    #dict_str += "}"
+    #print(dict_str)
+    #f.close()
+
     tdms_creator.ch_prop_dict = {
         "PKI Amplitude": {"wf_start_time": np.datetime64("2021-01-01T00:00:00.000000"), "wf_start_offset": 0.0,
                           "wf_increment": 6.25e-10, "wf_samples": 3200, "NI_ChannelName": "PKI Amplitude",
@@ -120,7 +120,7 @@ def _event_data_creator(tdms_file_path: Path, hdf_file_path: Path) -> CreatorTes
 
 def _create_empty(created_tdms_files_dir: Path, created_hdf_files_dir: Path) -> None:
     file_name = "EventData_20210101_empty"
-    tdms_creator = _event_data_creator((created_tdms_files_dir / file_name).with_suffix(".tdms"),
+    _event_data_creator((created_tdms_files_dir / file_name).with_suffix(".tdms"),
                                      (created_hdf_files_dir / file_name).with_suffix(".hdf"))
 
 def _create_ok_data(created_tdms_files_dir: Path, created_hdf_files_dir: Path) -> None:
@@ -168,10 +168,15 @@ def _create_semi_corrupt_data(created_tdms_files_dir: Path, created_hdf_files_di
     tdms_creator.ch_data_dict = {}
     for chn in chn_list:
         data_size = tdms_creator.ch_prop_dict[chn]["wf_samples"]
-        tdms_creator.ch_data_dict.update({chn: [i for i in range(2**32, 2**32 + data_size)]})
+        tdms_creator.ch_data_dict.update({chn: [2**32 + i for i in range(data_size)]})
     tdms_creator.add_artificial_group("LogTest_corrupt_chn")
 
 def create_all(created_tdms_files_dir: Path, created_hdf_files_dir:Path) -> None:
+    """
+    runs all the event data creators and creates tdms and hdf files for testing in the specified directories
+    :param created_tdms_files_dir: the destination directory for the tdms files
+    :param created_hdf_files_dir: the destination directory for the hdf files
+    """
     _create_empty(created_tdms_files_dir, created_hdf_files_dir)
     _create_semi_corrupt_data(created_tdms_files_dir, created_hdf_files_dir)
     _create_ok_data(created_tdms_files_dir, created_hdf_files_dir)

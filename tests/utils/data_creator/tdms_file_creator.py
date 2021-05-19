@@ -1,3 +1,6 @@
+"""
+class for creating tdms files faster
+"""
 from typing import Union, Set
 from pathlib import Path
 import nptdms  #type: ignore
@@ -8,7 +11,7 @@ class CreatorTdmsFile():
     tdms_object_set: Set[Union[nptdms.RootObject, nptdms.GroupObject, nptdms.ChannelObject]]
 
     def __init__(self, tdms_file_path: Path, tdms_root_properties: dict):
-        root_object = nptdms.RootObject(properties=tdms_root_properties)
+        root_object = nptdms.RootObject(properties=tdms_root_properties.copy())
         self.tdms_file_path = tdms_file_path.absolute()
         self.tdms_object_set = {root_object}  # this set will be additionally filled with groups and channels
 
@@ -18,19 +21,19 @@ class CreatorTdmsFile():
         :param grp_name: name of the group to add
         :param grp_properties: a dictonary of the gorup properties
         """
-        grp = nptdms.GroupObject(grp_name, properties=grp_properties)
+        grp = nptdms.GroupObject(grp_name, properties=grp_properties.copy())
         self.tdms_object_set.update({grp})
 
     def add_tdms_ch(self, grp_name, ch_name: str, ch_properties: dict, data: list) -> None:
         """
-        add a channel object to the segment set that will eventually be written out
-        :param grp_name: name of the group the channel is in
+        add a channel object to the segment set that will eventually be added to the tdms object
+        :param grp_name: name of the parent group
         :param ch_name: name of the channel
         :param ch_properties: dictonary of the channel properties
         :param data: dictornary of the channel data
         """
-        ch = nptdms.ChannelObject(grp_name, ch_name, data, properties=ch_properties)
-        self.tdms_object_set.update({ch})
+        channel = nptdms.ChannelObject(grp_name, ch_name, data, properties=ch_properties.copy())
+        self.tdms_object_set.update({channel})
 
     def write(self):
         """write the tdms segment set with root object, group objects and channel objects into one tmds file"""
