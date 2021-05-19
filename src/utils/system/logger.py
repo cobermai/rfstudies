@@ -6,7 +6,7 @@ import os
 import logging
 from datetime import datetime
 from sys import stderr
-import telegram_handler
+#import telegram_handler
 
 def logger(level_console_handler: str = "INFO", level_file_handler: str ="DEBUG", name: str = "MLOG") -> logging.Logger:
     """
