@@ -25,6 +25,7 @@ type_checking:
   stage: type_checking
   script:
     - pip3 install mypy
+    - pip3 install -r requirements.txt
     - mypy --config-file mypy.ini src 
   allow_failure: true
 
