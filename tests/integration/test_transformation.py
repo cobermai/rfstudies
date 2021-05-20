@@ -7,6 +7,7 @@ import os
 from src.transformation import transform
 from tests.utils.data_creator import xb2_like_event_data_creator
 from tests.utils.data_creator import xb2_like_trend_data_creator
+from tests.utils.dir_handler import get_clean_data_dir, mkdir_ret
 
 def test_transformation() -> None:
     """
@@ -14,22 +15,16 @@ def test_transformation() -> None:
     hdf5 files
     """
     ### ARRANGE
-    # delete old test data
-    try:
-        shutil.rmtree(Path("./tests/test_data/").absolute())
-    except FileNotFoundError:
-        pass  # we want to delete the folder anyways.
-    # create data folders
-    created_tdms_dir = Path("./tests/test_data/created_files/tdms_files").absolute()
-    created_hdf_dir = Path("./tests/test_data/created_files/hdf_files").absolute()
-    created_tdms_dir.mkdir(parents=True, exist_ok=True)
-    created_hdf_dir.mkdir(parents=True, exist_ok=True)
+    data_dir_path = get_clean_data_dir(__file__)
+
+    created_tdms_dir = mkdir_ret(data_dir_path / "created_tdms")
+    created_hdf_dir = mkdir_ret(data_dir_path / "created_hdf")
+
     # create tdms files (trend and event data) similar to xb2 data files
     xb2_like_event_data_creator.create_all(created_tdms_dir, created_hdf_dir)
     xb2_like_trend_data_creator.create_all(created_tdms_dir, created_hdf_dir)
 
-    transform_hdf_dir = Path("./tests/test_data/hdf_files/").absolute()
-    transform_hdf_dir.mkdir(parents=True, exist_ok=True)
+    transform_hdf_dir = mkdir_ret(data_dir_path / "transformed_hdf")
 
     ### ACT
     transform(created_tdms_dir, transform_hdf_dir)

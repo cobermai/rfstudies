@@ -51,7 +51,7 @@ def _get_ext_link_rek(file_path: Path,
     return ret
 
 def _hdf_write_ext_links(from_file_path: Path,
-                        write_to_file_path: Path,
+                        dest_file_path: Path,
                         lock: Lock_Data_Type,
                         depth: int,
                         func_to_fulfill: Callable[[Path, str], bool]) -> None:
@@ -60,13 +60,12 @@ def _hdf_write_ext_links(from_file_path: Path,
                                       depth_to_go=depth,
                                       func_to_fulfill=func_to_fulfill)
     with lock:
-        with h5py.File(write_to_file_path, "a") as write_to_file:
-            rek_grp_name = lambda x: x + "(new)" if write_to_file.get(x, None) is not None else x
+        with h5py.File(dest_file_path, "a") as dest_file:
+            rek_grp_name = lambda x: x + "(new)" if dest_file.get(x, None) is not None else x.replace("/", "-")
             for link in ext_link_list:
-
-                grp_name = rek_grp_name(from_file_path.stem + " - " + link.path)
-                write_to_file[grp_name] = link
-            write_to_file.flush()
+                grp_name = rek_grp_name(from_file_path.stem + ":" + link.path[1:] if link.path[0]=="/" else link.path )
+                dest_file[grp_name] = link
+            dest_file.flush()
 
 
 class Gather:
@@ -80,8 +79,8 @@ class Gather:
         '''
         self.depth: int = depth
         self.set_num_processes(num_processes)
-        self.to_file_path: Path
-        self.from_file_paths: Iterable
+        self.dest_file_path: Path
+        self.source_file_paths: Iterable
         self.func_to_fulfill: Callable[[Path, str], bool]
 
     def set_num_processes(self, num_processes: int = None) -> None:
@@ -106,29 +105,29 @@ class Gather:
             return ret
         self.func_to_fulfill = func_to_fulfill_with_error_handling
 
-    def from_files(self, from_file_paths: Iterable):
+    def from_files(self, source_file_paths: Iterable):
         """
         Sets the source file paths for the gathering
-        :param from_file_paths: Iterable of file paths to be added
+        :param source_file_paths: Iterable of file paths to be added
         :return: The Gather object
         """
-        self.from_file_paths = from_file_paths
+        self.source_file_paths = source_file_paths
         return self
 
-    def to_hdf_file(self, to_file_path: Path):
+    def to_hdf_file(self, dest_file_path: Path):
         """
         Sets the destination file path for the gathering
-        :param from_file_paths: Path of the destination file path
+        :param dest_file_paths: Path of the destination file path
         :return: The Gather object
         """
-        self.to_file_path = to_file_path
+        self.dest_file_path = dest_file_path
         return self
 
-    def if_fulfills(self, func_to_fulfill: Callable[[Path, str], bool] = None, on_error: bool = False):
+    def if_fulfills(self, func_to_fulfill: Callable[[Path, str], bool] = None, on_error: bool = False) -> None:
         """
-        calls set_function_to_fulfill with the on_error parameter
-        :param from_file_paths: Iterable of file paths to be added
-        :return: The Gather object
+        if func_to_fulfill is fulfilled the link to the hdf_object will be added
+        :param func_to_fulfill: function to be fulfilled by a feasible hdf_object
+        :param on_error: if the func_to_fulfill has an expected error, the on_error parameter will be returned
         """
         self.set_func_to_fulfill(on_error, func_to_fulfill)
         return self
@@ -136,10 +135,10 @@ class Gather:
     def run_with_external_links(self) -> None:
         """This starts the Gathering by creating hdf ExternalLink objects"""
         multi_proc_func = partial(_hdf_write_ext_links,
-                                    write_to_file_path=self.to_file_path,
+                                    dest_file_path=self.dest_file_path,
                                     lock=Lock(),
                                     depth=self.depth,
                                     func_to_fulfill=self.func_to_fulfill)
         with ThreadPool(self.num_processes) as pool:
-            pool.map(multi_proc_func, self.from_file_paths)
-        log.debug("finished Gathering for %s", self.to_file_path)
+            pool.map(multi_proc_func, self.source_file_paths)
+        log.debug("finished Gathering for %s", self.dest_file_path)
