@@ -8,7 +8,8 @@ import os
 from typing import Callable
 import logging
 from pathlib import Path
-import multiprocessing as mp
+from multiprocessing import Lock
+from multiprocessing.synchronize import Lock as Lock_Data_Type
 from multiprocessing.pool import ThreadPool
 from functools import partial
 from collections.abc import Iterable
@@ -23,12 +24,12 @@ def hdf_path_combine(*argv: str) -> str:
     :param argv: the group names/to concatenate
     :return: the concatenated path string
     """
-    path = "/".join(argv)
-    path = path.replace("///", "/")
-    path = path.replace("//", "/")
-    if path[0]!="/":
-        path = f"/{path}"
-    return path
+    def rem_double_dash(path: str) -> str:
+        if path.find("//")!=-1:
+            path = rem_double_dash(path.replace("//","/"))
+        return path
+    return rem_double_dash("/" + "/".join(argv))
+
 
 def _get_ext_link_rek(file_path: Path,
                       hdf_path: str,
@@ -51,7 +52,7 @@ def _get_ext_link_rek(file_path: Path,
 
 def _hdf_write_ext_links(from_file_path: Path,
                         write_to_file_path: Path,
-                        lock: mp.synchronize.Lock,
+                        lock: Lock_Data_Type,
                         depth: int,
                         func_to_fulfill: Callable[[Path, str], bool]) -> None:
     ext_link_list = _get_ext_link_rek(file_path=from_file_path,
@@ -99,11 +100,9 @@ class Gather:
                 else:
                     ret = func_to_fulfill(file_path, hdf_path)
             except (KeyError,ValueError, SystemError, ArithmeticError, AttributeError, LookupError, NotImplementedError,
-                    RuntimeError) :
+                    RuntimeError):
                 log.debug("function_to_fulfill error (%s, %s) -> %s", file_path, hdf_path, on_error)
                 ret = on_error
-            else:
-                raise RuntimeWarning("An unexpected Error occurred in func_to_fulfill")
             return ret
         self.func_to_fulfill = func_to_fulfill_with_error_handling
 
@@ -138,7 +137,7 @@ class Gather:
         """This starts the Gathering by creating hdf ExternalLink objects"""
         multi_proc_func = partial(_hdf_write_ext_links,
                                     write_to_file_path=self.to_file_path,
-                                    lock=mp.Lock(),
+                                    lock=Lock(),
                                     depth=self.depth,
                                     func_to_fulfill=self.func_to_fulfill)
         with ThreadPool(self.num_processes) as pool:
