@@ -46,7 +46,5 @@ setup(
         'all': [req for reqs in REQUIREMENTS.values() for req in reqs],
     },
     packages=find_packages(),
-    entry_points={
-        'console_scripts': ['mlframework=src:main'],
-    },
+    #entry_points={'console_scripts': ['mlframework=src:main']}, #add it to terminal
 )
