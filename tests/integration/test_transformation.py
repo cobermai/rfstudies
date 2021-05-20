@@ -1,13 +1,12 @@
 """
 Does an end to end test for the transformation.py located in src.
 """
-import shutil
 from pathlib import Path
 import os
 from src.transformation import transform
 from tests.utils.data_creator import xb2_like_event_data_creator
 from tests.utils.data_creator import xb2_like_trend_data_creator
-from tests.utils.dir_handler import get_clean_data_dir, mkdir_ret
+from tests.utils.dir_handler import remkdir
 
 def test_transformation() -> None:
     """
@@ -15,16 +14,16 @@ def test_transformation() -> None:
     hdf5 files
     """
     ### ARRANGE
-    data_dir_path = get_clean_data_dir(__file__)
+    data_dir_path = remkdir(Path(__file__).parent / "data")
 
-    created_tdms_dir = mkdir_ret(data_dir_path / "created_tdms")
-    created_hdf_dir = mkdir_ret(data_dir_path / "created_hdf")
+    created_tdms_dir = remkdir(data_dir_path / "created_tdms")
+    created_hdf_dir = remkdir(data_dir_path / "created_hdf")
 
     # create tdms files (trend and event data) similar to xb2 data files
     xb2_like_event_data_creator.create_all(created_tdms_dir, created_hdf_dir)
     xb2_like_trend_data_creator.create_all(created_tdms_dir, created_hdf_dir)
 
-    transform_hdf_dir = mkdir_ret(data_dir_path / "transformed_hdf")
+    transform_hdf_dir = remkdir(data_dir_path / "transformed_hdf")
 
     ### ACT
     transform(created_tdms_dir, transform_hdf_dir)
