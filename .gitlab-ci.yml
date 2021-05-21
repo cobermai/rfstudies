@@ -15,7 +15,6 @@ linter:
   image: python:${PY_VERSION}
   stage: linter
   script:
-    - pip3 install python-telegram-handler
     - pip3 install pylint
     - pip3 install -r requirements.txt
     - pylint -j 4 --rcfile .pylintrc src
