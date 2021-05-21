@@ -11,8 +11,10 @@ from src.utils.system.logger import logger
 from src.utils.system.logger import logger_add_tg
 
 log = logger("DEBUG")
-logger_add_tg(log, "DEBUG")
-
+try:
+    logger_add_tg(log, "DEBUG")
+except FileNotFoundError:
+    pass
 
 def transform(tdms_dir: Union[Path, str], hdf_dir: Union[Path, str]) -> None:
     """
