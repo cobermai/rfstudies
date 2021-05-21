@@ -1,7 +1,7 @@
 """creating XBox2 like trend data for testing"""
 from pathlib import Path
 import numpy as np
-from tests.utils.data_creator.test_files_creator import CreatorTestFiles
+from tests.utils.data_creator.file_creator_for_testing import CreatorTestFiles
 
 
 def _trend_data_creator(tdms_file_path: Path, hdf_file_path: Path) -> CreatorTestFiles:
