@@ -1,3 +1,6 @@
+"""
+setup file
+"""
 from setuptools import setup, find_packages
 
 REQUIREMENTS: dict = {
@@ -17,6 +20,7 @@ REQUIREMENTS: dict = {
         'pytest',
     ],
     'dev': [
+        "python-telegram-handler"
     ],
     'doc': [  # sphinx
     ],
