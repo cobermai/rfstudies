@@ -9,7 +9,7 @@ def remkdir(file_path: Union[str, Path]) -> Path:
     :return: remade path"""
     path = Path(file_path).absolute()
     try:
-        rmtree(path.absolute())
+        rmtree(path)
     except FileNotFoundError:
         pass  # we want to delete the folder anyways.
     path.mkdir(parents=False, exist_ok=False)
