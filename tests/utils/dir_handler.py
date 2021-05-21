@@ -8,9 +8,7 @@ def remkdir(file_path: Union[str, Path]) -> Path:
     :param path: the path of the dir to remake
     :return: remade path"""
     path = Path(file_path).absolute()
-    try:
+    if path.exists():
         rmtree(path)
-    except FileNotFoundError:
-        pass  # we want to delete the folder anyways.
     path.mkdir(parents=False, exist_ok=False)
     return path
