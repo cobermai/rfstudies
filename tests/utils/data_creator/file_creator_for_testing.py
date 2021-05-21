@@ -31,9 +31,9 @@ class CreatorTestFiles(CreatorTdmsFile):
             for key in root_prop_dict:
                 file.attrs.create(key, _hdf_attr_value(root_prop_dict[key]))
         self.hdf_file_path = hdf_file_path
+        self.grp_prop_dict: dict = {}
         self.ch_prop_dict: dict = {}
         self.ch_data_dict: dict = {}
-        self.grp_prop_dict: dict = {}
 
     def test_ch_prop_and_data(self) -> set:
         """

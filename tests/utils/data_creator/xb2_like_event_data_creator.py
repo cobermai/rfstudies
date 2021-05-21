@@ -1,7 +1,7 @@
 """creating XBox2 like event data for testing"""
 from pathlib import Path
 import numpy as np
-from tests.utils.data_creator.test_files_creator import CreatorTestFiles
+from tests.utils.data_creator.file_creator_for_testing import CreatorTestFiles
 
 def _event_data_creator(tdms_file_path: Path, hdf_file_path: Path) -> CreatorTestFiles:
     tdms_creator = CreatorTestFiles(hdf_file_path=hdf_file_path,
