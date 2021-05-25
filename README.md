@@ -3,30 +3,15 @@
 
 ## Getting Started
 This is a framework for machine learning. It consists of three steps:
-1) **Transformation**: 
-   * transform source data into a more handy data format (eg. HDF5)
-   * make accessible: gather hdf files together if they have the wanted data structure
-2) **Exploration**: 
-   * handling: reformat, clean and sort
-   * calculate features: extract features for machine learning
-   * data exploration: unsupervised machine learning for data analysis
-3) **Modelling**: 
-   * (un)supervised machine learning
-   * explain results and validate by application
-    
-
+1) **Transformation**: transforming data into the fileformat hdf
+2) **Handling**: 
+3) **Exploration**:
+4) **Training**:
 ### Requirements
 In order to follow the installation guide it is required to install
-```bash
-# for debian based systems
-apt update
-sudo xargs apt install <requirements.system
+```pip (?)``` and ```python >=3.8 <4 ``` and ```git```
 
-```
-### Installation in CERN environment
-for an installation in the CERN environment follow the [Acc-Py](https://wikis.cern.ch/display/ACCPY/Getting+started+with+Acc-Py) guide.
-
-### Installation local
+### Installation
 ```bash
 git clone https://gitlab.cern.ch/machine-protection-ml/mlframework.git # Clone the gitlab project
 git checkout mlframework #  and checkout the branch mlframework
@@ -36,33 +21,59 @@ virtualenv venv
 source ./venv/bin/activate
 pip3 install -r requirements.txt
 ```
+
 ### Usage
 ```python
 # Transformation from .tdms files source/files/path/ to destination/path/
 from src.transformation import transform
-transform("source/files/dir", "destination/dir")
+transform("source/files/path", "destination/path")
 ```
 
-```angular2html ( cleanpy .; tree -A -I "__init__.py|venv|__pycache__|log_files")
+```angular2html (tree -A -I "archive|venv|__pycache__|log_files)
 .
-├── log_config.yml              < logging configurations
-├── mypy.ini                    < configuration file for mypy
-├── README.md                   < explanation file
-├── requirements.system         < list of required system packages
-├── requirements.txt            < list of required python packages and version numbers
-├── setup.py                    < Setup file for using the project with "pip install mlframework"
-├── sonar-project.properties    < properties for sonar code analyzation tool
-├── src                         <<< source directory
-│   ├── transformation.py       < tranforms data in special formats into a handy format (ex.: .tdms -> .hdf)
-│   └── utils                   < utilities
-│       ├── hdf_tools.py        < tools to handle hdf files
-│       ├── handler_tools       < combines data without copying it
-│       └── transf_tools        < utilities used in the transformation
-│           ├── convert.py      < converting tool
-│           └── gather.py       < gather data scattered on multiple files
-└── tests                       <<< tests for main code in the source directory
-    ├── integration             < tests from start to beginning (also called end to end test), NOT IMPLEMENTED YET
-    ├── unit                    < tests every function/class (also called atomic test)
-    └── utils                   < utilyties for the testing suite (ex. creating test files)
+├── docu
+├── mypy.ini
+├── requirements.txt
+├── setup.py
+├── src
+│   ├── handler.py
+│   ├── __init__.py
+│   ├── README.md
+│   ├── transformation.py
+│   └── utils
+│       ├── hdf_utils
+│       │   ├── gather.py
+│       │   ├── __init__.py
+│       │   └── tdms_read.py
+│       ├── __init__.py
+│       └── system
+│           ├── __init__.py
+│           ├── logger.py
+│           ├── progress.py
+│           └── work_load.py
+└── tests
+    ├── __init__.py
+    ├── integration
+    │   └── __init__.py
+    ├── unit
+    │   ├── data
+    │   │   ├── dest.hdf
+    │   │   └── source_dir
+    │   │       └── test.hdf
+    │   ├── test_transformation.py
+    │   └── utils
+    │       └── hdf_utils
+    │           ├── test_gather.py
+    │           └── test_tdms_read.py
+    └── utils
+        ├── data_creator
+        │   ├── file_creator_for_testing.py
+        │   ├── __init__.py
+        │   ├── tdms_file_creator.py
+        │   ├── xb2_like_event_data_creator.py
+        │   └── xb2_like_trend_data_creator.py
+        ├── dir_handler.py
+        └── __init__.py
+
 
 ```
