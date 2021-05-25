@@ -162,7 +162,7 @@ class TestGather():
             .to_hdf_file(dest_file_path) \
             .if_fulfills(_sanity_func, on_error=False) \
             .run_with_external_links()
-        ###ASSERT
+        ### ASSERT
         with h5py.File(dest_file_path, "r") as file:
             output = set(file.keys())
         assert output == expected_keys, f"expected{expected_keys}\nbut got {output}"

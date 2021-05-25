@@ -12,6 +12,7 @@ from multiprocessing.synchronize import Lock as Lock_Data_Type
 from multiprocessing.pool import ThreadPool
 from functools import partial
 from collections.abc import Iterable
+from src.utils.system.progress import working_on
 import h5py
 log = logging.getLogger("MLOG")  # the standard logger for this machine learning framework, see utils/system/logger.py
 
@@ -76,9 +77,9 @@ def hdf_write_ext_links(source_file_path: Path,
                                      func_to_fulfill=func_to_fulfill)
     with lock:
         with h5py.File(dest_file_path, "a") as dest_file:
-            rek_grp_name = lambda x: x + "(new)" if dest_file.get(x, None) is not None else x.replace("/", "-")
             for link in ext_link_list:
-                grp_name = rek_grp_name(source_file_path.stem + "-" + link.path)
+                rek_grp_name = lambda x: x if dest_file.get(x, None) is None else rek_grp_name(x + "(new)")
+                grp_name = rek_grp_name(source_file_path.stem + "-" + link.path.replace("/","-"))
                 dest_file[grp_name] = link
             dest_file.flush()
 
@@ -109,8 +110,7 @@ class Gather:
                     ret = True
                 else:
                     ret = func_to_fulfill(file_path, hdf_path)
-            except (KeyError,ValueError, SystemError, ArithmeticError, AttributeError, LookupError, NotImplementedError,
-                    RuntimeError):
+            except (ValueError, SystemError, ArithmeticError, AttributeError, LookupError, RuntimeError):
                 log.debug("function_to_fulfill error (%s, %s) -> %s", file_path, hdf_path, on_error)
                 ret = on_error
             return ret
