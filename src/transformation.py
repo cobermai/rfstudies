@@ -11,8 +11,8 @@ from src.utils.system.logger import logger
 from src.utils.system.logger import logger_add_tg
 
 log = logger("DEBUG")
-try:
-    logger_add_tg(log, "DEBUG")
+try:  # TODO: see if internet connection i spossible
+    pass  # logger_add_tg(log, "DEBUG")
 except FileNotFoundError:
     pass
 
@@ -55,7 +55,7 @@ def transform(tdms_dir: Union[Path, str], hdf_dir: Union[Path, str]) -> None:
                 ch_len.count(3200)==8 and \
                 not any((any(np.isnan(file[hdf_path][key][:])) for key in file[hdf_path].keys()))
 
-    Gather().from_files(hdf_dir.glob("data/Event*.hdf"))\
+    Gather(num_processes=8).from_files(hdf_dir.glob("data/Event*.hdf"))\
         .to_hdf_file(hdf_dir / "EventDataExtLinks.hdf")\
         .if_fulfills(ed_func_to_fulfill, on_error=True)\
         .run_with_external_links()
@@ -63,4 +63,4 @@ def transform(tdms_dir: Union[Path, str], hdf_dir: Union[Path, str]) -> None:
 
 if __name__=="__main__":
     transform(tdms_dir = Path("~/project_data/CLIC_DATA_Xbox2_T24PSI_2/").expanduser(),
-                   hdf_dir = Path("~/output_files/").expanduser())
+              hdf_dir = Path("~/output_files").expanduser())
