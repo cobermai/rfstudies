@@ -12,7 +12,6 @@ from multiprocessing.synchronize import Lock as Lock_Data_Type
 from multiprocessing.pool import ThreadPool
 from functools import partial
 from collections.abc import Iterable
-from src.utils.system.progress import working_on
 import h5py
 log = logging.getLogger("MLOG")  # the standard logger for this machine learning framework, see utils/system/logger.py
 
@@ -78,8 +77,9 @@ def hdf_write_ext_links(source_file_path: Path,
     with lock:
         with h5py.File(dest_file_path, "a") as dest_file:
             for link in ext_link_list:
-                rek_grp_name = lambda x: x if dest_file.get(x, None) is None else rek_grp_name(x + "(new)")
-                grp_name = rek_grp_name(source_file_path.stem + "-" + link.path.replace("/","-"))
+                #rek_grp_name = lambda x: x if dest_file.get(x, None) is None else rek_grp_name(x + "(new)")
+                grp_name = source_file_path.stem + "-" + link.path.replace("/","-")
+                #grp_name = rek_grp_name(source_file_path.stem + "-" + link.path.replace("/","-"))
                 dest_file[grp_name] = link
             dest_file.flush()
 
@@ -131,6 +131,7 @@ class Gather:
         :param dest_file_paths: Path of the destination file path
         :return: The Gather object
         """
+        h5py.File(dest_file_path, "w")  # overwrite old file
         self.dest_file_path = dest_file_path
         return self
 
