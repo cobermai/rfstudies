@@ -9,20 +9,6 @@ import pytest
 from src.utils.hdf_utils import gather
 from tests.utils.dir_handler import remkdir
 log = logging.getLogger("TESTLOG")
-#import unittest
-#class TestGather(unittest.TestCase):
-#    def test__hdf_path_combine(self):
-#        desired_outcome = "/a/b"
-#        self.assertEqual(gather.hdf_path_combine("a", "b"), desired_outcome, f"should be {desired_outcome}")
-#
-#        desired_outcome = "/a/b"
-#        self.assertEqual(gather.hdf_path_combine("/a", "b"), desired_outcome, f"should be {desired_outcome}")
-#
-#        desired_outcome = "/a/b"
-#        self.assertEqual(gather.hdf_path_combine("/a/", "/b"), desired_outcome, f"should be {desired_outcome}")
-#
-#        desired_outcome = "faulty outcome"
-#        self.assertEqual(gather.hdf_path_combine("a", "b"), desired_outcome, f"should be {desired_outcome}")
 
 def _sanity_func(file_path: Path, hdf_path: str) -> bool:
     """a function to fulfill for testing purposes"""
