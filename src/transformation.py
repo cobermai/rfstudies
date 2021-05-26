@@ -8,13 +8,10 @@ import numpy as np
 from src.utils.hdf_utils.tdms_read import Convert
 from src.utils.hdf_utils.gather import Gather
 from src.utils.system.logger import logger
-from src.utils.system.logger import logger_add_tg
+from src.utils.system.logger import try_logger_add_tg
 
 log = logger("DEBUG")
-try:  # TODO: see if internet connection i spossible
-    pass  # logger_add_tg(log, "DEBUG")
-except FileNotFoundError:
-    pass
+try_logger_add_tg(log, "DEBUG")
 
 def transform(tdms_dir: Union[Path, str], hdf_dir: Union[Path, str]) -> None:
     """
