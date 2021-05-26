@@ -1,12 +1,14 @@
 """
 This module does the first step of the transformation. The reading and writing of the data.
 """
+import os
 from time import time
 from pathlib import Path
 import multiprocessing as mp
 import logging
 from functools import partial
 import nptdms
+import h5py
 log = logging.getLogger("MLOG")
 
 
@@ -94,6 +96,11 @@ class ConvertFromTdmsToHdf:
         """
         tdms_file_paths = self.tdms_dir.glob("*.tdms")
         if self.converter.check_already_converted:
+            for path in Path(self.hdf_dir).glob("*.hdf"):
+                try:
+                    h5py.File(path, "r").close()
+                except OSError:
+                    os.remove(path)
             hdf_file_names = set(path.stem for path in self.hdf_dir.glob("*.hdf"))
             ret = set(p for p in tdms_file_paths if p.stem not in hdf_file_names)
         else:
