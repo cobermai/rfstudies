@@ -5,8 +5,8 @@ from pathlib import Path
 from typing import Union
 import h5py
 import numpy as np
-from src.utils.hdf_utils.tdms_read import Convert
-from src.utils.hdf_utils.gather import Gather
+from src.utils.transf_tools.tdms_read import Convert
+from src.utils.transf_tools.gather import Gather
 from src.utils.system.logger import logger
 from src.utils.system.logger import try_logger_add_tg
 
