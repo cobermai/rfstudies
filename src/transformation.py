@@ -33,9 +33,9 @@ def transform(tdms_dir: Union[Path, str], hdf_dir: Union[Path, str]) -> None:
     ## Combining all Events and TrendData sets into one hdf5 file with external links if they are not faulty
     def td_func_to_fulfill(file_path: Path, hdf_path: str) -> bool:
         with h5py.File(file_path, "r") as file:
-            ch_shapes = [file[hdf_path][key].shape[0] for key in file[hdf_path].keys()]
-            len_equal = all(ch_shape == ch_shapes[0] for ch_shape in ch_shapes)
-            num_of_samples = 35
+            ch_shapes: list = [file[hdf_path][key].shape[0] for key in file[hdf_path].keys()]
+            len_equal: bool = all(ch_shape == ch_shapes[0] for ch_shape in ch_shapes)
+            num_of_samples: int = 35
             return len_equal and len(file[hdf_path].keys()) == num_of_samples
 
     Gather(num_processes=4)\
@@ -47,23 +47,23 @@ def transform(tdms_dir: Union[Path, str], hdf_dir: Union[Path, str]) -> None:
 
     def ed_func_to_fulfill(file_path: Path, hdf_path: str)->bool:
         with h5py.File(file_path, "r") as file:
-            ch_len = [file[hdf_path][key].shape[0] for key in file[hdf_path].keys()]
+            ch_len: list = [file[hdf_path][key].shape[0] for key in file[hdf_path].keys()]
 
-            aquisation_window = 2e-6  # time period of one event is 2 microseconds
+            aquisation_window: float = 2e-6  # time period of one event is 2 microseconds
 
             #aquisation card NI-5772 see https://www.ni.com/en-us/support/model.ni-5772.html
-            sampling_frequency_ni5772 = 1.6e9  # sampling frequency of the acquisition card
-            num_of_values_ni5772 = aquisation_window * sampling_frequency_ni5772
-            number_of_signals_monitored_with_ni5772 = 8
+            sampling_frequency_ni5772: int = int(1.6e8)  # sampling frequency of the acquisition card
+            num_of_values_ni5772: int = int(aquisation_window * sampling_frequency_ni5772)
+            number_of_signals_monitored_with_ni5772: int = 8
 
             # aquisation card NI-5761 see https://www.ni.com/en-us/support/model.ni-5761.html
-            sampling_frequency_ni5761 = 1.6e9  # sampling frequency of the acquisition card
-            num_of_values_ni5761 = aquisation_window * sampling_frequency_ni5761
-            number_of_signals_monitored_with_ni5761 = 8
+            sampling_frequency_ni5761: int = int(1.6e9)  # sampling frequency of the acquisition card
+            num_of_values_ni5761: int = int(aquisation_window * sampling_frequency_ni5761)
+            number_of_signals_monitored_with_ni5761: int = 8
 
             return file[hdf_path].attrs.get("Timestamp", None) is not None \
                 and ch_len.count(num_of_values_ni5772) == number_of_signals_monitored_with_ni5772 \
-                and ch_len.count(num_of_values_ni5761)==number_of_signals_monitored_with_ni5761 \
+                and ch_len.count(num_of_values_ni5761) == number_of_signals_monitored_with_ni5761 \
                 and not any((any(np.isnan(file[hdf_path][key][:])) for key in file[hdf_path].keys()))
 
     Gather(num_processes=1).from_files(hdf_dir.glob("data/Event*.hdf"))\
