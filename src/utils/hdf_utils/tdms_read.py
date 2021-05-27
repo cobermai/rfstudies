@@ -98,6 +98,7 @@ class ConvertFromTdmsToHdf:
         if self.converter.check_already_converted:
             for path in Path(self.hdf_dir).glob("*.hdf"):
                 try:
+                    # if the writing process of an hdf file was aborted prematurely, the file can not be opened.
                     h5py.File(path, "r").close()
                 except OSError:
                     os.remove(path)
