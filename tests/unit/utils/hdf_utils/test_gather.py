@@ -1,7 +1,9 @@
 """
 tests for gather module
 """
+from typing import Callable
 from pathlib import Path
+from functools import partial
 import logging
 from multiprocessing import Lock
 import h5py
@@ -94,11 +96,13 @@ class TestGather():
         error_list = [KeyError,ValueError, SystemError, ArithmeticError, AttributeError, LookupError,
                        NotImplementedError, RuntimeError]
         on_error = True
+        def func_expected_errors(_file_path:Path, _hdf_path:str, expected_error: BaseException):
+            raise expected_error
         for err in error_list:
-            on_error = not on_error
-            def func_expected_errors(_file_path:Path, _hdf_path:str):
-                raise err  # pylint: disable=cell-var-from-loop
-            self.gather.set_func_to_fulfill(on_error, func_expected_errors)
+            on_error = not on_error  # Trying out different error handlers
+            fun: Callable = partial(func_expected_errors, expected_error=err)
+            self.gather.set_func_to_fulfill(on_error= on_error,
+            func_to_fulfill=fun)
             assert self.gather.func_to_fulfill(Path("/"), "/") == on_error
 
     def test_from_files(self):
