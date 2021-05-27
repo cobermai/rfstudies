@@ -29,51 +29,32 @@ from src.transformation import transform
 transform("source/files/path", "destination/path")
 ```
 
-```angular2html (tree -A -I "archive|venv|__pycache__|log_files)
+```angular2html (tree -A -I "__init__.py|venv|__pycache__|log_files)
 .
-├── docu
-├── mypy.ini
-├── requirements.txt
-├── setup.py
-├── src
-│   ├── handler.py
-│   ├── __init__.py
-│   ├── README.md
-│   ├── transformation.py
-│   └── utils
-│       ├── hdf_utils
-│       │   ├── gather.py
-│       │   ├── __init__.py
-│       │   └── tdms_read.py
-│       ├── __init__.py
-│       └── system
-│           ├── __init__.py
-│           ├── logger.py
-│           ├── progress.py
-│           └── work_load.py
-└── tests
-    ├── __init__.py
-    ├── integration
-    │   └── __init__.py
-    ├── unit
-    │   ├── data
-    │   │   ├── dest.hdf
-    │   │   └── source_dir
-    │   │       └── test.hdf
-    │   ├── test_transformation.py
-    │   └── utils
-    │       └── hdf_utils
-    │           ├── test_gather.py
-    │           └── test_tdms_read.py
-    └── utils
-        ├── data_creator
-        │   ├── file_creator_for_testing.py
-        │   ├── __init__.py
-        │   ├── tdms_file_creator.py
-        │   ├── xb2_like_event_data_creator.py
-        │   └── xb2_like_trend_data_creator.py
-        ├── dir_handler.py
-        └── __init__.py
-
-
+├── src                        <<< source directory
+│   ├── handler.py               < the data handler UNFINISHED
+│   ├── transformation.py        < tranforms unknown data files to commonly known ones (ex.: .tdms -> .hdf)
+│   └── utils                    < utilities
+│       ├── transf_tools         < utilities used in the transformation
+│       │   ├── gather.py        < combines data without copying it
+│       │   └── tdms_read.py     < reads tmds files and transformes them in to hdf files
+│       └── system               < development utils for logging and displaying progress
+│── tests                      <<< tests for main code in the source directory
+│   ├── integration              < tests from start to beginning (also called end to end test), NOT IMPLEMENTED YET
+│   ├── unit                     < tests every function/class (also called atomic test)
+│   └── utils                    < utilyties for the testing suite (ex. creating test files)
+├── archive                    <<< OLD CODE that is "stored" here but not part of the main project. 
+│   ├── API                      < old implementation of the API and refactored code
+│   ├── Data_Plot                < code for plotting xb2 data
+│   ├── file_format_presentation < presentation to explain the advantages of the old file format (df+pickle) vs hdf
+│   ├── hdf_utils                < an old hdf tool that is now part of gather.py
+│   ├── spark                    < DISCARDED tried to use spark for feature calculating
+│   ├── tdms_reader              < tdms to pandas dataframe converter
+│   └── XBox3_notebooks          < notebooks regarding the xbox3 data set
+├── docu                       <<< information regarding some documentation. Not propperly filled yet.
+├── mlf.env                      <
+├── mypy.ini                     < MyPy config file
+├── README.md                    < explanation file
+├── requirements.txt             < list of required packages
+├── setup.py                     < Setup file for using the project with "pip install mlframework"
 ```
