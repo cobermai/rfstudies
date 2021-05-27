@@ -6,6 +6,7 @@ from pathlib import Path
 from functools import partial
 import logging
 from multiprocessing import Lock
+from shutil import rmtree
 import h5py
 import pytest
 from src.utils.hdf_utils import gather
@@ -57,6 +58,7 @@ def test__get_ext_link_rek() -> None:
     link_tuple_set = lambda link_set: {(link.filename, link.path) for link in link_set}
     assert link_tuple_set(output) == link_tuple_set(expected_output), \
         f"expected {expected_output}\nbut got {output}"
+    rmtree(data_dir_path)
 
 def test__hdf_write_ext_links() -> None:
     """tests _hdf_write_ext_links function"""
@@ -78,6 +80,7 @@ def test__hdf_write_ext_links() -> None:
         expected_output = source_file["aaa"]
         output = dest_file["test--aaa"]
         assert output == expected_output, f"expected {expected_output}\nbut got {output}"
+    rmtree(data_dir_path)
 
 class TestGather():
     """ testing the Gather class"""
@@ -112,8 +115,11 @@ class TestGather():
 
     def test_to_hdf_file(self):
         """testing to hdf file"""
-        assert self.gather.to_hdf_file(Path("a/random/path"))\
-                   .dest_file_path == Path("a/random/path")
+        data_dir_path = remkdir(Path(__file__).parent / "data")
+        hdf_file_path = data_dir_path / "test.hdf"
+        assert self.gather.to_hdf_file(hdf_file_path)\
+                   .dest_file_path == hdf_file_path
+        rmtree(data_dir_path)
 
     def test_if_fulfills(self):
         """testing if fulfills"""
@@ -156,6 +162,7 @@ class TestGather():
         with h5py.File(dest_file_path, "r") as file:
             output = set(file.keys())
         assert output == expected_keys, f"expected{expected_keys}\nbut got {output}"
+        rmtree(data_dir_path)
 
 
 if __name__ == "__main__":
