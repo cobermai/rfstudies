@@ -9,7 +9,7 @@ from multiprocessing import Lock
 from shutil import rmtree
 import h5py
 import pytest
-from src.utils.hdf_utils import gather
+from src.utils.transf_tools import gather
 from tests.utils.dir_handler import remkdir
 log = logging.getLogger("TESTLOG")
 

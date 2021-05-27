@@ -4,7 +4,7 @@ from pathlib import Path
 from shutil import rmtree
 import pytest
 import h5py
-from src.utils.hdf_utils import tdms_read
+from src.utils.transf_tools import tdms_read
 from tests.utils.dir_handler import remkdir
 from tests.utils.data_creator.file_creator_for_testing import CreatorTestFiles
 from tests.utils.data_creator.tdms_file_creator import CreatorTdmsFile
