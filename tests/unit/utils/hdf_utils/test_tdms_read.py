@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 from shutil import rmtree
 import pytest
+import h5py
 from src.utils.hdf_utils import tdms_read
 from tests.utils.dir_handler import remkdir
 from tests.utils.data_creator.file_creator_for_testing import CreatorTestFiles
@@ -63,11 +64,12 @@ class TestConvertFromTdms:
     def test_to_hdf():
         """tests to_hdf"""
         conv = tdms_read.Convert()
-        conv_from_tdms = conv.from_tdms(tdms_dir=Path("/path/to/tdms/dir"))
+        tdms_dir_path = Path("/path/to/tdms/dir")
+        conv_from_tdms = conv.from_tdms(tdms_dir=tdms_dir_path)
         cft2h = conv_from_tdms.to_hdf(Path("/path/to/hdf/dir"))
         assert isinstance(cft2h, tdms_read.ConvertFromTdmsToHdf)
         assert cft2h.hdf_dir == Path("/path/to/hdf/dir")
-        assert cft2h.tdms_dir == Path("/path/to/tdms/dir")
+        assert cft2h.tdms_dir == tdms_dir_path
         assert cft2h.converter == conv
 
     @staticmethod
@@ -89,21 +91,34 @@ class TestConvertFromTdmsToHdf:
         os.system(command=f"""
             hdf_path={hdf_dir_path}
             tdms_path={tdms_dir_path}
-            for file_stem in test1_ok test2_ok test_discard
+            for file_stem in test1 test2 test3
             do
                 echo > $tdms_path/$file_stem.tdms
             done
-            echo > $hdf_path/test_discard.hdf
+            echo > $hdf_path/test1.hdf
         """)
+        expected = set(tdms_dir_path.glob("*.tdms"))
+
         conv_tdms2hdf = tdms_read.Convert()\
             .from_tdms(tdms_dir_path)\
             .to_hdf(hdf_dir_path)
-        assert conv_tdms2hdf.get_tdms_file_paths_to_convert() == set(tdms_dir_path.glob("*ok.tdms"))
+        assert conv_tdms2hdf.get_tdms_file_paths_to_convert() == expected, "withc a faulty hdf file with check"
+
+        h5py.File(hdf_dir_path / "test1.hdf", "w").close()
         conv_tdms2hdf = tdms_read.Convert(check_already_converted=False)\
             .from_tdms(tdms_dir_path)\
             .to_hdf(hdf_dir_path)
-        assert conv_tdms2hdf.get_tdms_file_paths_to_convert() == set(tdms_dir_path.glob("*.tdms"))
+        assert conv_tdms2hdf.get_tdms_file_paths_to_convert() == expected, "with healtyh hdf file no check"
+
+        expected = set(tdms_dir_path.glob("*2.tdms")).union(set(tdms_dir_path.glob("*3.tdms")))
+        conv_tdms2hdf = tdms_read.Convert(check_already_converted=True) \
+            .from_tdms(tdms_dir_path) \
+            .to_hdf(hdf_dir_path)
+        assert conv_tdms2hdf.get_tdms_file_paths_to_convert() == expected, "with a healthy hdf file with check"
+
         rmtree(data_dir_path, ignore_errors=True)
+
+
 
     @staticmethod
     def test_run():
