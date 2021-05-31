@@ -6,8 +6,6 @@ import os
 import logging
 from sys import stderr
 from datetime import datetime
-import requests
-import telegram_handler
 
 def logger(level_console_handler: str = "INFO", level_file_handler: str ="DEBUG", name: str = "MLOG") -> logging.Logger:
     """
@@ -56,35 +54,3 @@ def logger(level_console_handler: str = "INFO", level_file_handler: str ="DEBUG"
             console_handler.setFormatter(formatter_console_handler)  # setting the custom format to the console handler
             log.addHandler(console_handler)  # add this handler to the logger
     return log
-
-def logger_add_tg(log: logging.Logger, level_telegram_handler: str) -> None:
-    """
-    This will add a log handler to log that will write logs to telegram.
-    You need to have a telegram bot setup with access informatino located in the right folder.
-    :param log: the logger to which a tg_handler should be added
-    :param level_telegram_handler: the level the tg_handler should work at
-    """
-    format_string = "%(levelname)-5s[line%(lineno)3s|%(funcName)-15s]:\n<b>%(message)s</b>"
-    path = os.path.expanduser("~/.config/telegram_bot/tg_tqdm.txt")
-    with open(path) as file:
-        formatter_tg = telegram_handler.HTMLFormatter(format_string)
-        tgh = telegram_handler.TelegramHandler(token=file.readline()[:-1],
-                                               chat_id=file.readline()[:-1],
-                                               level=level_telegram_handler,
-                                               disable_notification=True)
-        tgh.setFormatter(formatter_tg)
-        log.addHandler(tgh)
-
-def try_logger_add_tg(log: logging.Logger, level_telegram_handler: str) -> None:
-    """
-    checks for internet connection and connection file without throwing errors
-    :param log: the logger to which a tg_handler should be added
-    :param level_telegram_handler: the level the tg_handler should work at
-    """
-    try:
-        requests.get("https://home.cern/", timeout=1)  # check if internet connection is possible
-        logger_add_tg(log, level_telegram_handler)  # try adding tg logger
-    except FileNotFoundError:
-        log.debug("Adding tg logger failed due to missing connection information. Logging will continue without.")
-    except requests.exceptions.ConnectionError:
-        log.debug("Adding tg logger failed due to missing internet connection. Logging will continue without.")
