@@ -9,13 +9,14 @@ import logging
 from functools import partial
 import nptdms
 import h5py
-log = logging.getLogger("MLOG")
+
+log = logging.getLogger(__name__)
 
 
 def convert_file(tdms_file_path: Path, hdf_dir: Path) -> None:
     """
     converts the tdms file of tdms_file_path to an hdf file by use of the nptdms converter
-    :param tdms_file_path: file path of the tmds file
+    :param tdms_file_path: file path of the tdms file
     :param hdf_dir: file path of the hdf file (dir instead of file name is given because easier handling with mp)
     """
     t_0 = time()
@@ -26,8 +27,9 @@ def convert_file(tdms_file_path: Path, hdf_dir: Path) -> None:
         tdms_file.as_hdf(hdf_file_path, mode="w", group="/")
         log.debug("tdms2hdf + writing %s     took: %s sec", tdms_file_path.stem, time() - t_0)
 
+
 class Convert:
-    """A very general converter Object, that can be adapdet to new data formats."""
+    """A very general converter Object, that can be adapted to new data formats."""
     def __init__(self,
                  check_already_converted: bool = True,
                  num_processes: int = 2):
@@ -50,6 +52,7 @@ class Convert:
     def run(self) -> None:
         """too early to run yet, no source directory specified yet"""
         raise NotImplementedError("too early to run yet, no source directory specified yet")
+
 
 class ConvertFromTdms:
     """Adds the from_directory (source) for conversion"""
@@ -77,14 +80,14 @@ class ConvertFromTdms:
 
 class ConvertFromTdmsToHdf:
     """Adds the to_directory (destination) for conversion"""
-    def __init__(self, fromtdms: ConvertFromTdms, hdf_dir: Path):
+    def __init__(self, from_tdms: ConvertFromTdms, hdf_dir: Path):
         """
         Initializes the ConvertFromTdmsToHdf class object
-        :param fromtdms: ConverterFromTdms class object
+        :param from_tdms: ConverterFromTdms class object
         :param hdf_dir: destination directory of the hdf files
         """
-        self.converter = fromtdms.converter
-        self.tdms_dir = fromtdms.tdms_dir
+        self.converter = from_tdms.converter
+        self.tdms_dir = from_tdms.tdms_dir
         self.hdf_dir = hdf_dir
 
     def get_tdms_file_paths_to_convert(self) -> set:
@@ -106,7 +109,7 @@ class ConvertFromTdmsToHdf:
             ret = set(p for p in tdms_file_paths if p.stem not in hdf_file_names)
         else:
             ret = set(tdms_file_paths)
-        if len(ret)!=0:
+        if len(ret) != 0:
             log.debug("Files to convert: %s", len(ret))
         return ret
 
@@ -117,7 +120,7 @@ class ConvertFromTdmsToHdf:
             for path in self.get_tdms_file_paths_to_convert():
                 convert_file(path, self.hdf_dir)
         else:
-            convert_func = partial(convert_file, hdf_dir = self.hdf_dir)
+            convert_func = partial(convert_file, hdf_dir=self.hdf_dir)
             with mp.Pool(self.converter.num_processes) as pool:
                 pool.map(convert_func, self.get_tdms_file_paths_to_convert())
-        log.debug("In total tdms to hdf5 conversion took: %s sec",time() - t_tot)
+        log.debug("In total tdms to hdf5 conversion took: %s sec", time() - t_tot)
