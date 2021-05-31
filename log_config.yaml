@@ -1,0 +1,29 @@
+version: 1
+
+formatters:
+  brief:
+    format: '%(levelname)s: %(message)s [line%(lineno)3s in %(filename)s]'
+  precise:
+    format: '%(asctime)s-%(name)s-%(levelname)s-%(filename)s-line%(lineno)s-%(message)s'
+handlers:
+    console:
+      class: logging.StreamHandler
+      level: DEBUG
+      formatter: brief
+      stream: ext://sys.stdout
+    file_handler:
+      class: logging.handlers.RotatingFileHandler
+      level: DEBUG
+      formatter: precise
+      filename: log_file.log
+      maxBytes: 10485760 # 10MB
+      backupCount: 20
+root:
+  level: NOTSET
+  handlers: [console, file_handler]
+  propogate: yes
+loggers:
+  <module>:
+    level: DEBUG
+    handlers: [console, file_handler]
+    propogate: no
