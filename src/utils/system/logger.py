@@ -35,7 +35,7 @@ def logger(level_console_handler: str = "INFO", level_file_handler: str ="DEBUG"
             formatter_file_handler = logging.Formatter(format_string)  # create formatter
             date = str(datetime.date(datetime.today()))
             dir_path = os.path.dirname(__file__) + "/log_files/"
-            file_name = "log_file_" + date + ".txt"
+            file_name = "log_file_" + date + ".log"
             if not os.path.isdir(dir_path):
                 os.mkdir(dir_path)
             if not os.path.isfile(dir_path + file_name):
@@ -67,7 +67,7 @@ def logger_add_tg(log: logging.Logger, level_telegram_handler: str) -> None:
     format_string = "%(levelname)-5s[line%(lineno)3s|%(funcName)-15s]:\n<b>%(message)s</b>"
     path = os.path.expanduser("~/.config/telegram_bot/tg_tqdm.txt")
     with open(path) as file:
-        formatter_tg = telegram_handler.HtmlFormatter(format_string)
+        formatter_tg = telegram_handler.HTMLFormatter(format_string)
         tgh = telegram_handler.TelegramHandler(token=file.readline()[:-1],
                                                chat_id=file.readline()[:-1],
                                                level=level_telegram_handler,
