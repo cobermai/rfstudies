@@ -5,24 +5,24 @@ from setuptools import setup, find_packages
 
 REQUIREMENTS: dict = {
     'core': [
-        'numpy',
-        'pandas',
-        'datetime',
-        'matplotlib',
-        "nptdms",
-        "h5py",
-        "psutil",
-        "tqdm",
-        "telegram-handler",
-        "requests"
+        'tqdm >= 4.60.0',
+        'python_telegram_handler >= 2.2.1',
+        'requests >= 2.25.1',
+        'psutil >= 5.8.0',
+        'npTDMS >= 1.2.0',
+        'h5py >= 3.2.1',
+        'matplotlib >= 3.4.1',
+        'compress_pickle >= 2.0.1',
+        'scipy >= 1.6.3',
+
     ],
     'test': [
-        'pytest',
+        'pytest >= 6.2.4',
     ],
     'dev': [
-        "python-telegram-handler"
+        'telegram_handler >= 1.3',
     ],
-    'doc': [  # sphinx
+    'doc': [  # sphinx (?)
     ],
 }
 
@@ -50,5 +50,4 @@ setup(
         'all': [req for reqs in REQUIREMENTS.values() for req in reqs],
     },
     packages=find_packages(),
-    #entry_points={'console_scripts': ['mlframework=src:main']}, #add it to terminal
 )
