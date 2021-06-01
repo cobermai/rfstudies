@@ -10,7 +10,7 @@ import yaml
 
 def setup_logging() -> None:
     """sets up the logging with the log_config.yaml file"""
-    path = Path("log_config.yml").absolute()
+    path = Path("../../../log_config.yml").absolute()
     with open(path, 'rt') as file:
         config = yaml.safe_load(file.read())
         logging.config.dictConfig(config)
