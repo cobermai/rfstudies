@@ -3,37 +3,45 @@ Does an end to end test for the transformation.py located in src.
 """
 from pathlib import Path
 import os
+from datetime import date
+from shutil import rmtree
 from src.transformation import transform
-from tests.utils.data_creator import xb2_like_event_data_creator
-from tests.utils.data_creator import xb2_like_trend_data_creator
-from tests.utils.dir_handler import remkdir
+from tests.utils.data_creator.xb2_like_event_data_creator import create_event_data
+from tests.utils.data_creator.xb2_like_trend_data_creator import create_trend_data
+
 
 def test_transformation() -> None:
     """
     creates tdms files and hdf5 files that we want, applies the transformation and tests its output to the created
     hdf5 files
     """
-    ### ARRANGE
-    data_dir_path = remkdir(Path(__file__).parent / "data")
-
-    created_tdms_dir = remkdir(data_dir_path / "created_tdms")
-    created_hdf_dir = remkdir(data_dir_path / "created_hdf")
+    # ARRANGE
+    data_dir_path = Path(__file__).parent / f"data_{date.today()}"
+    data_dir_path.mkdir()
+    created_tdms_dir = data_dir_path / "created_tdms"
+    created_tdms_dir.mkdir()
+    created_hdf_dir = data_dir_path / "created_hdf"
+    created_hdf_dir.mkdir()
 
     # create tdms files (trend and event data) similar to xb2 data files
-    xb2_like_event_data_creator.create_all(created_tdms_dir, created_hdf_dir)
-    xb2_like_trend_data_creator.create_all(created_tdms_dir, created_hdf_dir)
+    create_event_data(created_tdms_dir, created_hdf_dir)
+    create_trend_data(created_tdms_dir, created_hdf_dir)
 
-    transform_hdf_dir = remkdir(data_dir_path / "transformed_hdf")
+    transform_hdf_dir = data_dir_path / "transformed_hdf"
+    transform_hdf_dir.mkdir()
 
-    ### ACT
+    # ACT
     transform(created_tdms_dir, transform_hdf_dir)
 
-    ## ASSERT
+    # ASSERT
     for path in transform_hdf_dir.glob("data/*.hdf"):
         path_of_output = transform_hdf_dir / "data" / path.name
         path_of_expected = created_hdf_dir / path.name
         is_equal = os.system(f"h5diff  {path_of_output} {path_of_expected}") == 0
         assert is_equal, f"the transformed file {path_of_output.name} differs from the expected output"
+
+    # CLEAN
+    rmtree(data_dir_path)
 
 
 if __name__ == "__main__":
