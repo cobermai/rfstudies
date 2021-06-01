@@ -11,8 +11,7 @@ from src.utils.transf_tools.gather import Gather
 from src.utils.system.setup_logging import setup_logging
 
 setup_logging()
-log = logging.getLogger(__name__)
-
+LOG = logging.getLogger(__name__)
 
 def transform(tdms_dir: Union[Path, str], hdf_dir: Union[Path, str]) -> None:
     """

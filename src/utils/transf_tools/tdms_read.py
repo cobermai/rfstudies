@@ -10,7 +10,7 @@ from functools import partial
 import nptdms
 import h5py
 
-log = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 def convert_file(tdms_file_path: Path, hdf_dir: Path) -> None:
@@ -21,11 +21,11 @@ def convert_file(tdms_file_path: Path, hdf_dir: Path) -> None:
     """
     t_0 = time()
     with nptdms.TdmsFile(tdms_file_path) as tdms_file:
-        log.debug("reading tdms file  %s     took: %s sec", tdms_file_path.stem, time() - t_0)
+        LOG.debug("reading tdms file  %s     took: %s sec", tdms_file_path.stem, time() - t_0)
         hdf_file_path = hdf_dir / tdms_file_path.with_suffix(".hdf").name
         t_0 = time()
         tdms_file.as_hdf(hdf_file_path, mode="w", group="/")
-        log.debug("tdms2hdf + writing %s     took: %s sec", tdms_file_path.stem, time() - t_0)
+        LOG.debug("tdms2hdf + writing %s     took: %s sec", tdms_file_path.stem, time() - t_0)
 
 
 class Convert:
@@ -110,7 +110,7 @@ class ConvertFromTdmsToHdf:
         else:
             ret = set(tdms_file_paths)
         if len(ret) != 0:
-            log.debug("Files to convert: %s", len(ret))
+            LOG.debug("Files to convert: %s", len(ret))
         return ret
 
     def run(self) -> None:
@@ -123,4 +123,4 @@ class ConvertFromTdmsToHdf:
             convert_func = partial(convert_file, hdf_dir=self.hdf_dir)
             with mp.Pool(self.converter.num_processes) as pool:
                 pool.map(convert_func, self.get_tdms_file_paths_to_convert())
-        log.debug("In total tdms to hdf5 conversion took: %s sec", time() - t_tot)
+        LOG.debug("In total tdms to hdf5 conversion took: %s sec", time() - t_tot)
