@@ -9,13 +9,14 @@ import yaml
 
 
 def setup_logging() -> None:
-    """setsup the logging with the log_config.yaml file"""
-    path = Path("log_config.yaml").absolute()
+    """sets up the logging with the log_config.yaml file"""
+    path = Path("log_config.yml").absolute()
     with open(path, 'rt') as file:
         config = yaml.safe_load(file.read())
         logging.config.dictConfig(config)
 
-if __name__=='__main__':
+
+if __name__ == '__main__':
     setup_logging()
     log = logging.getLogger(__name__)
     log.debug("test")
