@@ -8,7 +8,7 @@ import h5py
 import numpy as np
 from src.utils.transf_tools.tdms_read import Convert
 from src.utils.transf_tools.gather import Gather
-from setup_logging import setup_logging
+from src.utils.system.setup_logging import setup_logging
 
 setup_logging()
 log = logging.getLogger(__name__)
