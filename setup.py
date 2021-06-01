@@ -6,7 +6,6 @@ from setuptools import setup, find_packages
 REQUIREMENTS: dict = {
     'core': [
         'tqdm >= 4.60.0',
-        'python_telegram_handler >= 2.2.1',
         'requests >= 2.25.1',
         'psutil >= 5.8.0',
         'npTDMS >= 1.2.0',
@@ -14,13 +13,11 @@ REQUIREMENTS: dict = {
         'matplotlib >= 3.4.1',
         'compress_pickle >= 2.0.1',
         'scipy >= 1.6.3',
-
     ],
     'test': [
         'pytest >= 6.2.4',
     ],
     'dev': [
-        'telegram_handler >= 1.3',
     ],
     'doc': [  # sphinx (?)
     ],
