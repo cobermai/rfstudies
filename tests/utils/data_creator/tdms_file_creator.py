@@ -3,9 +3,10 @@ class for creating tdms files faster
 """
 from typing import Union, Set
 from pathlib import Path
-import nptdms  #type: ignore
+import nptdms
 
-class CreatorTdmsFile():
+
+class CreatorTdmsFile:
     """A tool to make creating tdms files easier."""
     tdms_file_path: Path
     tdms_object_set: Set[Union[nptdms.RootObject, nptdms.GroupObject, nptdms.ChannelObject]]
@@ -19,7 +20,7 @@ class CreatorTdmsFile():
         """
         add a group object to the segment set that will eventually be added to the tdms object
         :param grp_name: name of the group to add
-        :param grp_properties: a dictonary of the gorup properties
+        :param grp_properties: a dictionary of the group properties
         """
         grp = nptdms.GroupObject(grp_name, properties=grp_properties.copy())
         self.tdms_object_set.update({grp})
@@ -29,17 +30,13 @@ class CreatorTdmsFile():
         add a channel object to the segment set that will eventually be added to the tdms object
         :param grp_name: name of the parent group
         :param ch_name: name of the channel
-        :param ch_properties: dictonary of the channel properties
-        :param data: dictornary of the channel data
+        :param ch_properties: dictionary of the channel properties
+        :param data: dictionary of the channel data
         """
         channel = nptdms.ChannelObject(grp_name, ch_name, data, properties=ch_properties.copy())
         self.tdms_object_set.update({channel})
 
     def write(self):
-        """write the tdms segment set with root object, group objects and channel objects into one tmds file"""
+        """write the tdms segment set with root object, group objects and channel objects into one tdms file"""
         with nptdms.TdmsWriter(self.tdms_file_path) as writer:
             writer.write_segment(self.tdms_object_set)
-
-    def __del__(self):
-        """automatically writes tdms files when object is deleted"""
-        self.write()

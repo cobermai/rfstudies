@@ -1,11 +1,12 @@
 """
-class for creating tdms and hdf files for testing simultanously. The hdf files are generated as expected output of the
+class for creating tdms and hdf files for testing simultaneously. The hdf files are generated as expected output of the
 transformation.
 """
 from pathlib import Path
 import h5py
 import numpy as np
 from tests.utils.data_creator.tdms_file_creator import CreatorTdmsFile
+
 
 def _hdf_array(data):
     """ Convert data array into a format suitable for initialising HDF data. (See nptdms/export/hdf_export.py)"""
@@ -23,10 +24,10 @@ def _hdf_attr_value(value):
 
 
 class CreatorTestFiles(CreatorTdmsFile):
-    """Creator class of tdms and hdf files simultanousely for testing."""
+    """Creator class of tdms and hdf files simultaneously for testing."""
     def __init__(self, hdf_file_path: Path, tdms_file_path: Path, root_prop_dict: dict):
-        super().__init__(tdms_file_path = tdms_file_path,
-                         tdms_root_properties = root_prop_dict)
+        super().__init__(tdms_file_path=tdms_file_path,
+                         tdms_root_properties=root_prop_dict)
         with h5py.File(hdf_file_path, "w") as file:
             for key in root_prop_dict:
                 file.attrs.create(key, _hdf_attr_value(root_prop_dict[key]))
@@ -38,15 +39,15 @@ class CreatorTestFiles(CreatorTdmsFile):
     def test_ch_prop_and_data(self) -> set:
         """
         checks if the channel property dict keys are similar to the channel data dict keys
-        :return: intersection of channel propertiy dict keys and channel data dict keys as a set
+        :return: intersection of channel property dict keys and channel data dict keys as a set
         """
         inters = set(self.ch_prop_dict.keys()).intersection(set(self.ch_data_dict))
         union = set(self.ch_prop_dict.keys()).union(set(self.ch_data_dict))
         if inters != union:
-            raise RuntimeWarning("ch_prop_dict and ch_data_dict have differnt keys (=channel names).\n" +
-                f"Got ch_prop_dict.keys() = {self.ch_prop_dict.keys()} and " +
-                f"ch_data_dict.keys() = {self.ch_data_dict.keys()}.\n" +
-                "Some channels might be discarted for the creation of the tdms file.")
+            raise RuntimeWarning(f""" ch_prop_dict and ch_data_dict have different keys (=channel names).
+                Got ch_prop_dict.keys() = {self.ch_prop_dict.keys()} and 
+                ch_data_dict.keys() = {self.ch_data_dict.keys()}.
+                Some channels might be discarded for the creation of the tdms file.""")
         return inters
 
     def add_artificial_group(self, grp_name) -> None:
