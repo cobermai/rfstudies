@@ -14,7 +14,7 @@ from functools import partial
 from collections.abc import Iterable
 import h5py
 
-log = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 def hdf_path_combine(*argv: str) -> str:
@@ -90,7 +90,7 @@ class Gather:
     """
     dest_file_path: Path
     source_file_paths: Iterable
-    func_to_fulfill: Callable[[Path, str], bool]
+
     def __init__(self, depth: int = 1, num_processes: int = 2):
         """
         :param depth: the depth of the hdf groups to combine
@@ -98,22 +98,23 @@ class Gather:
         """
         self.depth: int = depth
         self.num_processes: int = num_processes
+        self.func_to_fulfill: Callable[[Path, str], bool]
 
-    def set_func_to_fulfill(self, on_error: bool, func_to_fulfill: Callable[[Path, str], bool]=None) -> None:
+    def set_func_to_fulfill(self, on_error: bool, func_to_fulfill: Callable[[Path, str], bool] = None) -> None:
         """Sets the function_to_fulfill. On True the HdfObject will be added, if False it will not be added.
         Additionally if an error occurs the HdfObject will not be added.
         :param func_to_fulfill: The filtering function/ restriction function/ function to fulfill for an HdfObject to
         be added to the output.
         :param on_error: boolean value that will be returned when the func_to_fulfill trows an error."""
         def func_to_fulfill_with_error_handling(file_path: Path, hdf_path: str) -> bool:
+            ret = on_error
             try:
                 if func_to_fulfill is None:
                     ret = True
                 else:
                     ret = func_to_fulfill(file_path, hdf_path)
             except (ValueError, SystemError, ArithmeticError, AttributeError, LookupError, RuntimeError):
-                log.debug("function_to_fulfill error (%s, %s) -> %s", file_path, hdf_path, on_error)
-                ret = on_error
+                LOG.debug("function_to_fulfill error (%s, %s) -> %s", file_path, hdf_path, on_error)
             return ret
         self.func_to_fulfill = func_to_fulfill_with_error_handling
 
@@ -136,7 +137,7 @@ class Gather:
         self.dest_file_path = dest_file_path
         return self
 
-    def if_fulfills(self, func_to_fulfill: Callable[[Path, str], bool]=None, on_error: bool=False):
+    def if_fulfills(self, func_to_fulfill: Callable[[Path, str], bool] = None, on_error: bool = False):
         """
         if func_to_fulfill is fulfilled the link to the hdf_object will be added
         :param func_to_fulfill: function to be fulfilled by a feasible hdf_object
@@ -154,4 +155,4 @@ class Gather:
                                   func_to_fulfill=self.func_to_fulfill)
         with ThreadPool(self.num_processes) as pool:
             pool.map(multi_proc_func, self.source_file_paths)
-        log.debug("finished Gathering for %s", self.dest_file_path)
+        LOG.debug("finished Gathering for %s", self.dest_file_path)
