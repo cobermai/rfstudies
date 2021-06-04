@@ -1,6 +1,7 @@
 """future data handler. UNFINISHED"""
 import os.path
 import logging
+from datetime import datetime
 import itertools
 import numpy as np
 from pandas import to_datetime
@@ -11,6 +12,8 @@ from setup_logging import setup_logging
 setup_logging()
 LOG = logging.getLogger("test_handler")
 import numpy.typing as npt
+import dateutil.parser
+
 
 
 def get_hdf_paths(file_path: Path, depth: int, hdf_path: str="/") -> list:
@@ -31,6 +34,15 @@ def get_hdf_paths(file_path: Path, depth: int, hdf_path: str="/") -> list:
         raise ValueError(f"depth has to be a non negative int, but got {depth}")
 
 
+def is_iso8601(maybe_iso_str: str) -> bool:
+    ret = True
+    try:
+        datetime.fromisoformat(maybe_iso_str)
+    except ValueError:
+        ret = False
+    return ret
+
+
 def union(source_file_path: Path, hdf_path_list: list, data_set_name: str, destination_file_path: Path):
     """
     for each dataset_name it unites (concatenates) all hdf-dataset at given depth to one large hdf-dataset in the
@@ -42,26 +54,27 @@ def union(source_file_path: Path, hdf_path_list: list, data_set_name: str, desti
     """
     with h5py.File(source_file_path, mode="r") as source_file, \
          h5py.File(destination_file_path, mode="a") as dest_file:
+
         if source_file[hdf_path_list[0]][data_set_name].dtype==float:
             data = np.concatenate([source_file[path][data_set_name][:] for path in hdf_path_list])
-            dest_file.create_dataset(name=data_set_name,
-                                     dtype=float,
-                                     data=data,
-                                     chunks=True)
-        elif source_file[hdf_path_list[0]][data_set_name].dtype=="S27":
-            #data = np.concatenate([to_datetime(source_file[path][data_set_name][:].astype(dtype=str)).to_numpy(dtype=np.datetime64) for path in hdf_path_list])
-
-            #data = to_datetime(np.concatenate(
-            #    [source_file[path][data_set_name][:].astype(dtype=str) for
-            #     path in hdf_path_list])).to_numpy(dtype=np.datetime64)
-
-            data = np.array([ts[:-1] for path in hdf_path_list
-                            for ts in source_file[path][data_set_name][:].astype(dtype=str)]).astype(dtype=np.datetime64)
-            dest_file.create_dataset(name = data_set_name, data=data.astype(dtype=h5py.opaque_dtype(data.dtype)), chunks=True)
-            #dest_file[data_set_name] = data.astype(dtype=h5py.opaque_dtype(data.dtype))
-
+            dest_file.create_dataset(name=data_set_name, dtype=float, data=data, chunks=True)
+        elif source_file[hdf_path_list[0]][data_set_name].dtype=='S27':
+            example_str = source_file[hdf_path_list[0]][data_set_name][0]
+            if is_iso8601(example_str):  # is the string an iso date-time format
+                if example_str[-1]=="Z" or example_str[-6:]=="+00:00":  # the timezone "ZULU" time can be parsed much faster than other timezones
+                    data = [ts.replace("Z", "") for path in hdf_path_list for ts in
+                            source_file[path][data_set_name][:].astype(str)]
+                    data = np.array(data, dtype=np.datetime64)
+                else:  # if a timezone is given, we use pandas for parsing
+                    data = to_datetime([ts for path in hdf_path_list
+                                           for ts in source_file[path][data_set_name][:].astype(dtype=str)])\
+                            .to_numpy(dtype=np.datetime64)
+                dest_file.create_dataset(name = data_set_name, data=data.astype(dtype=h5py.opaque_dtype(data.dtype)),
+                                         chunks=True)
+            else:
+                raise NotImplementedError("Unknown data format, only know numeric, string and string in iso8601 format")
         else:
-            raise NotImplementedError("Unknown data format, neither numeric nor datetime-like-string")
+            raise NotImplementedError("Unknown data format, only know numeric, string and string in iso8601 format")
 
 def clean(file_path: Path):
     with h5py.File(file_path, "r+") as file:
@@ -89,27 +102,21 @@ def create_context_data(source_file_path: Path, dest_file_path: Path):
         dest_file["event_key"] = key_list  # has length of ~300_000
         length = len(key_list)
 
-        dataset_settings_list = [('is_log',       bool),
-                                 ('is_in40ms',    bool),
-                                 ('is_in20ms',    bool),
-                                 ('is_bd',        bool)]
+        label_to_name = {0:'is_log', 1:'is_in40ms', 2:'is_in20ms', 3:'is_bd'}
+        for name in label_to_name.values():
+            dest_file.create_dataset(name=name, data=np.zeros(shape=(length,), dtype=bool), chunks=True)
 
-        for name, dt in dataset_settings_list:
-            dest_file.create_dataset(name=name, shape=(length,), dtype=dt, chunks=True)
-
-        #for key, index in zip(source_file.keys(), itertools.count(0)):
-        #    print(f"now working on {key}", end="\r")
-        #    for log_flag, flag_name in [(0, "is_log"), (1, "is_in40ms"), (2, "is_in20ms"), (3, "is_bd")]:
-        #        dest_file[flag_name][index] = source_file[key].attrs["Log Type"] == log_flag
+        for key, index in zip(source_file.keys(), itertools.count(0)):
+            label = source_file[key].attrs["Log Type"]
+            dest_file[label_to_name[label]][index] = True
 
         dataset_settings_list = [('Timestamp', h5py.opaque_dtype(np.datetime64)),
                                  ('prev_td_Timestamp', h5py.opaque_dtype(np.datetime64))]
         for name, dt in dataset_settings_list:
             dest_file.create_dataset(name=name, shape=(length,), dtype=dt, chunks=True)
-        print("starting_to_load")
-        data = np.array([to_datetime(source_file[key].attrs["Timestamp"].astype(str)) for key in key_list], dtype=np.datetime64)
-        print(data[:10])
-        dest_file["Timestamp"][:] = data
+
+        data = to_datetime([source_file[key].attrs["Timestamp"].astype(str) for key in key_list]).to_numpy(dtype=np.datetime64)
+        dest_file["Timestamp"][:] = data.astype(h5py.opaque_dtype(np.datetime64))
 
 def add_context_data():
     dataset_settings_list = [('Timestamp',         h5py.opaque_dtype(np.datetime64)),
