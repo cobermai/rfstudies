@@ -11,6 +11,7 @@ stages:
   - linter-acc
   - type_checking
   - test_dev
+  - sonar
 
 linter:
   image: python:${PY_VERSION}
@@ -50,3 +51,9 @@ test_dev:
     - apt install hdf5-tools -y
     - pytest ${project_root}/tests --cov=${project_name} --junitxml=report.xml
     - pytest --cov-report xml:cov.xml --cov=${project_name} ${project_root}/tests
+
+sonar:
+  image: java:8
+  stage: sonar
+  script:
+    - bash CI/sonar.sh
