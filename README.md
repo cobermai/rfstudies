@@ -14,8 +14,10 @@ In order to follow the installation guide it is required to install
 apt update
 sudo apt install pip python git h5utils 
 ```
+### Installation in CERN environment
+for an installation in the CERN environment follow the [Acc-Py](https://wikis.cern.ch/display/ACCPY/Getting+started+with+Acc-Py) guide.
 
-### Installation
+### Installation local
 ```bash
 git clone https://gitlab.cern.ch/machine-protection-ml/mlframework.git # Clone the gitlab project
 git checkout mlframework #  and checkout the branch mlframework
@@ -25,7 +27,6 @@ virtualenv venv
 source ./venv/bin/activate
 pip3 install -r requirements.txt
 ```
-
 ### Usage
 ```python
 # Transformation from .tdms files source/files/path/ to destination/path/
