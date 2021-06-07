@@ -22,7 +22,7 @@ linter:
   allow_failure: true
 
 linter-acc:
-  stage: linter
+  stage: devtools
   extends: .acc_py_devtools
   script:
     - check-pylint
