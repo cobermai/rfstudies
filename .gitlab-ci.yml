@@ -16,15 +16,16 @@ stages:
 linter:
   image: python:${PY_VERSION}
   stage: linter
-  script:
+  before_script:
     - pip3 install pylint
     - pip3 install -r requirements.txt
+  script:
     - pylint -j 4 --rcfile .pylintrc src
   allow_failure: true
 
 linter-acc:
   stage: linter-acc
-  extends: .acc_py_base
+  extends: .acc_py_linting
   script:
     - check-pylint
   allow_failure: true
@@ -32,9 +33,10 @@ linter-acc:
 type_checking:
   image: python:${PY_VERSION}
   stage: type_checking
-  script:
+  before_script: 
     - pip3 install mypy
     - pip3 install -r requirements.txt
+  script:
     - mypy --config-file mypy.ini src 
   allow_failure: true
 
