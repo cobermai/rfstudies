@@ -22,7 +22,7 @@ linter:
   allow_failure: true
 
 linter-acc:
-  image: python:${PY_VERSION}
+  extends: .acc_py_devtools
   stage: linter
   script:
     - check-pylint
