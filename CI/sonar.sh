@@ -21,6 +21,5 @@ version_number=$(head -n 1 "version.txt")
 
 export PATH=$PATH:$PWD/sonar-scanner/bin
 sonar-scanner -Dsonar.branch.name=$CI_COMMIT_REF_NAME -Dsonar.projectVersion=version_number
-#sonar-scanner -Dsonar.projectVersion=version_number
 
 exit 0;
