@@ -8,6 +8,7 @@ variables:
 
 stages:
   - linter
+  - linter-acc
   - type_checking
   - test_dev
 
@@ -18,6 +19,13 @@ linter:
     - pip3 install pylint
     - pip3 install -r requirements.txt
     - pylint -j 4 --rcfile .pylintrc src
+  allow_failure: true
+
+linter-acc:
+  image: python:${PY_VERSION}
+  stage: linter
+  script:
+    - check-pylint
   allow_failure: true
 
 type_checking:
