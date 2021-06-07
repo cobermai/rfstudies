@@ -22,8 +22,8 @@ linter:
   allow_failure: true
 
 linter-acc:
-  extends: .acc_py_devtools
   stage: linter
+  extends: .acc_py_devtools
   script:
     - check-pylint
   allow_failure: true
