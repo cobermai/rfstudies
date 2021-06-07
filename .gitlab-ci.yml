@@ -25,7 +25,7 @@ linter:
 
 linter-acc:
   stage: linter-acc
-  extends: .acc_py_linting
+  extends: .acc_py_base
   script:
     - check-pylint
   allow_failure: true
