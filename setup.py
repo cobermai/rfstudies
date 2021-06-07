@@ -18,7 +18,7 @@ REQUIREMENTS: dict = {
         'coloredlogs>=15',
     ],
     'test': [
-        'pytest >= 6.2.4',
+        'pytest >= 6.2',
     ],
     'dev': [
     ],
