@@ -2,9 +2,10 @@
 import os.path
 import logging
 from datetime import datetime
+import math
 import itertools
 import numpy as np
-from pandas import to_datetime
+import pandas as pd
 import h5py
 from pathlib import Path
 from src.utils.transf_tools.gather import hdf_path_combine
@@ -13,37 +14,10 @@ setup_logging()
 LOG = logging.getLogger("test_handler")
 import numpy.typing as npt
 import dateutil.parser
+import time
 
 
-
-def get_hdf_paths(file_path: Path, depth: int, hdf_path: str="/") -> list:
-    """
-    Returns a list of all hdf-paths of an hdf file at the given depth.
-    :param file_path: file path of the hdf file
-    :param depth: depth of the returning hdf path (i.e. the number of additional "/" in the output paths)
-    :param hdf_path: root path to start path search
-    :return: list of hdf-paths
-    """
-    if depth==0:
-        return [hdf_path]
-    elif depth>0:
-        with h5py.File(file_path, "r") as hdf_file:
-            return [path for key in hdf_file[hdf_path].keys()
-                        for path in get_hdf_paths(file_path, depth-1, hdf_path_combine(hdf_path, key))]
-    else:
-        raise ValueError(f"depth has to be a non negative int, but got {depth}")
-
-
-def is_iso8601(maybe_iso_str: str) -> bool:
-    ret = True
-    try:
-        datetime.fromisoformat(maybe_iso_str)
-    except ValueError:
-        ret = False
-    return ret
-
-
-def union(source_file_path: Path, hdf_path_list: list, data_set_name: str, destination_file_path: Path):
+def union(source_file_path: Path, destination_file_path: Path):
     """
     for each dataset_name it unites (concatenates) all hdf-dataset at given depth to one large hdf-dataset in the
     destination file
@@ -54,27 +28,21 @@ def union(source_file_path: Path, hdf_path_list: list, data_set_name: str, desti
     """
     with h5py.File(source_file_path, mode="r") as source_file, \
          h5py.File(destination_file_path, mode="a") as dest_file:
+        dataset_name = "Timestamp"
+        data = [ts.replace("Z", "") for path in source_file.keys()
+                for ts in source_file[path][dataset_name][:].astype(str)]
+        data = np.array(data, dtype=np.datetime64)
+        dest_file.create_dataset(name=dataset_name, data=data.astype(dtype=h5py.opaque_dtype(data.dtype)),
+                                 chunks=True)
 
-        if source_file[hdf_path_list[0]][data_set_name].dtype==float:
-            data = np.concatenate([source_file[path][data_set_name][:] for path in hdf_path_list])
-            dest_file.create_dataset(name=data_set_name, dtype=float, data=data, chunks=True)
-        elif source_file[hdf_path_list[0]][data_set_name].dtype=='S27':
-            example_str = source_file[hdf_path_list[0]][data_set_name][0]
-            if is_iso8601(example_str):  # is the string an iso date-time format
-                if example_str[-1]=="Z" or example_str[-6:]=="+00:00":  # the timezone "ZULU" time can be parsed much faster than other timezones
-                    data = [ts.replace("Z", "") for path in hdf_path_list for ts in
-                            source_file[path][data_set_name][:].astype(str)]
-                    data = np.array(data, dtype=np.datetime64)
-                else:  # if a timezone is given, we use pandas for parsing
-                    data = to_datetime([ts for path in hdf_path_list
-                                           for ts in source_file[path][data_set_name][:].astype(dtype=str)])\
-                            .to_numpy(dtype=np.datetime64)
-                dest_file.create_dataset(name = data_set_name, data=data.astype(dtype=h5py.opaque_dtype(data.dtype)),
-                                         chunks=True)
-            else:
-                raise NotImplementedError("Unknown data format, only know numeric, string and string in iso8601 format")
-        else:
-            raise NotImplementedError("Unknown data format, only know numeric, string and string in iso8601 format")
+        for dataset_name in ['BLM TIA Q', 'BLM TIA min', 'BLM min', 'Bunker WG Temp', 'Chiller 1', 'Chiller 2',
+                             'Chiller 3', 'Collector', 'DC Down min', 'DC Up min', 'Gun', 'IP Load', 'IP before PC',
+                             'IP before structure', 'Klystron Flange Temp', 'Load Temp', 'Loadside win', 'PC IP',
+                             'PC Left Cavity Temp', 'PC Right Cavity Temp', 'PEI FT avg', 'PEI max', 'PKI FT avg',
+                             'PKI max', 'PSI FT avg', 'PSI Pulse Width', 'PSI max', 'PSR FT avg', 'PSR max',
+                             'Pulse Count', 'Structure Input Temp', 'Tubeside win', 'US Beam Axis IP', 'WG IP']:
+            data = np.concatenate([source_file[path][dataset_name][:] for path in source_file.keys()])
+            dest_file.create_dataset(name=dataset_name, dtype=float, data=data, chunks=True)
 
 def clean(file_path: Path):
     with h5py.File(file_path, "r+") as file:
@@ -98,25 +66,41 @@ def sort_by_timestamp(file_path: Path):
 def create_context_data(source_file_path: Path, dest_file_path: Path):
     with h5py.File(source_file_path, mode="r") as source_file, \
          h5py.File(destination_file_path, mode="w") as dest_file:
-        key_list = list(source_file.keys())
-        dest_file["event_key"] = key_list  # has length of ~300_000
-        length = len(key_list)
 
-        label_to_name = {0:'is_log', 1:'is_in40ms', 2:'is_in20ms', 3:'is_bd'}
-        for name in label_to_name.values():
+        key_list = list(source_file.keys())
+        dest_file.create_dataset(name="event_key", data =key_list, chunks=True)  # has length of ~300_000
+        length = len(key_list)
+        del key_list
+
+        for chn in ['BLM', 'BLM TIA', 'Col.', 'DC Down', 'DC Up', 'PEI Amplitude', 'PEI Phase', 'PER log',
+                    'PKI Amplitude', 'PKI Phase', 'PKR log', 'PSI Amplitude', 'PSI Phase', 'PSR Amplitude',
+                    'PSR Phase', 'PSR log']:
+            dest_file.create_group(name=chn)
+
+        ds_timestamp= dest_file.create_dataset("Timestamp", shape=(length,), dtype=h5py.opaque_dtype("<M8[us]"), chunks=True)
+
+        label_name_dict = {0:'is_log', 1:'is_in40ms', 2:'is_in20ms', 3:'is_bd'}
+        for name in label_name_dict.values():
             dest_file.create_dataset(name=name, data=np.zeros(shape=(length,), dtype=bool), chunks=True)
 
-        for key, index in zip(source_file.keys(), itertools.count(0)):
+
+        def pulse_length(df: pd.DataFrame):
+            threshold = df.max(axis=0) / 2
+            acquisation_window: float = 2e-6
+            return (df > threshold).sum() / df.shape[0] * acquisation_window
+
+        for index, key in zip(range(10), source_file.keys()):  # zip(itertools.count(0), source_file.keys()):
+            if math.fmod(index, 1000) == 0: print(index)
+            ret = {}
+            grp = source_file[key]
+            ret["Timestamp"] = grp.attrs["Timestamp"][:-1]
             label = source_file[key].attrs["Log Type"]
-            dest_file[label_to_name[label]][index] = True
-
-        dataset_settings_list = [('Timestamp', h5py.opaque_dtype(np.datetime64)),
-                                 ('prev_td_Timestamp', h5py.opaque_dtype(np.datetime64))]
-        for name, dt in dataset_settings_list:
-            dest_file.create_dataset(name=name, shape=(length,), dtype=dt, chunks=True)
-
-        data = to_datetime([source_file[key].attrs["Timestamp"].astype(str) for key in key_list]).to_numpy(dtype=np.datetime64)
-        dest_file["Timestamp"][:] = data.astype(h5py.opaque_dtype(np.datetime64))
+            ret[label_name_dict[label]] = True
+            df500 = pd.DataFrame([grp[key][:] for key in grp.keys() if grp[key].shape==(500,)], index=[key for key in grp.keys() if grp[key].shape==(500,)]).T
+            df3200 = pd.DataFrame([grp[key][:] for key in grp.keys() if grp[key].shape==(3200,)], index=[key for key in grp.keys() if grp[key].shape==(3200,)]).T
+            amplitude_channels = ['PEI Amplitude', 'PKI Amplitude', 'PSI Amplitude', 'PSR Amplitude']
+            ret.update({chn: {"pulse_length": pls_len} for chn, pls_len in zip(amplitude_channels, pulse_length(df3200[amplitude_channels])) })
+            print(ret)
 
 def add_context_data():
     dataset_settings_list = [('Timestamp',         h5py.opaque_dtype(np.datetime64)),
@@ -139,24 +123,17 @@ def add_context_data():
 if __name__ == "__main__":
     source_file_path = Path("~/output_files/TrendDataExtLinks.hdf").expanduser()
     destination_file_path = Path("~/output_files/combined_td.hdf").expanduser()
-    h5py.File(destination_file_path, mode="w").close()
 
-    hdf_path_list = get_hdf_paths(file_path=source_file_path, depth=1)
-    with h5py.File(source_file_path, "r") as source_file:
-        data_set_list = source_file[hdf_path_list[0]].keys()
-
-    for data_set_name in  data_set_list:
-        print(data_set_name)
+    if False:
+        h5py.File(destination_file_path, mode="w").close()
         union(source_file_path=source_file_path,
-              hdf_path_list=hdf_path_list,
-              data_set_name=data_set_name,
               destination_file_path=destination_file_path)
-    LOG.debug("## Union done")
-    clean(destination_file_path)
-    LOG.debug("## Clean done")
-    sort_by_timestamp(destination_file_path)
-    LOG.debug("##sort_by_timestmap done")
-
-    ed_links_file_path = Path("~/output_files/EventDataExtLinks.hdf").expanduser()
-    destination_file_path= Path("~/output_files/context_data.hdf").expanduser()
-    create_context_data(ed_links_file_path, destination_file_path)
+        LOG.debug("## Union done")
+        clean(destination_file_path)
+        LOG.debug("## Clean done")
+        sort_by_timestamp(destination_file_path)
+        LOG.debug("##sort_by_timestmap done")
+    else:
+        ed_links_file_path = Path("~/output_files/EventDataExtLinks.hdf").expanduser()
+        destination_file_path= Path("~/output_files/context_data.hdf").expanduser()
+        df = create_context_data(ed_links_file_path, destination_file_path)
