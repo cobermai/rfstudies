@@ -12,7 +12,8 @@ In order to follow the installation guide it is required to install
 ```bash
 # for debian based systems
 apt update
-sudo apt install pip python git h5utils 
+sudo xargs apt install <requirements.system
+
 ```
 ### Installation in CERN environment
 for an installation in the CERN environment follow the [Acc-Py](https://wikis.cern.ch/display/ACCPY/Getting+started+with+Acc-Py) guide.
