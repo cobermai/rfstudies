@@ -1,10 +1,8 @@
-"""This module contains helping functions for handling hdf-files."""
 from pathlib import Path
 import re
 import typing
 import h5py
 import pandas as pd
-
 
 def hdf_path_combine(*argv: str) -> str:
     """
