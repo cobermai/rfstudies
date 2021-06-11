@@ -21,7 +21,6 @@ LOG = logging.getLogger("test_handler")
 
 
 
-
 if __name__ == "__main__":
     source_file_path = Path("~/output_files/TrendDataExtLinks.hdf").expanduser()
     dest_file_path = Path("~/output_files/combined_td.hdf").expanduser()
