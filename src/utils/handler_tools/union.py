@@ -1,9 +1,15 @@
+"""This module contains three straight forward functions for hdf-files: unite, clean, sort_by. (
+Unite: unites all hdf-datasets of the source file with the same name into one large dataset. The datasets are expected
+to be separated in different groups.
+Clean: The clean_by_row cleans "corrupt" values row by row after all datasets have been united.
+Sort: sort_by sorts all datasets with respect to one of them"""
 import typing
 import logging
 from functools import partial
 from pathlib import Path
 from dateutil.parser import parse
 import numpy as np
+from numpy import typing as npt
 import h5py
 from setup_logging import setup_logging
 from src.utils.hdf_tools import get_datasets
