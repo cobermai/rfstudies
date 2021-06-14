@@ -5,7 +5,6 @@ Clean: The clean_by_row cleans "corrupt" values row by row after all datasets ha
 Sort: sort_by sorts all datasets with respect to one of them"""
 import typing
 import logging
-from functools import partial
 from pathlib import Path
 from dateutil.parser import parse
 import numpy as np
@@ -29,25 +28,25 @@ def is_datetime(val: typing.Any):
     return ret
 
 
-def get_datetime_converter_for(val: typing.Union[str, bytes]) -> typing.Callable:
+def get_datetime_array_converter_for(example_data: typing.Union[str, bytes]) \
+        -> typing.Callable:
     """Creates the fastest date-time converter known for other date-times given in the the same format.
-    :param val: an example value of datetime format.
+    :param example_data: an example value of datetime format.
     """
-    convert = parse
-
-    def cut_end(ts: bytes, end: bytes) -> bytes:
-        return ts.replace(end, b"")
-
-    for useless_timezone_ending in [b"Z", b"+00:00"]:
-        if isinstance(val, bytes) and val.endswith(useless_timezone_ending):
-            convert = partial(cut_end, end=useless_timezone_ending)
+    zulu_time_ending = b"Z"  # timezone +00:00
+    if isinstance(example_data, bytes) and example_data.endswith(zulu_time_ending):
+        def convert(data) -> npt.ArrayLike[np.datetime64]:
+            return np.array([value.replace(zulu_time_ending, b"") for value in data], np.datetime64)
+    else:
+        def convert(data) -> npt.ArrayLike[np.datetime64]:
+            return np.array([parse(value) for value in data], np.datetime64)
     return convert
 
 
 def union(source_file_path: Path, dest_file_path: Path) -> None:
     """
     In the first layer of the hdf-directory structure there have to be only groups. In each group is required to have
-    the same hdf-datasets, they are refered to as dataset-type.
+    the same hdf-datasets, they are referred to as dataset-type.
     for each dataset-type: unites (concatenates) all datasets of the same dataset-type from all groups.
     :param source_file_path: file of the un-united groups with same data set names
     :param dest_file_path: file where the united datasets will be stored
@@ -58,28 +57,28 @@ def union(source_file_path: Path, dest_file_path: Path) -> None:
         for chn in first_grp.keys():  # the channel names are always the same
             example_val = first_grp[chn][0]
             if is_datetime(val=example_val):
-                convert = get_datetime_converter_for(example_val)
-                data = [convert(ts) for path in source_file.keys() for ts in source_file[path][chn][:]]  # .astype(str)
-                data = np.array(data, dtype=np.datetime64)
+                convert = get_datetime_array_converter_for(example_val)
+                data = convert([ts for path in source_file.keys() for ts in source_file[path][chn][:]])
                 dest_file.create_dataset(name=chn, data=data.astype(dtype=h5py.opaque_dtype(data.dtype)), chunks=True)
             else:
                 data = np.concatenate([source_file[path][chn][:] for path in source_file.keys()])
                 dest_file.create_dataset(name=chn, data=data, chunks=True)
 
 
-def check_corruptness(arr: npt.ArrayLike) -> npt.ArrayLike:
-    """checks if the input array is healtyh of corrupt. In this case corrupt means infinite value or nan value.
+def check_corruptness(arr) -> npt.ArrayLike[bool]:  # npt.ArrayLike[typing.Union[np.number, np.datetime64]]
+    """checks if the input array is healthy of corrupt. In this case corrupt means infinite value or nan value.
     :param arr: input array
-    :return: anarray with boolean values. True if the value in the input cell was healthy, False if it was corrupt."""
+    :return: ndarray with boolean values. True if the value in the input cell was healthy, False if it was corrupt."""
     if np.issubdtype(arr.dtype, np.number):
-        return np.isnan(arr) | np.isinf(arr)
+        ret = np.isnan(arr) | np.isinf(arr)
     elif np.issubdtype(arr.dtype, np.datetime64):
-        return np.isnat(arr)
+        ret = np.isnat(arr)
     else:
         raise NotImplementedError("Corrupt data is only known for numeric and datetime values.")
+    return ret
 
 def clean_by_row(file_path: Path) -> None:
-    """remove "rows" where the check_corruptness function returnes at least one True value in the the row.
+    """remove "rows" where the check_corruptness function returns at least one True value in the the row.
     A column is referred to as a dataset of the hdf file.
     A row is referred to as the values from all columns with the same index.
     :param file_path: the path of the hdf  file with the datasets. (already united with unite())"""
