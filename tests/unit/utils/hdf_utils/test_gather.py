@@ -86,18 +86,22 @@ def test__hdf_write_ext_links() -> None:
 
 class TestGather:
     """ testing the Gather class"""
-    gather = gather.Gather(depth=1, num_processes=2)
-
-    def test_set_func_to_fulfill(self):
+    @staticmethod
+    def test_set_func_to_fulfill():
         """checks what happens when an error occurs"""
-        # an unexpected error
+        # unexpected Errors
+        # ARRANGE
+        gather_obj = gather.Gather(depth=1, num_processes=2)
         def func_unexpected_error(_file_path: Path, _hdf_path: str):
-            raise InterruptedError
-        self.gather.set_func_to_fulfill(False, func_unexpected_error)
+            raise InterruptedError  # an unexpected error
+        # ACT
+        gather_obj.set_func_to_fulfill(False, func_unexpected_error)
+        # ASSERT
         with pytest.raises(InterruptedError):
-            self.gather.func_to_fulfill(Path("/"), "/")
+            gather_obj.func_to_fulfill(Path("/"), "/")
 
-        # list of all expected errors
+        # expected Errors
+        # ARRANGE
         error_list = [KeyError, ValueError, SystemError, ArithmeticError, AttributeError, LookupError,
                       NotImplementedError, RuntimeError]
         on_error = True
@@ -107,46 +111,57 @@ class TestGather:
         for err in error_list:
             on_error = not on_error  # Trying out different error handlers
             fun: Callable = partial(func_expected_errors, expected_error=err)
-            self.gather.set_func_to_fulfill(on_error=on_error, func_to_fulfill=fun)
-            assert self.gather.func_to_fulfill(Path("/"), "/") == on_error
+            # ACT
+            gather_obj.set_func_to_fulfill(on_error=on_error, func_to_fulfill=fun)
+            # ASSERT
+            assert gather_obj.func_to_fulfill(Path("/"), "/") == on_error
 
-    def test_from_files(self):
+    @staticmethod
+    def test_from_files():
         """testing from files"""
-        assert self.gather.from_files({Path("/"), Path("another/path")})\
+        gather_obj = gather.Gather(depth=1, num_processes=2)
+        assert gather_obj.from_files({Path("/"), Path("another/path")})\
             .source_file_paths == {Path("/"), Path("another/path")}
 
-    def test_to_hdf_file(self):
+    @staticmethod
+    def test_to_hdf_file():
         """testing to hdf file"""
         # ARRANGE
+        gather_obj = gather.Gather(depth=1, num_processes=2)
         data_dir_path = Path(__file__).parent / f"data_{date.today()}"
         data_dir_path.mkdir()
         # ACT
         hdf_file_path = data_dir_path / "test.hdf"
         # ASSERT
-        assert self.gather.to_hdf_file(hdf_file_path)\
+        assert gather_obj.to_hdf_file(hdf_file_path)\
                    .dest_file_path == hdf_file_path
         # CLEAN
         rmtree(data_dir_path)
 
-    def test_if_fulfills(self):
+    @staticmethod
+    def test_if_fulfills():
         """testing if fulfills"""
-
+        # ARRANGE
+        gather_obj = gather.Gather(depth=1, num_processes=2)
         def my_func(file_path: Path, hdf_path: str):
             raise RuntimeError
+        # ACT AND ASSERT
         for on_error in [True, False]:
             expected_output = on_error
-            assert self.gather.if_fulfills(my_func, on_error)\
+            assert gather_obj.if_fulfills(my_func, on_error)\
                        .func_to_fulfill(Path("/"), "/") == expected_output
             expected_output = True
-            assert self.gather.if_fulfills(lambda x, y: True, on_error)\
+            assert gather_obj.if_fulfills(lambda x, y: True, on_error)\
                        .func_to_fulfill(Path("/"), "/") == expected_output
             expected_output = False
-            assert self.gather.if_fulfills(lambda x, y: False, on_error)\
+            assert gather_obj.if_fulfills(lambda x, y: False, on_error)\
                        .func_to_fulfill(Path("/"), "/") == expected_output
 
-    def test_run_with_external_links(self):
+    @staticmethod
+    def test_run_with_external_links():
         """testing run with external links"""
         # ARRANGE
+        gather_obj = gather.Gather()
         data_dir_path = Path(__file__).parent / f"data_{date.today()}"
         data_dir_path.mkdir()
         dest_file_path = data_dir_path / "TestDataExtLinks.hdf"
@@ -161,9 +176,7 @@ class TestGather:
                 file.create_group("discard_this")
         expected_keys = {'test0--grp', 'test1--grp', 'test2--grp'}
         # ACT
-        self.gather = gather.Gather()
-        self.gather \
-            .from_files(source_dir_path.glob("*.hdf")) \
+        gather_obj.from_files(source_dir_path.glob("*.hdf")) \
             .to_hdf_file(dest_file_path) \
             .if_fulfills(_sanity_func, on_error=False) \
             .run_with_external_links()
