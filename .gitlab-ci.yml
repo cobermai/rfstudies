@@ -8,7 +8,6 @@ variables:
 
 stages:
   - linter
-  - linter-acc
   - type_checking
   - test_dev
   - sonar
@@ -21,13 +20,6 @@ linter:
     - pip3 install -r requirements.txt
   script:
     - pylint -j 4 --rcfile .pylintrc src
-  allow_failure: true
-
-linter-acc:
-  stage: linter-acc
-  extends: .acc_py_base
-  script:
-    - check-pylint
   allow_failure: true
 
 type_checking:
