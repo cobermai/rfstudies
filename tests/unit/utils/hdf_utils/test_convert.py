@@ -1,11 +1,11 @@
-"""module to test the tdms_reader"""
+"""module to test the convert.py"""
 import os
 from pathlib import Path
 from shutil import rmtree
 from datetime import date
 import pytest
 import h5py
-from src.utils.transf_tools import tdms_read
+from src.utils.transf_tools import convert
 from tests.utils.data_creator.file_creator_for_testing import CreatorTestFiles
 from tests.utils.data_creator.tdms_file_creator import CreatorTdmsFile
 
@@ -27,7 +27,7 @@ def test_convert_file():
     test_creator.write()
 
     # ACT
-    tdms_read.convert_file(tdms_file_path=tdms_file_path, hdf_dir=data_dir_path)
+    convert.convert_file(tdms_file_path=tdms_file_path, hdf_dir=data_dir_path)
 
     # ASSERT
     path_of_output = data_dir_path / tdms_file_path.with_suffix(".hdf").name
@@ -44,16 +44,16 @@ class TestConvert:
     @staticmethod
     def test_from_tdms():
         """tests from_tdms"""
-        conv = tdms_read.Convert()
+        conv = convert.Convert()
         assert conv.check_already_converted is True
         assert conv.num_processes == 2
 
-        conv = tdms_read.Convert(check_already_converted=False, num_processes=100)
+        conv = convert.Convert(check_already_converted=False, num_processes=100)
         assert conv.check_already_converted is False
         assert conv.num_processes == 100
 
         conv_from_tdms = conv.from_tdms(tdms_dir=Path("/"))
-        assert isinstance(conv_from_tdms, tdms_read.ConvertFromTdms)
+        assert isinstance(conv_from_tdms, convert.ConvertFromTdms)
         assert conv_from_tdms.converter == conv
         assert conv_from_tdms.tdms_dir == Path("/")
 
@@ -61,7 +61,7 @@ class TestConvert:
     def test_run():
         """tests run"""
         with pytest.raises(NotImplementedError):
-            tdms_read.Convert().run()
+            convert.Convert().run()
 
 
 class TestConvertFromTdms:
@@ -70,7 +70,7 @@ class TestConvertFromTdms:
     def test_to_hdf():
         """tests to_hdf"""
         # ARRANGE
-        conv = tdms_read.Convert()
+        conv = convert.Convert()
         tdms_dir_path = Path("/path/to/tdms/dir")
         conv_from_tdms = conv.from_tdms(tdms_dir=tdms_dir_path)
 
@@ -78,7 +78,7 @@ class TestConvertFromTdms:
         cft2h = conv_from_tdms.to_hdf(Path("/path/to/hdf/dir"))
 
         # ASSERT
-        assert isinstance(cft2h, tdms_read.ConvertFromTdmsToHdf)
+        assert isinstance(cft2h, convert.ConvertFromTdmsToHdf)
         assert cft2h.hdf_dir == Path("/path/to/hdf/dir")
         assert cft2h.tdms_dir == tdms_dir_path
         assert cft2h.converter == conv
@@ -87,7 +87,7 @@ class TestConvertFromTdms:
     def test_run():
         """tests run"""
         with pytest.raises(NotImplementedError):
-            tdms_read.Convert().from_tdms(Path("/path/to/tdms/dir")).run()
+            convert.Convert().from_tdms(Path("/path/to/tdms/dir")).run()
 
 
 class TestConvertFromTdmsToHdf:
@@ -114,19 +114,19 @@ class TestConvertFromTdmsToHdf:
         expected = set(tdms_dir_path.glob("*.tdms"))
 
         # ACT AND ASSERT
-        conv_tdms2hdf = tdms_read.Convert()\
+        conv_tdms2hdf = convert.Convert()\
             .from_tdms(tdms_dir_path)\
             .to_hdf(hdf_dir_path)
         assert conv_tdms2hdf.get_tdms_file_paths_to_convert() == expected, "with a faulty hdf file with check"
 
         h5py.File(hdf_dir_path / "test1.hdf", "w").close()
-        conv_tdms2hdf = tdms_read.Convert(check_already_converted=False)\
+        conv_tdms2hdf = convert.Convert(check_already_converted=False)\
             .from_tdms(tdms_dir_path)\
             .to_hdf(hdf_dir_path)
         assert conv_tdms2hdf.get_tdms_file_paths_to_convert() == expected, "with healthy hdf file no check"
 
         expected = set(tdms_dir_path.glob("*2.tdms")).union(set(tdms_dir_path.glob("*3.tdms")))
-        conv_tdms2hdf = tdms_read.Convert(check_already_converted=True) \
+        conv_tdms2hdf = convert.Convert(check_already_converted=True) \
             .from_tdms(tdms_dir_path) \
             .to_hdf(hdf_dir_path)
         assert conv_tdms2hdf.get_tdms_file_paths_to_convert() == expected, "with a healthy hdf file with check"
@@ -147,7 +147,7 @@ class TestConvertFromTdmsToHdf:
         for index in range(5):
             CreatorTdmsFile(tdms_dir_path/f"test{index}.tdms", {"root_prop": index}).write()
         for num_processes in [1, 3]:
-            conv_tdms2hdf = tdms_read.Convert(num_processes=num_processes, check_already_converted=False)\
+            conv_tdms2hdf = convert.Convert(num_processes=num_processes, check_already_converted=False)\
                 .from_tdms(tdms_dir_path)\
                 .to_hdf(hdf_dir_path)
             # ACT
