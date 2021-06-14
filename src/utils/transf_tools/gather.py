@@ -13,22 +13,9 @@ from multiprocessing.pool import ThreadPool
 from functools import partial
 from collections.abc import Iterable
 import h5py
+from src.utils.hdf_tools import hdf_path_combine
 
 LOG = logging.getLogger(__name__)
-
-
-def hdf_path_combine(*argv: str) -> str:
-    """
-    Concatenates hdf path with "/" in between. Works similar to Path(str, str, str) or the / operator for Path objects
-    but for hdf paths (as strings)
-    :param argv: the group names/to concatenate
-    :return: the concatenated path string
-    """
-    def rem_double_dash(path: str) -> str:
-        if path.find("//") != -1:
-            path = rem_double_dash(path.replace("//", "/"))
-        return path
-    return rem_double_dash("/" + "/".join(argv))
 
 
 def get_ext_link_rec(file_path: Path,
