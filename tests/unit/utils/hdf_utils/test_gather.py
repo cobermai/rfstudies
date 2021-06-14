@@ -24,6 +24,7 @@ def _sanity_func(file_path: Path, hdf_path: str) -> bool:
         ret = True
     return ret
 
+
 def test__get_ext_link_rek() -> None:
     """tests _get_ext_link_rek function"""
     # ARRANGE
@@ -43,7 +44,7 @@ def test__get_ext_link_rek() -> None:
     # ACT
     output = gather.get_ext_link_rec(hdf_file_path, "/", 2, _sanity_func)
     with pytest.raises(ValueError):
-        gather.get_ext_link_rec(hdf_file_path, "/", -10, lambda x, y: True)
+        gather.get_ext_link_rec(hdf_file_path, "/", -10, lambda _, __: True)
 
     # ASSERT
     def link_tuple_set(link_set) -> set:
