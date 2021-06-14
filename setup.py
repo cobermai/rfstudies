@@ -13,7 +13,8 @@ REQUIREMENTS: dict = {
         'matplotlib >= 3.4.1',
         'compress_pickle >= 2.0.1',
         'scipy >= 1.6.3',
-        'pyyaml>=5.4'
+        'pyyaml>=5.4',
+        'pandas>=1.2.4'
     ],
     'test': [
         'pytest >= 6.2.4',
