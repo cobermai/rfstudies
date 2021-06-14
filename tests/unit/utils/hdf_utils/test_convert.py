@@ -1,16 +1,20 @@
 """module to test the convert.py"""
 import os
 from pathlib import Path
+from shutil import rmtree
+from datetime import date
+import pytest
 import h5py
 from src.utils.transf_tools import convert
 from tests.utils.data_creator.file_creator_for_testing import CreatorTestFiles
 from tests.utils.data_creator.tdms_file_creator import CreatorTdmsFile
 
 
-def test__convert_file(tmp_path):
-    """tests the _convert_file function"""
+def test_convert_file():
+    """tests the convert_file function"""
     # ARRANGE
-    data_dir_path = tmp_path
+    data_dir_path = Path(__file__).parent / f"data_{date.today()}"
+    data_dir_path.mkdir()
     tdms_file_path = data_dir_path / "test.tdms"
     path_of_expected = data_dir_path / "expected.hdf"
     test_creator = CreatorTestFiles(hdf_file_path=path_of_expected,
@@ -23,7 +27,7 @@ def test__convert_file(tmp_path):
     test_creator.write()
 
     # ACT
-    convert._convert_file(tdms_file_path=tdms_file_path, hdf_dir=data_dir_path)  # pylint: disable=protected-access
+    convert.convert_file(tdms_file_path=tdms_file_path, hdf_dir=data_dir_path)
 
     # ASSERT
     path_of_output = data_dir_path / tdms_file_path.with_suffix(".hdf").name
@@ -31,112 +35,122 @@ def test__convert_file(tmp_path):
     is_equal = os.system(f"h5diff {path_of_output} {path_of_expected}") == 0
     assert is_equal
 
+    # CLEAN
+    rmtree(data_dir_path)
+
 
 class TestConvert:
-    """tests the Convert class"""
-    @staticmethod
-    def test_init():
-        """Tests the initialisation of the Convert class"""
-        # ARRANGE ACT
-        conv = convert.Convert()
-        # ASSERT
-        assert conv.check_already_converted is True
-        assert conv.num_processes == 2
-
-        # ARRANGE ACT
-        conv = convert.Convert(check_already_converted=False, num_processes=100)
-        # ASSERT
-        assert conv.check_already_converted is False
-        assert conv.num_processes == 100
-
+    """tests teh Convert class"""
     @staticmethod
     def test_from_tdms():
         """tests from_tdms"""
-        # ARRANGE
+        conv = convert.Convert()
+        assert conv.check_already_converted is True
+        assert conv.num_processes == 2
+
         conv = convert.Convert(check_already_converted=False, num_processes=100)
-        # ACT
+        assert conv.check_already_converted is False
+        assert conv.num_processes == 100
+
         conv_from_tdms = conv.from_tdms(tdms_dir=Path("/"))
-        # ASSERT
         assert isinstance(conv_from_tdms, convert.ConvertFromTdms)
+        assert conv_from_tdms.converter == conv
         assert conv_from_tdms.tdms_dir == Path("/")
-        assert conv_from_tdms.num_processes == 100
-        assert conv_from_tdms.check_already_converted is False
+
+    @staticmethod
+    def test_run():
+        """tests run"""
+        with pytest.raises(NotImplementedError):
+            convert.Convert().run()
 
 
-class TestConvertFromTdms:  # pylint: disable=too-few-public-methods
+class TestConvertFromTdms:
     """tests the ConvertFromTdms class"""
     @staticmethod
     def test_to_hdf():
         """tests to_hdf"""
         # ARRANGE
-        conv = convert.Convert(num_processes=20, check_already_converted=False)
+        conv = convert.Convert()
         tdms_dir_path = Path("/path/to/tdms/dir")
-        hdf_dir_path = Path("/path/to/hdf/dir")
         conv_from_tdms = conv.from_tdms(tdms_dir=tdms_dir_path)
 
         # ACT
-        cft2h = conv_from_tdms.to_hdf(hdf_dir_path)
+        cft2h = conv_from_tdms.to_hdf(Path("/path/to/hdf/dir"))
 
         # ASSERT
         assert isinstance(cft2h, convert.ConvertFromTdmsToHdf)
-        assert cft2h.hdf_dir == hdf_dir_path
+        assert cft2h.hdf_dir == Path("/path/to/hdf/dir")
         assert cft2h.tdms_dir == tdms_dir_path
-        assert cft2h.num_processes == 20
-        assert cft2h.check_already_converted is False
+        assert cft2h.converter == conv
+
+    @staticmethod
+    def test_run():
+        """tests run"""
+        with pytest.raises(NotImplementedError):
+            convert.Convert().from_tdms(Path("/path/to/tdms/dir")).run()
 
 
 class TestConvertFromTdmsToHdf:
     """tests the ConvertFromTdmsToHdf class"""
     @staticmethod
-    def test_get_tdms_file_paths_to_convert(tmp_path_factory):
-        """tests get_tdms_file_paths_to_convert """
+    def test_get_tdms_file_paths_to_convert():
+        """tests get_tdms_file_paths_to_convert"""
         # ARRANGE
-        tdms_dir_path = tmp_path_factory.mktemp("tdms_files")
-        hdf_dir_path = tmp_path_factory.mktemp("hdf_files")
-        for index in [1, 2, 3]:
-            open(tdms_dir_path / f"test{index}.tdms", "w")
-        open(hdf_dir_path / "test1.hdf", "w")
-
+        data_dir_path = Path(__file__).parent / f"data_{date.today()}"
+        data_dir_path.mkdir()
+        hdf_dir_path = data_dir_path / "hdf"
+        hdf_dir_path.mkdir()
+        tdms_dir_path = data_dir_path / "tdms"
+        tdms_dir_path.mkdir()
+        os.system(command=f"""
+            hdf_path={hdf_dir_path}
+            tdms_path={tdms_dir_path}
+            for file_stem in test1 test2 test3
+            do
+                echo > $tdms_path/$file_stem.tdms
+            done
+            echo > $hdf_path/test1.hdf
+        """)
         expected = set(tdms_dir_path.glob("*.tdms"))
 
-        # ACT
-        conv_tdms2hdf = convert.Convert(check_already_converted=True)\
+        # ACT AND ASSERT
+        conv_tdms2hdf = convert.Convert()\
             .from_tdms(tdms_dir_path)\
             .to_hdf(hdf_dir_path)
-        # ASSERT
-        assert conv_tdms2hdf.get_tdms_file_paths_to_convert() == expected, "with no healthy hdf file, with check"
+        assert conv_tdms2hdf.get_tdms_file_paths_to_convert() == expected, "with a faulty hdf file with check"
 
         h5py.File(hdf_dir_path / "test1.hdf", "w").close()
-
-        # ACT
         conv_tdms2hdf = convert.Convert(check_already_converted=False)\
             .from_tdms(tdms_dir_path)\
             .to_hdf(hdf_dir_path)
-        # ASSERT
-        assert conv_tdms2hdf.get_tdms_file_paths_to_convert() == expected, "with one healthy hdf file, no check"
+        assert conv_tdms2hdf.get_tdms_file_paths_to_convert() == expected, "with healthy hdf file no check"
 
         expected = set(tdms_dir_path.glob("*2.tdms")).union(set(tdms_dir_path.glob("*3.tdms")))
-
-        # ACT
         conv_tdms2hdf = convert.Convert(check_already_converted=True) \
             .from_tdms(tdms_dir_path) \
             .to_hdf(hdf_dir_path)
-        # ASSERT
-        assert conv_tdms2hdf.get_tdms_file_paths_to_convert() == expected, "with one healthy hdf file, with check"
+        assert conv_tdms2hdf.get_tdms_file_paths_to_convert() == expected, "with a healthy hdf file with check"
+
+        # CLEAN
+        rmtree(data_dir_path, ignore_errors=True)
 
     @staticmethod
-    def test_run(tmp_path_factory):
+    def test_run():
         """tests run"""
         # ARRANGE
-        hdf_dir_path = tmp_path_factory.mktemp("hdf_files")
-        tdms_dir_path = tmp_path_factory.mktemp("tmp_files")
+        data_dir_path = Path(__file__).parent / f"data_{date.today()}"
+        data_dir_path.mkdir()
+        hdf_dir_path = data_dir_path / "hdf"
+        hdf_dir_path.mkdir()
+        tdms_dir_path = data_dir_path / "tdms"
+        tdms_dir_path.mkdir()
         for index in range(5):
-            CreatorTdmsFile(tdms_dir_path / f"test{index}.tdms", {"root_prop": index}).write()
+            CreatorTdmsFile(tdms_dir_path/f"test{index}.tdms", {"root_prop": index}).write()
         for num_processes in [1, 3]:
-            # ACT
-            convert.Convert(num_processes=num_processes, check_already_converted=False)\
+            conv_tdms2hdf = convert.Convert(num_processes=num_processes, check_already_converted=False)\
                 .from_tdms(tdms_dir_path)\
-                .to_hdf(hdf_dir_path)\
-                .run()
-            # ASSERT
+                .to_hdf(hdf_dir_path)
+            # ACT
+            conv_tdms2hdf.run()
             assert {p.stem for p in hdf_dir_path.glob("*.hdf")} == {p.stem for p in tdms_dir_path.glob("*.tdms")}
+        rmtree(data_dir_path, ignore_errors=True)

@@ -6,7 +6,7 @@ from typing import Union
 import logging
 import h5py
 import numpy as np
-from src.utils.transf_tools.tdms_read import Convert
+from src.utils.transf_tools.convert import Convert
 from src.utils.transf_tools.gather import Gather
 from src.utils.system.setup_logging import setup_logging
 
