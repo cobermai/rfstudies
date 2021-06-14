@@ -11,10 +11,9 @@ import h5py
 from pathlib import Path
 from src.utils.transf_tools.gather import hdf_path_combine
 from setup_logging import setup_logging
-import numpy.typing as npt
-import dateutil.parser
-import time
-from utils.handler_tools.union import union, clean, sort_by
+from utils.handler_tools.union import union, clean_by_row, sort_by
+from src.utils.handler_tools.context_data_creator import ContextDataCreator
+from src.utils.handler_tools.features import get_features
 
 setup_logging()
 LOG = logging.getLogger("test_handler")
@@ -26,8 +25,9 @@ if __name__ == "__main__":
     dest_file_path = Path("~/output_files/combined_td.hdf").expanduser()
 
     h5py.File(dest_file_path, mode="w").close()
-    union(source_file_path=source_file_path, dest_file_path=dest_file_path)
-    clean(file_path=dest_file_path)
+
+    union(source_file_path=src_file_path, dest_file_path=dest_file_path)
+    clean_by_row(file_path=dest_file_path)
     sort_by(file_path=dest_file_path, sort_by_name="Timestamp")
 
 
