@@ -34,8 +34,10 @@ class Convert:
                  check_already_converted: bool = True,
                  num_processes: int = 2):
         """
-        Initializes the Converter, that can run in parallel with num_processes many threads.
-        :param check_already_converted: check if a part of the data is already converted.
+        Initializes the Converter, that can run in parallel with num_processes many threads. Its possible that part of
+        the files have been converted already. If check_already_converted is True, only the files are missing will be
+        converted. If check_already_converted is False, everything with be converted from scratch.
+        :param check_already_converted: check if a part of the data is already converted
         :param num_processes: number of processes for parallel conversion
         """
         self.check_already_converted = check_already_converted
