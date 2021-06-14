@@ -4,6 +4,7 @@ include:
 
 variables:
   project_name: mlframework
+  project_root: mlframework
   PY_VERSION: "3.8"
 
 stages:
