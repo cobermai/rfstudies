@@ -60,10 +60,13 @@ def transform(tdms_dir: Union[Path, str], hdf_dir: Union[Path, str]) -> None:
             num_of_values_ni5761: int = int(acquisation_window * sampling_frequency_ni5761)
             number_of_signals_monitored_with_ni5761: int = 8
 
+            def has_smelly_vals(data) -> bool:
+                return any(np.isnan(data) | np.isinf(data))
+
             return file[hdf_path].attrs.get("Timestamp", None) is not None \
                 and ch_len.count(num_of_values_ni5772) == number_of_signals_monitored_with_ni5772 \
                 and ch_len.count(num_of_values_ni5761) == number_of_signals_monitored_with_ni5761 \
-                and not any((any(np.isnan(file[hdf_path][key][:])) for key in file[hdf_path].keys()))
+                and not any(has_smelly_vals(file[hdf_path][key][:]) for key in file[hdf_path].keys())
 
     Gather(num_processes=1).from_files(hdf_dir.glob("data/Event*.hdf"))\
         .to_hdf_file(hdf_dir / "EventDataExtLinks.hdf")\
