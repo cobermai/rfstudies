@@ -42,20 +42,31 @@ def test_convert_file():
 class TestConvert:
     """tests teh Convert class"""
     @staticmethod
-    def test_from_tdms():
-        """tests from_tdms"""
+    def test_init():
+        """Testing the inizialisation of the Convert class"""
+        # Arrange Act
         conv = convert.Convert()
+        # Assert
         assert conv.check_already_converted is True
         assert conv.num_processes == 2
 
+        # Arrange Act
         conv = convert.Convert(check_already_converted=False, num_processes=100)
+        # Assert
         assert conv.check_already_converted is False
         assert conv.num_processes == 100
-
+    @staticmethod
+    def test_from_tdms():
+        """tests from_tdms"""
+        # ARRANGE
+        conv = convert.Convert(check_already_converted=False, num_processes=100)
+        # ACT
         conv_from_tdms = conv.from_tdms(tdms_dir=Path("/"))
+        # ASSERT
         assert isinstance(conv_from_tdms, convert.ConvertFromTdms)
-        assert conv_from_tdms.converter == conv
         assert conv_from_tdms.tdms_dir == Path("/")
+        assert conv_from_tdms.num_processes == 100
+        assert conv_from_tdms.check_already_converted is False
 
     @staticmethod
     def test_run():
@@ -70,18 +81,20 @@ class TestConvertFromTdms:
     def test_to_hdf():
         """tests to_hdf"""
         # ARRANGE
-        conv = convert.Convert()
+        conv = convert.Convert(num_processes=20, check_already_converted=False)
         tdms_dir_path = Path("/path/to/tdms/dir")
+        hdf_dir_path = Path("/path/to/hdf/dir")
         conv_from_tdms = conv.from_tdms(tdms_dir=tdms_dir_path)
 
         # ACT
-        cft2h = conv_from_tdms.to_hdf(Path("/path/to/hdf/dir"))
+        cft2h = conv_from_tdms.to_hdf(hdf_dir_path)
 
         # ASSERT
         assert isinstance(cft2h, convert.ConvertFromTdmsToHdf)
-        assert cft2h.hdf_dir == Path("/path/to/hdf/dir")
+        assert cft2h.hdf_dir == hdf_dir_path
         assert cft2h.tdms_dir == tdms_dir_path
-        assert cft2h.converter == conv
+        assert cft2h.num_processes == 20
+        assert cft2h.check_already_converted is False
 
     @staticmethod
     def test_run():
