@@ -4,7 +4,6 @@ include:
 
 variables:
   project_name: mlframework
-  project_root: mlframework
   PY_VERSION: "3.8"
 
 stages:
@@ -45,7 +44,7 @@ test_dev:
     - apt update
     - apt install hdf5-tools -y
     - pytest ${project_root}/tests --cov=${project_name} --junitxml=cov.xml
-    - pytest --cov-report xml:cov.xml --cov=${project_name} ${project_root}/tests
+    - pytest --cov-report xml:cov.xml --cov=${project_name} ${project_name}/tests
 
 sonar:
   image: java:8
