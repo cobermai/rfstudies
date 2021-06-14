@@ -1,4 +1,6 @@
-""""""
+"""This module contains a class structure for creating a context data file. There is a Feature class where the features
+can be applied and written. Additionally there is a ContextDataCreator class that organizes the creation of the context
+data file."""
 import typing
 import logging
 from pathlib import Path
@@ -101,8 +103,9 @@ class ContextDataCreator:
 
 if __name__ == '__main__':
     destination_file_path = Path("~/output_files/context_data.hdf").expanduser()
-    h5py.File(destination_file_path, "w").close()
-    cd_creator = ContextDataCreator(src_file_path=Path("~/output_files/EventDataExtLinks.hdf").expanduser(),
+    h5py.File(destination_file_path, "w").close()  # overwrite destination file
+    source_file_path = Path("~/output_files/EventDataExtLinks.hdf").expanduser()
+    cd_creator = ContextDataCreator(src_file_path=source_file_path,
                                     dest_file_path=destination_file_path,
                                     get_features=features.get_features)
     cd_creator.calc_features()
