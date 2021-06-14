@@ -24,20 +24,6 @@ def _sanity_func(file_path: Path, hdf_path: str) -> bool:
         ret = True
     return ret
 
-
-def test__hdf_path_combine() -> None:
-    """tests hdf_path_combine function"""
-    # ARRANGE
-    arg_list = (("a", "b", "c"),
-                ("/a/b", "/c"),
-                ("/a///b///", "/c"))
-    expected_output = "/a/b/c"
-    # ACT + ASSERT
-    for args in arg_list:
-        output = gather.hdf_path_combine(*args)
-        assert output == expected_output, f"expected {expected_output}\nbut got {output}"
-
-
 def test__get_ext_link_rek() -> None:
     """tests _get_ext_link_rek function"""
     # ARRANGE
@@ -189,7 +175,6 @@ class TestGather:
 
 
 if __name__ == "__main__":
-    test__hdf_path_combine()
     test__get_ext_link_rek()
     test__hdf_write_ext_links()
     TestGather()
