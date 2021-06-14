@@ -61,16 +61,27 @@ def union(source_file_path: Path, dest_file_path: Path) -> None:
                 dest_file.create_dataset(name=chn, data=data, chunks=True)
 
 
-def clean(file_path: Path) -> None:
-    """remove "rows" where there are None values or infinity values in at least one of the "columns", inplace.
+def check_corruptness(arr: npt.ArrayLike) -> npt.ArrayLike:
+    """checks if the input array is healtyh of corrupt. In this case corrupt means infinite value or nan value.
+    :param arr: input array
+    :return: anarray with boolean values. True if the value in the input cell was healthy, False if it was corrupt."""
+    if np.issubdtype(arr.dtype, np.number):
+        return np.isnan(arr) | np.isinf(arr)
+    elif np.issubdtype(arr.dtype, np.datetime64):
+        return np.isnat(arr)
+    else:
+        raise NotImplementedError("Corrupt data is only known for numeric and datetime values.")
+
+def clean_by_row(file_path: Path) -> None:
+    """remove "rows" where the check_corruptness function returnes at least one True value in the the row.
     A column is referred to as a dataset of the hdf file.
     A row is referred to as the values from all columns with the same index.
     :param file_path: the path of the hdf  file with the datasets. (already united with unite())"""
     with h5py.File(file_path, "r+") as file:
         shape = file.values().__iter__().__next__().shape  # shape of the first dataset
         is_corrupt = np.zeros(shape, dtype=bool)
-        for chn in (chn for chn in file.keys() if np.issubdtype(file[chn].dtype, np.number)):
-            is_corrupt |= np.isnan(file[chn][:]) | np.isinf(file[chn][:])
+        for chn in file.keys():
+            is_corrupt |= check_corruptness(file[chn][:])
         new_shape = (sum(~is_corrupt),)
         for key in file.keys():
             data = file[key][~is_corrupt]
