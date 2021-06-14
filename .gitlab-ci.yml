@@ -7,30 +7,30 @@ variables:
   PY_VERSION: "3.8"
 
 stages:
-  - linter
-  - type_checking
+# - linter
+# - type_checking
   - test_dev
   - sonar
 
-linter:
-  image: python:${PY_VERSION}
-  stage: linter
-  before_script:
-    - pip3 install pylint
-    - pip3 install -r requirements.txt
-  script:
-    - pylint -j 4 --rcfile .pylintrc src
-  allow_failure: true
+#linter:
+#  image: python:${PY_VERSION}
+#  stage: linter
+#  before_script:
+#    - pip3 install pylint
+#    - pip3 install -r requirements.txt
+#  script:
+#    - pylint -j 4 --rcfile .pylintrc src
+#  allow_failure: true
 
-type_checking:
-  image: python:${PY_VERSION}
-  stage: type_checking
-  before_script: 
-    - pip3 install mypy
-    - pip3 install -r requirements.txt
-  script:
-    - mypy --config-file mypy.ini src 
-  allow_failure: true
+#type_checking:
+#  image: python:${PY_VERSION}
+#  stage: type_checking
+#  before_script: 
+#    - pip3 install mypy
+#    - pip3 install -r requirements.txt
+#  script:
+#    - mypy --config-file mypy.ini src 
+#  allow_failure: true
 
 test_dev:
   stage: test_dev
@@ -41,6 +41,7 @@ test_dev:
       - cov.xml
     expire_in: 1 day
   script:
+    - ls
     - apt update
     - apt install hdf5-tools -y
     - pytest ${project_root}/tests --cov=${project_name} --junitxml=cov.xml
