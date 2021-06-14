@@ -13,6 +13,7 @@ from src.utils.system.setup_logging import setup_logging
 setup_logging()
 LOG = logging.getLogger(__name__)
 
+
 def transform(tdms_dir: Union[Path, str], hdf_dir: Union[Path, str]) -> None:
     """
     transforms all tdms files to hdf files, filters faulty data and gathers hdf groups with depth 1 of the hdf files

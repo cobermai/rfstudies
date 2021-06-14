@@ -9,3 +9,4 @@ compress_pickle>=2.0.1
 scipy>=1.6.3
 numpy>=1.20
 pyyaml>=5.4
+pandas>=1.2.4

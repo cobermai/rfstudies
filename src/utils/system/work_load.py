@@ -3,6 +3,7 @@ import os
 import logging
 import psutil
 
+
 def memo_usage(log: logging.Logger):
     """log memory usage of the current process
     :param log: logger for logging the memory usage

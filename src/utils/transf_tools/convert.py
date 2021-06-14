@@ -34,9 +34,9 @@ class Convert:
                  check_already_converted: bool = True,
                  num_processes: int = 2):
         """
-        Initializes the Converter
+        Initializes the Converter, that can run in parallel with num_processes many threads.
         :param check_already_converted: check if a part of the data is already converted.
-        :param num_processes: number of processes for multiprocessing
+        :param num_processes: number of processes for parallel conversion
         """
         self.check_already_converted = check_already_converted
         self.num_processes = num_processes
