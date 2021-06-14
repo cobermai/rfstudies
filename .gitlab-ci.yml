@@ -45,7 +45,7 @@ test_dev:
     - apt update
     - apt install hdf5-tools -y
     - pytest ${project_root}/tests --cov=${project_name} --junitxml=report.xml
-    - pytest --cov-report xml:cov.xml --cov=${project_name} ${project_root}/${project_name}
+    - pytest --cov-report xml:cov.xml --cov=${project_name} ${project_root}
 
 sonar:
   image: java:8
