@@ -2,28 +2,24 @@
 This module provides tools to transform data to a capable format so that further analyzing can be done easily.
 """
 from pathlib import Path
-from typing import Union
 import logging
 import h5py
 import numpy as np
 from src.utils.transf_tools.convert import Convert
-from src.utils.transf_tools.gather import Gather
+from src.utils.transf_tools.gather import gather
 from src.utils.system.setup_logging import setup_logging
 
 setup_logging()
 LOG = logging.getLogger(__name__)
 
 
-def transform(tdms_dir: Union[Path, str], hdf_dir: Union[Path, str]) -> None:
+def transform(tdms_dir: Path, hdf_dir: Path) -> None:
     """
     transforms all tdms files to hdf files, filters faulty data and gathers hdf groups with depth 1 of the hdf files
     into one hdf file with external links.
     :param tdms_dir: input directory with tdms files
     :param hdf_dir: output directory with hdf files
     """
-    tdms_dir = Path(tdms_dir)
-    hdf_dir = Path(hdf_dir)
-
     Path(hdf_dir, "data").mkdir(parents=False, exist_ok=True)
 
     # read tdms files and convert them to hdf5 and writing them into hdf_dir/data/
@@ -39,11 +35,11 @@ def transform(tdms_dir: Union[Path, str], hdf_dir: Union[Path, str]) -> None:
             num_of_samples: int = 35
             return len_equal and len(file[hdf_path].keys()) == num_of_samples
 
-    Gather(num_processes=4)\
-        .from_files(hdf_dir.glob("data/Trend*.hdf"))\
-        .to_hdf_file(hdf_dir / "TrendDataExtLinks.hdf")\
-        .if_fulfills(td_func_to_fulfill, on_error=False)\
-        .run_with_external_links()
+    gather(src_file_paths=hdf_dir.glob("data/Trend*.hdf"),
+           dest_file_path=hdf_dir / "TrendDataExtLinks.hdf",
+           if_fulfills=td_func_to_fulfill,
+           on_error=False,
+           num_processes=4)
 
     def ed_func_to_fulfill(file_path: Path, hdf_path: str) -> bool:
         with h5py.File(file_path, "r") as file:
@@ -69,10 +65,11 @@ def transform(tdms_dir: Union[Path, str], hdf_dir: Union[Path, str]) -> None:
                 and ch_len.count(num_of_values_ni5761) == number_of_signals_monitored_with_ni5761 \
                 and not any(has_smelly_vals(file[hdf_path][key][:]) for key in file[hdf_path].keys())
 
-    Gather(num_processes=1).from_files(hdf_dir.glob("data/Event*.hdf"))\
-        .to_hdf_file(hdf_dir / "EventDataExtLinks.hdf")\
-        .if_fulfills(ed_func_to_fulfill, on_error=True)\
-        .run_with_external_links()
+    gather(src_file_paths=hdf_dir.glob("data/Event*.hdf"),
+           dest_file_path=hdf_dir / "EventDataExtLinks.hdf",
+           if_fulfills=ed_func_to_fulfill,
+           on_error=False,
+           num_processes=1)
 
 
 if __name__ == "__main__":
