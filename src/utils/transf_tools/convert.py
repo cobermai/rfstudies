@@ -21,11 +21,11 @@ def convert_file(tdms_file_path: Path, hdf_dir: Path) -> None:
     """
     t_0 = time()
     with nptdms.TdmsFile(tdms_file_path) as tdms_file:
-        LOG.debug("reading tdms file  %s     took: %s sec", tdms_file_path.stem, time() - t_0)
+        LOG.info("reading tdms file  %s     took: %s sec", tdms_file_path.stem, time() - t_0)
         hdf_file_path = hdf_dir / tdms_file_path.with_suffix(".hdf").name
         t_0 = time()
         tdms_file.as_hdf(hdf_file_path, mode="w", group="/")
-        LOG.debug("tdms2hdf + writing %s     took: %s sec", tdms_file_path.stem, time() - t_0)
+        LOG.info("tdms2hdf + writing %s     took: %s sec", tdms_file_path.stem, time() - t_0)
 
 
 class Convert:
@@ -51,10 +51,6 @@ class Convert:
         """
         return ConvertFromTdms(tdms_dir, self.check_already_converted, self.num_processes)
 
-    def run(self) -> None:
-        """too early to run yet, no source directory specified yet"""
-        raise NotImplementedError("too early to run yet, no source directory specified yet")
-
 
 class ConvertFromTdms(Convert):
     """Adds the from_directory (source) for Convert"""
@@ -76,10 +72,6 @@ class ConvertFromTdms(Convert):
         :return: a ConvertFromTdmsToHdf object
         """
         return ConvertFromTdmsToHdf(hdf_dir, self.tdms_dir, self.check_already_converted, self.num_processes)
-
-    def run(self):
-        """too early to run yet, no destination directory specified yet"""
-        raise NotImplementedError("too early to run yet, no destination directory specified yet")
 
 
 class ConvertFromTdmsToHdf(ConvertFromTdms):
