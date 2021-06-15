@@ -1,5 +1,6 @@
 """
-The gathering module combines/concatenates/groups/glues/sticks together/merges/assembles multiple files into one.
+The gathering module combines/concatenates/groups/glues/sticks-together/merges/assembles hdf-groups scattered on
+multiple files into one.
 Currently implemented:
 * Gather hdf groups of arbitrary layer scattered on many hdf files with external links (hdf external links).
   This gathers groups without copying its contents.
@@ -68,78 +69,50 @@ def hdf_write_ext_links(source_file_path: Path,
             for link in ext_link_list:
                 grp_name = source_file_path.stem + "-" + link.path.replace("/", "-")
                 dest_file[grp_name] = link
-            dest_file.flush()
 
 
-class Gather:
+def get_func_to_fulfill(on_error: bool,
+                        func_to_fulfill: Callable[[Path, str], bool] = None) -> Callable[[Path, str], bool]:
+    """Sets the function_to_fulfill. On True the HdfObject will be added, if False it will not be added.
+    Additionally if an error occurs the HdfObject will not be added.
+    :param func_to_fulfill: The filtering function/ restriction function/ function to fulfill for an HdfObject to
+    be added to the output.
+    :param on_error: boolean value that will be returned when the func_to_fulfill trows an error."""
+    def func_to_fulfill_with_error_handling(file_path: Path, hdf_path: str) -> bool:
+        ret = on_error
+        try:
+            if func_to_fulfill is None:
+                ret = True
+            else:
+                ret = func_to_fulfill(file_path, hdf_path)
+        except (ValueError, SystemError, ArithmeticError, AttributeError, LookupError, RuntimeError):
+            LOG.debug("function_to_fulfill error (%s, %s) -> %s", file_path, hdf_path, on_error)
+        return ret
+    return func_to_fulfill_with_error_handling
+
+
+def gather(src_file_paths: Iterable,
+           dest_file_path: Path,
+           if_fulfills: Callable[[Path, str], bool] = None,
+           on_error: bool = False,
+           depth: int = 1,
+           num_processes: int = 2) -> None:
+    """gathers hdf-groups of many hdf files into one by creating external links that point to the original files.
+    This way the data can be accessed though one without copying the data
+    :param src_file_paths: Iterable of Path objects of the source hdf-file-paths
+    :param dest_file_path: Path of the destination hdf file
+    :param if_fulfills: function that needs to be fulfilled in order for the hdf-object to be added to the destination
+    file via external links.
+    :param on_error: what should
+    :param depth: depth where the objects
+    :param num_processes: number of processors for parallel gathering
     """
-    combines hdf groups of many hdf files into one by creating external links that point to the original files
-    """
-    dest_file_path: Path
-    source_file_paths: Iterable
-
-    def __init__(self, depth: int = 1, num_processes: int = 2):
-        """
-        :param depth: the depth of the hdf groups to combine
-        :param num_processes: number of processing kernels, None -> os.cpu_count
-        """
-        self.depth: int = depth
-        self.num_processes: int = num_processes
-        self.func_to_fulfill: Callable[[Path, str], bool]
-
-    def set_func_to_fulfill(self, on_error: bool, func_to_fulfill: Callable[[Path, str], bool] = None) -> None:
-        """Sets the function_to_fulfill. On True the HdfObject will be added, if False it will not be added.
-        Additionally if an error occurs the HdfObject will not be added.
-        :param func_to_fulfill: The filtering function/ restriction function/ function to fulfill for an HdfObject to
-        be added to the output.
-        :param on_error: boolean value that will be returned when the func_to_fulfill trows an error."""
-        def func_to_fulfill_with_error_handling(file_path: Path, hdf_path: str) -> bool:
-            ret = on_error
-            try:
-                if func_to_fulfill is None:
-                    ret = True
-                else:
-                    ret = func_to_fulfill(file_path, hdf_path)
-            except (ValueError, SystemError, ArithmeticError, AttributeError, LookupError, RuntimeError):
-                LOG.debug("function_to_fulfill error (%s, %s) -> %s", file_path, hdf_path, on_error)
-            return ret
-        self.func_to_fulfill = func_to_fulfill_with_error_handling
-
-    def from_files(self, source_file_paths: Iterable):
-        """
-        Sets the source file paths for the gathering
-        :param source_file_paths: Iterable of file paths to be added
-        :return: The Gather object
-        """
-        self.source_file_paths = source_file_paths
-        return self
-
-    def to_hdf_file(self, dest_file_path: Path):
-        """
-        Sets the destination file path for the gathering
-        :param dest_file_path: Path of the destination file path
-        :return: The Gather object
-        """
-        h5py.File(dest_file_path, "w").close()  # overwrite old file
-        self.dest_file_path = dest_file_path
-        return self
-
-    def if_fulfills(self, func_to_fulfill: Callable[[Path, str], bool] = None, on_error: bool = False):
-        """
-        if func_to_fulfill is fulfilled the link to the hdf_object will be added
-        :param func_to_fulfill: function to be fulfilled by a feasible hdf_object
-        :param on_error: if the func_to_fulfill has an expected error, the on_error parameter will be returned
-        """
-        self.set_func_to_fulfill(on_error, func_to_fulfill)
-        return self
-
-    def run_with_external_links(self) -> None:
-        """This starts the Gathering by creating hdf ExternalLink objects"""
-        multi_proc_func = partial(hdf_write_ext_links,
-                                  dest_file_path=self.dest_file_path,
-                                  lock=Lock(),
-                                  depth=self.depth,
-                                  func_to_fulfill=self.func_to_fulfill)
-        with ThreadPool(self.num_processes) as pool:
-            pool.map(multi_proc_func, self.source_file_paths)
-        LOG.debug("finished Gathering for %s", self.dest_file_path)
+    h5py.File(dest_file_path, "w").close()  # overwrite destination file
+    multi_proc_func = partial(hdf_write_ext_links,
+                              dest_file_path=dest_file_path,
+                              lock=Lock(),
+                              depth=depth,
+                              func_to_fulfill=get_func_to_fulfill(on_error, if_fulfills))
+    with ThreadPool(num_processes) as pool:
+        pool.map(multi_proc_func, src_file_paths)
+    LOG.debug("finished Gathering for %s", dest_file_path)
