@@ -27,7 +27,7 @@ class Feature:
         self.name: str = name
         self.func: typing.Callable = func
         self.dtype = output_dtype
-        self.working_dataset: str = working_dataset  # hdf_grp can also be None
+        self.work_on_signal: str = working_dataset  # hdf_grp can also be None
         if info is None:
             raise RuntimeWarning("""It is recommended to add an info text to describe the feature function.
                                     Maybe you can use func.__doc__?""")
@@ -40,7 +40,7 @@ class Feature:
         :param data: the length the hdf-dataset should have
         """
         with h5py.File(dest_file_path, "a") as file:
-            grp = file.require_group(self.working_dataset)
+            grp = file.require_group(self.work_on_signal)
             grp.create_dataset(name=self.name, data=data, dtype=self.dtype, chunks=True)
             grp[self.name].attrs.create(name="info", data=self.info_text)
 
@@ -54,5 +54,5 @@ class Feature:
         with h5py.File(src_file_path, "r") as file:
             ret_vec = np.empty(shape=(file.__len__(),), dtype=self.dtype)
             for key, index in zip(file.keys(), range(300)):
-                ret_vec[index] = self.func(src_file_path, hdf_path_combine(key, self.working_dataset))
+                ret_vec[index] = self.func(src_file_path, hdf_path_combine(key, self.work_on_signal))
         return ret_vec
