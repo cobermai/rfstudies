@@ -68,12 +68,6 @@ class TestConvert:
         assert conv_from_tdms.num_processes == 100
         assert conv_from_tdms.check_already_converted is False
 
-    @staticmethod
-    def test_run():
-        """tests run"""
-        with pytest.raises(NotImplementedError):
-            convert.Convert().run()
-
 
 class TestConvertFromTdms:
     """tests the ConvertFromTdms class"""
@@ -95,12 +89,6 @@ class TestConvertFromTdms:
         assert cft2h.tdms_dir == tdms_dir_path
         assert cft2h.num_processes == 20
         assert cft2h.check_already_converted is False
-
-    @staticmethod
-    def test_run():
-        """tests run"""
-        with pytest.raises(NotImplementedError):
-            convert.Convert().from_tdms(Path("/path/to/tdms/dir")).run()
 
 
 class TestConvertFromTdmsToHdf:
