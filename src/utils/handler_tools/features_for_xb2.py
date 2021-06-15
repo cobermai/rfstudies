@@ -68,7 +68,7 @@ def get_timestamp(file_path: Path, hdf_path: str) -> np.datetime64:
     :param hdf_path: hdf-path of the source group
     :return: numpy datetime format of the timestamp
     """
-    with h5py.File(file_path, "r", ) as file:
+    with h5py.File(file_path, "r") as file:
         datetime_str = file[hdf_path].attrs["Timestamp"][:-1]
         return np.datetime64(datetime_str).astype(h5py.opaque_dtype('M8[us]'))
 

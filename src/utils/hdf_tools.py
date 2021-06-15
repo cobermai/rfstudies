@@ -33,9 +33,10 @@ def get_datasets(file_path: Path, hdf_path: str = "/", mode="r+") -> typing.Gene
 def hdf_to_df(file_path: Path, hdf_path: str = "/"):
     """Converts hdf files with the write format into hdf files. This will be extended to further functionality."""
     with h5py.File(file_path, "r") as file:
-        return pd.DataFrame(data=(file[path][:100] for path in get_datasets(file_path, hdf_path=hdf_path, mode="r")),
-                            index=get_datasets(file_path, hdf_path=hdf_path, mode="r")).T
+        return pd.DataFrame(data={path[1:].replace("/", "-").replace(" ", "_"): file[path][:100]
+                                  for path in get_datasets(file_path, hdf_path=hdf_path, mode="r")})
 
 
 if __name__ == "__main__":
-    print(hdf_to_df(Path("~/output_files/context_data.hdf").expanduser()))
+    df = hdf_to_df(Path("~/output_files/context_data.h5").expanduser())
+    print(df)
