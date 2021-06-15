@@ -3,10 +3,18 @@
 
 ## Getting Started
 This is a framework for machine learning. It consists of three steps:
-1) **Transformation**: transforming data into the fileformat hdf
-2) **Handling**: 
-3) **Exploration**:
-4) **Training**:
+1) **Transformation**: 
+   * transform source data into a more handy data format (eg. HDF5)
+   * make accessible: gather hdf files together if they have the wanted data structure
+2) **Exploration**: 
+   * handling: reformat, clean and sort
+   * calculate features: extract features for machine learning
+   * data exploration: unsupervised machine learning for data analysis
+3) **Modelling**: 
+   * (un)supervised machine learning
+   * explain results and validate by application
+    
+
 ### Requirements
 In order to follow the installation guide it is required to install
 ```bash
