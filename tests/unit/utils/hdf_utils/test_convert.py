@@ -1,20 +1,16 @@
 """module to test the convert.py"""
 import os
 from pathlib import Path
-from shutil import rmtree
-from datetime import date
-import pytest
 import h5py
 from src.utils.transf_tools import convert
 from tests.utils.data_creator.file_creator_for_testing import CreatorTestFiles
 from tests.utils.data_creator.tdms_file_creator import CreatorTdmsFile
 
 
-def test_convert_file():
+def test_convert_file(tmp_path):
     """tests the convert_file function"""
     # ARRANGE
-    data_dir_path = Path(__file__).parent / f"data_{date.today()}"
-    data_dir_path.mkdir()
+    data_dir_path = tmp_path
     tdms_file_path = data_dir_path / "test.tdms"
     path_of_expected = data_dir_path / "expected.hdf"
     test_creator = CreatorTestFiles(hdf_file_path=path_of_expected,
@@ -35,15 +31,12 @@ def test_convert_file():
     is_equal = os.system(f"h5diff {path_of_output} {path_of_expected}") == 0
     assert is_equal
 
-    # CLEAN
-    rmtree(data_dir_path)
-
 
 class TestConvert:
     """tests teh Convert class"""
     @staticmethod
     def test_init():
-        """Testing the inizialisation of the Convert class"""
+        """Testing the initialisation of the Convert class"""
         # Arrange Act
         conv = convert.Convert()
         # Assert
@@ -55,6 +48,7 @@ class TestConvert:
         # Assert
         assert conv.check_already_converted is False
         assert conv.num_processes == 100
+
     @staticmethod
     def test_from_tdms():
         """tests from_tdms"""
@@ -94,15 +88,11 @@ class TestConvertFromTdms:
 class TestConvertFromTdmsToHdf:
     """tests the ConvertFromTdmsToHdf class"""
     @staticmethod
-    def test_get_tdms_file_paths_to_convert():
+    def test_get_tdms_file_paths_to_convert(tmp_path_factory):
         """tests get_tdms_file_paths_to_convert"""
         # ARRANGE
-        data_dir_path = Path(__file__).parent / f"data_{date.today()}"
-        data_dir_path.mkdir()
-        hdf_dir_path = data_dir_path / "hdf"
-        hdf_dir_path.mkdir()
-        tdms_dir_path = data_dir_path / "tdms"
-        tdms_dir_path.mkdir()
+        tdms_dir_path = tmp_path_factory.mktemp("tdms_files")
+        hdf_dir_path = tmp_path_factory.mktemp("hdf_files")
         os.system(command=f"""
             hdf_path={hdf_dir_path}
             tdms_path={tdms_dir_path}
@@ -114,44 +104,42 @@ class TestConvertFromTdmsToHdf:
         """)
         expected = set(tdms_dir_path.glob("*.tdms"))
 
-        # ACT AND ASSERT
+        # ACT
         conv_tdms2hdf = convert.Convert()\
             .from_tdms(tdms_dir_path)\
             .to_hdf(hdf_dir_path)
+        # ASSERT
         assert conv_tdms2hdf.get_tdms_file_paths_to_convert() == expected, "with a faulty hdf file with check"
 
+        # ACT
         h5py.File(hdf_dir_path / "test1.hdf", "w").close()
         conv_tdms2hdf = convert.Convert(check_already_converted=False)\
             .from_tdms(tdms_dir_path)\
             .to_hdf(hdf_dir_path)
+        # ASSERT
         assert conv_tdms2hdf.get_tdms_file_paths_to_convert() == expected, "with healthy hdf file no check"
 
+        # ACT
         expected = set(tdms_dir_path.glob("*2.tdms")).union(set(tdms_dir_path.glob("*3.tdms")))
         conv_tdms2hdf = convert.Convert(check_already_converted=True) \
             .from_tdms(tdms_dir_path) \
             .to_hdf(hdf_dir_path)
+        # ASSERT
         assert conv_tdms2hdf.get_tdms_file_paths_to_convert() == expected, "with a healthy hdf file with check"
 
-        # CLEAN
-        rmtree(data_dir_path, ignore_errors=True)
-
     @staticmethod
-    def test_run():
+    def test_run(tmp_path_factory):
         """tests run"""
         # ARRANGE
-        data_dir_path = Path(__file__).parent / f"data_{date.today()}"
-        data_dir_path.mkdir()
-        hdf_dir_path = data_dir_path / "hdf"
-        hdf_dir_path.mkdir()
-        tdms_dir_path = data_dir_path / "tdms"
-        tdms_dir_path.mkdir()
+        hdf_dir_path = tmp_path_factory.mktemp("hdf_files")
+        tdms_dir_path = tmp_path_factory.mktemp("tmp_files")
         for index in range(5):
             CreatorTdmsFile(tdms_dir_path/f"test{index}.tdms", {"root_prop": index}).write()
         for num_processes in [1, 3]:
-            conv_tdms2hdf = convert.Convert(num_processes=num_processes, check_already_converted=False)\
-                .from_tdms(tdms_dir_path)\
-                .to_hdf(hdf_dir_path)
             # ACT
-            conv_tdms2hdf.run()
+            convert.Convert(num_processes=num_processes, check_already_converted=False)\
+                .from_tdms(tdms_dir_path)\
+                .to_hdf(hdf_dir_path)\
+                .run()
+            # ASSERT
             assert {p.stem for p in hdf_dir_path.glob("*.hdf")} == {p.stem for p in tdms_dir_path.glob("*.tdms")}
-        rmtree(data_dir_path, ignore_errors=True)
