@@ -1,8 +1,6 @@
 """
 tests for gather module
 """
-from shutil import rmtree
-from datetime import date
 from typing import Callable
 from pathlib import Path
 from functools import partial
@@ -16,8 +14,12 @@ LOG = logging.getLogger("TESTLOG")
 
 
 def _sanity_func(file_path: Path, hdf_path: str) -> bool:
-    """a function to fulfill for testing purposes"""
-    h5py.File(file_path, "r").close()
+    """
+    a function to fulfill for testing purposes
+    :param file_path: file path of the hdf file
+    :param hdf_path: hdf-path of the hdf object
+    """
+    h5py.File(file_path, "r").close()  # check if reading is possible (if hdf file is valid)
     if "discard" in hdf_path:
         ret = False
     else:
@@ -25,12 +27,10 @@ def _sanity_func(file_path: Path, hdf_path: str) -> bool:
     return ret
 
 
-def test__get_ext_link_rek() -> None:
+def test__get_ext_link_rek(tmp_path) -> None:
     """tests _get_ext_link_rek function"""
     # ARRANGE
-    data_dir_path = Path(__file__).parent / f"data_{date.today()}"
-    data_dir_path.mkdir()
-    hdf_file_path = data_dir_path / "test_file.hdf"
+    hdf_file_path = tmp_path / "test_file.hdf"
     with h5py.File(hdf_file_path, "w") as file:
         file.create_group("aaa")
         file["aaa"].create_dataset("ds_at_layer_1", (1,), int)
@@ -52,20 +52,19 @@ def test__get_ext_link_rek() -> None:
     assert link_tuple_set(output) == link_tuple_set(expected_output), \
         f"expected {expected_output}\nbut got {output}"
 
-    # CLEAN
-    rmtree(data_dir_path)
 
-
-def test__hdf_write_ext_links() -> None:
+def test__hdf_write_ext_links(tmp_path_factory) -> None:
     """tests _hdf_write_ext_links function"""
     # ARRANGE
-    data_dir_path = Path(__file__).parent / f"data_{date.today()}"
-    data_dir_path.mkdir()
+    data_dir_path = tmp_path_factory.mktemp("data")
+
+
     dest_file_path = data_dir_path / "dest.hdf"
     h5py.File(dest_file_path, "w").close()
-    source_dir_path = data_dir_path / "source"
-    source_dir_path.mkdir()
+
+    source_dir_path = tmp_path_factory.mktemp("src_files")
     source_file_path = source_dir_path / "test.hdf"
+
     with h5py.File(source_file_path, "w") as file:
         file.create_group("aaa")
         file["aaa"].create_dataset("ds_at_layer_1", (1,), int)
@@ -80,115 +79,55 @@ def test__hdf_write_ext_links() -> None:
         output = dest_file["test--aaa"]
         assert output == expected_output, f"expected {expected_output}\nbut got {output}"
 
-    # CLEAN
-    rmtree(data_dir_path)
 
+def test_get_func_to_fulfill():
+    """tests get_func_to_fulfill (i.e. checks if the error handling with on_error works)"""
+    # ### unexpected Errors
+    # ARRANGE
+    def func_unexpected_error(_file_path: Path, _hdf_path: str):
+        raise InterruptedError  # an unexpected error
+    # ACT
+    func_to_fulfill_with_error_handling = gather.get_func_to_fulfill(False, func_unexpected_error)
+    # ASSERT
+    with pytest.raises(InterruptedError):
+        func_to_fulfill_with_error_handling(Path("/"), "/")
 
-class TestGather:
-    """ testing the Gather class"""
-    @staticmethod
-    def test_set_func_to_fulfill():
-        """checks what happens when an error occurs"""
-        # unexpected Errors
-        # ARRANGE
-        gather_obj = gather.Gather(depth=1, num_processes=2)
-        def func_unexpected_error(_file_path: Path, _hdf_path: str):
-            raise InterruptedError  # an unexpected error
+    # ### expected Errors
+    # ARRANGE
+    error_list = [KeyError, ValueError, SystemError, ArithmeticError, AttributeError, LookupError,
+                  NotImplementedError, RuntimeError]
+    on_error = True
+
+    def func_expected_errors(_file_path: Path, _hdf_path: str, expected_error: BaseException):
+        raise expected_error
+    for err in error_list:
+        on_error = not on_error  # Trying out different error handlers
+        fun: Callable = partial(func_expected_errors, expected_error=err)
         # ACT
-        gather_obj.set_func_to_fulfill(False, func_unexpected_error)
+        func_to_fulfill_with_error_handling = gather.get_func_to_fulfill(on_error=on_error, func_to_fulfill=fun)
         # ASSERT
-        with pytest.raises(InterruptedError):
-            gather_obj.func_to_fulfill(Path("/"), "/")
-
-        # expected Errors
-        # ARRANGE
-        error_list = [KeyError, ValueError, SystemError, ArithmeticError, AttributeError, LookupError,
-                      NotImplementedError, RuntimeError]
-        on_error = True
-
-        def func_expected_errors(_file_path: Path, _hdf_path: str, expected_error: BaseException):
-            raise expected_error
-        for err in error_list:
-            on_error = not on_error  # Trying out different error handlers
-            fun: Callable = partial(func_expected_errors, expected_error=err)
-            # ACT
-            gather_obj.set_func_to_fulfill(on_error=on_error, func_to_fulfill=fun)
-            # ASSERT
-            assert gather_obj.func_to_fulfill(Path("/"), "/") == on_error
-
-    @staticmethod
-    def test_from_files():
-        """testing from files"""
-        gather_obj = gather.Gather(depth=1, num_processes=2)
-        assert gather_obj.from_files({Path("/"), Path("another/path")})\
-            .source_file_paths == {Path("/"), Path("another/path")}
-
-    @staticmethod
-    def test_to_hdf_file():
-        """testing to hdf file"""
-        # ARRANGE
-        gather_obj = gather.Gather(depth=1, num_processes=2)
-        data_dir_path = Path(__file__).parent / f"data_{date.today()}"
-        data_dir_path.mkdir()
-        # ACT
-        hdf_file_path = data_dir_path / "test.hdf"
-        # ASSERT
-        assert gather_obj.to_hdf_file(hdf_file_path)\
-                   .dest_file_path == hdf_file_path
-        # CLEAN
-        rmtree(data_dir_path)
-
-    @staticmethod
-    def test_if_fulfills():
-        """testing if fulfills"""
-        # ARRANGE
-        gather_obj = gather.Gather(depth=1, num_processes=2)
-        def my_func(file_path: Path, hdf_path: str):
-            raise RuntimeError
-        # ACT AND ASSERT
-        for on_error in [True, False]:
-            expected_output = on_error
-            assert gather_obj.if_fulfills(my_func, on_error)\
-                       .func_to_fulfill(Path("/"), "/") == expected_output
-            expected_output = True
-            assert gather_obj.if_fulfills(lambda x, y: True, on_error)\
-                       .func_to_fulfill(Path("/"), "/") == expected_output
-            expected_output = False
-            assert gather_obj.if_fulfills(lambda x, y: False, on_error)\
-                       .func_to_fulfill(Path("/"), "/") == expected_output
-
-    @staticmethod
-    def test_run_with_external_links():
-        """testing run with external links"""
-        # ARRANGE
-        gather_obj = gather.Gather()
-        data_dir_path = Path(__file__).parent / f"data_{date.today()}"
-        data_dir_path.mkdir()
-        dest_file_path = data_dir_path / "TestDataExtLinks.hdf"
-        h5py.File(dest_file_path, "w").close()
-        source_dir_path = data_dir_path / "source_dir"
-        source_dir_path.mkdir()
-        for index in range(3):
-            source_file_path = source_dir_path / f"test{index}.hdf"
-            with h5py.File(source_file_path, "w") as file:
-                file.create_group("grp")
-                file["grp"].create_dataset("ds_at_layer_1", (1,), int)
-                file.create_group("discard_this")
-        expected_keys = {'test0--grp', 'test1--grp', 'test2--grp'}
-        # ACT
-        gather_obj.from_files(source_dir_path.glob("*.hdf")) \
-            .to_hdf_file(dest_file_path) \
-            .if_fulfills(_sanity_func, on_error=False) \
-            .run_with_external_links()
-        # ASSERT
-        with h5py.File(dest_file_path, "r") as file:
-            output = set(file.keys())
-        assert output == expected_keys, f"expected{expected_keys}\nbut got {output}"
-        # CLEAN
-        rmtree(data_dir_path)
+        assert func_to_fulfill_with_error_handling(Path("/"), "/") == on_error
 
 
-if __name__ == "__main__":
-    test__get_ext_link_rek()
-    test__hdf_write_ext_links()
-    TestGather()
+def test_gather(tmp_path_factory):
+    """testing run with external links"""
+    # ARRANGE
+    dest_file_path = tmp_path_factory.mktemp("dest") / "TestDataExtLinks.hdf"
+    source_dir_path = tmp_path_factory.mktemp("src_files")
+    for index in range(3):
+        source_file_path = source_dir_path / f"test{index}.hdf"
+        with h5py.File(source_file_path, "w") as file:
+            file.create_group("grp")
+            file["grp"].create_dataset("ds_at_layer_1", (1,), int)
+            file.create_group("discard_this")
+    expected_keys = {'test0--grp', 'test1--grp', 'test2--grp'}
+
+    # ACT
+    gather.gather(src_file_paths=source_dir_path.glob("*.hdf"),
+                  dest_file_path=dest_file_path,
+                  if_fulfills=_sanity_func,
+                  on_error=False)
+    # ASSERT
+    with h5py.File(dest_file_path, "r") as file:
+        output = set(file.keys())
+    assert output == expected_keys, f"expected{expected_keys}\nbut got {output}"
