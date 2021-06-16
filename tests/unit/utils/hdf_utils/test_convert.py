@@ -36,7 +36,7 @@ class TestConvert:
     """tests teh Convert class"""
     @staticmethod
     def test_init():
-        """Testing the initialisation of the Convert class"""
+        """Tests the initialisation of the Convert class"""
         # Arrange Act
         conv = convert.Convert()
         # Assert

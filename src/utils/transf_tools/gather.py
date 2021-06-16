@@ -1,5 +1,5 @@
 """
-The gathering module combines/concatenates/groups/glues/sticks-together/merges/assembles hdf-groups scattered on
+The gather module combines/concatenates/groups/glues/sticks-together/merges/assembles hdf-groups scattered on
 multiple files into one.
 Currently implemented:
 * Gather hdf groups of arbitrary layer scattered on many hdf files with external links (hdf external links).

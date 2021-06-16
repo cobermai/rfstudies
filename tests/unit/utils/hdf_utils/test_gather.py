@@ -99,7 +99,7 @@ def test__get_func_to_fulfill():
     def func_expected_errors(_file_path: Path, _hdf_path: str, expected_error: BaseException):
         raise expected_error
     for err in error_list:
-        on_error = not on_error  # Trying out different error handlers
+        on_error = not on_error  # Trys out different error handlers
         fun: Callable = partial(func_expected_errors, expected_error=err)
         # ACT
         func_to_fulfill_with_error_handling = gather\
@@ -109,7 +109,7 @@ def test__get_func_to_fulfill():
 
 
 def test_gather(tmp_path_factory):
-    """testing run with external links"""
+    """tests run with external links"""
     # ARRANGE
     dest_file_path = tmp_path_factory.mktemp("dest") / "TestDataExtLinks.hdf"
     source_dir_path = tmp_path_factory.mktemp("src_files")

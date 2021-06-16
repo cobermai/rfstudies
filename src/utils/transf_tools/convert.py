@@ -35,8 +35,8 @@ class Convert:
                  num_processes: int = 2):
         """
         Initializes the Converter, that can run in parallel with num_processes many threads. Its possible that part of
-        the files have been converted already. If check_already_converted is True, only the files are missing will be
-        converted. If check_already_converted is False, everything with be converted from scratch.
+        the files have been converted already. If check_already_converted is True, only the files that are missing will
+        be converted. If check_already_converted is False, everything with be converted from scratch.
         :param check_already_converted: only convert the not yet converted files
         :param num_processes: number of processes for parallel conversion
         """
@@ -45,7 +45,7 @@ class Convert:
 
     def from_tdms(self, tdms_dir: Path):
         """
-        Adding the source directory where the tdms files are located and returning a ConvertFromTdms object
+        Adds the source directory where the tdms files are located and returns a ConvertFromTdms object
         :param tdms_dir: file path of the directory where the tdms files are located
         :return: a ConvertFromTdms object
         """
@@ -67,7 +67,7 @@ class ConvertFromTdms(Convert):
 
     def to_hdf(self, hdf_dir: Path):
         """
-        Adding the destination directory where the hdf files will be stored and returning a ConvertFromTdmsToHdf object
+        Adds the destination directory where the hdf files will be stored and returns a ConvertFromTdmsToHdf object
         :param hdf_dir: path of the directory where the hdf files should go to
         :return: a ConvertFromTdmsToHdf object
         """
