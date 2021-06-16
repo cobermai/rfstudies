@@ -45,25 +45,25 @@ def transform(tdms_dir: Path, hdf_dir: Path) -> None:
         with h5py.File(file_path, "r") as file:
             ch_len: list = [file[hdf_path][key].shape[0] for key in file[hdf_path].keys()]
 
-            acquisation_window: float = 2e-6  # time period of one event is 2 microseconds
+            acquisition_window: float = 2e-6  # time period of one event is 2 microseconds
 
             # acquisition card NI-5772 see https://www.ni.com/en-us/support/model.ni-5772.html
             sampling_frequency_ni5772: int = int(1.6e8)  # sampling frequency of the acquisition card
-            num_of_values_ni5772: int = int(acquisation_window * sampling_frequency_ni5772)
+            num_of_values_ni5772: int = int(acquisition_window * sampling_frequency_ni5772)
             number_of_signals_monitored_with_ni5772: int = 8
 
             # acquisition card NI-5761 see https://www.ni.com/en-us/support/model.ni-5761.html
             sampling_frequency_ni5761: int = int(1.6e9)  # sampling frequency of the acquisition card
-            num_of_values_ni5761: int = int(acquisation_window * sampling_frequency_ni5761)
+            num_of_values_ni5761: int = int(acquisition_window * sampling_frequency_ni5761)
             number_of_signals_monitored_with_ni5761: int = 8
 
-            def has_smelly_vals(data) -> bool:
+            def has_smelly_values(data) -> bool:
                 return any(np.isnan(data) | np.isinf(data))
 
             return file[hdf_path].attrs.get("Timestamp", None) is not None \
                 and ch_len.count(num_of_values_ni5772) == number_of_signals_monitored_with_ni5772 \
                 and ch_len.count(num_of_values_ni5761) == number_of_signals_monitored_with_ni5761 \
-                and not any(has_smelly_vals(file[hdf_path][key][:]) for key in file[hdf_path].keys())
+                and not any(has_smelly_values(file[hdf_path][key][:]) for key in file[hdf_path].keys())
 
     gather(src_file_paths=hdf_dir.glob("data/Event*.hdf"),
            dest_file_path=hdf_dir / "EventDataExtLinks.hdf",

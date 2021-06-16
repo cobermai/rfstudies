@@ -10,8 +10,6 @@ import h5py
 import pytest
 from src.utils.transf_tools import gather
 
-LOG = logging.getLogger("TESTLOG")
-
 
 def _sanity_func(file_path: Path, hdf_path: str) -> bool:
     """
@@ -57,7 +55,6 @@ def test__hdf_write_ext_links(tmp_path_factory) -> None:
     """tests _hdf_write_ext_links function"""
     # ARRANGE
     data_dir_path = tmp_path_factory.mktemp("data")
-
 
     dest_file_path = data_dir_path / "dest.hdf"
     h5py.File(dest_file_path, "w").close()

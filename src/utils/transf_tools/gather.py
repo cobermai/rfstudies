@@ -39,9 +39,9 @@ def get_ext_link_rec(file_path: Path,
             children_set = set()
             for key in file[hdf_path].keys():
                 children_set.update(set(get_ext_link_rec(file_path=file_path,
-                                                    hdf_path=hdf_path_combine(hdf_path, key),
-                                                    depth_to_go=depth_to_go - 1,
-                                                    func_to_fulfill=func_to_fulfill)))
+                                                         hdf_path=hdf_path_combine(hdf_path, key),
+                                                         depth_to_go=depth_to_go - 1,
+                                                         func_to_fulfill=func_to_fulfill)))
             return children_set
 
     raise ValueError("depth_to_go should be a non negative integer")
@@ -77,7 +77,8 @@ def get_func_to_fulfill(on_error: bool,
     Additionally if an error occurs the HdfObject will not be added.
     :param func_to_fulfill: The filtering function/ restriction function/ function to fulfill for an HdfObject to
     be added to the output.
-    :param on_error: boolean value that will be returned when the func_to_fulfill trows an error."""
+    :param on_error: boolean value that will be returned when the func_to_fulfill throws an error."""
+
     def func_to_fulfill_with_error_handling(file_path: Path, hdf_path: str) -> bool:
         ret = on_error
         try:
@@ -88,6 +89,7 @@ def get_func_to_fulfill(on_error: bool,
         except (ValueError, SystemError, ArithmeticError, AttributeError, LookupError, RuntimeError):
             LOG.debug("function_to_fulfill error (%s, %s) -> %s", file_path, hdf_path, on_error)
         return ret
+
     return func_to_fulfill_with_error_handling
 
 
