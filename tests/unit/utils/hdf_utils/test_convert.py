@@ -33,19 +33,19 @@ def test__convert_file(tmp_path):
 
 
 class TestConvert:
-    """tests teh Convert class"""
+    """tests the Convert class"""
     @staticmethod
     def test_init():
         """Tests the initialisation of the Convert class"""
-        # Arrange Act
+        # ARRANGE ACT
         conv = convert.Convert()
-        # Assert
+        # ASSERT
         assert conv.check_already_converted is True
         assert conv.num_processes == 2
 
-        # Arrange Act
+        # ARRANGE ACT
         conv = convert.Convert(check_already_converted=False, num_processes=100)
-        # Assert
+        # ASSERT
         assert conv.check_already_converted is False
         assert conv.num_processes == 100
 
@@ -93,15 +93,10 @@ class TestConvertFromTdmsToHdf:
         # ARRANGE
         tdms_dir_path = tmp_path_factory.mktemp("tdms_files")
         hdf_dir_path = tmp_path_factory.mktemp("hdf_files")
-        os.system(command=f"""
-            hdf_path={hdf_dir_path}
-            tdms_path={tdms_dir_path}
-            for file_stem in test1 test2 test3
-            do
-                echo > $tdms_path/$file_stem.tdms
-            done
-            echo > $hdf_path/test1.hdf
-        """)
+        for index in [1,2,3]:
+            open(tdms_dir_path/f"test{index}.tdms", "w")
+        open(hdf_dir_path/"test1.hdf", "w")
+
         expected = set(tdms_dir_path.glob("*.tdms"))
 
         # ACT
