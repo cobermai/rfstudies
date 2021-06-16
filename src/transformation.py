@@ -1,16 +1,16 @@
 """
 This module provides tools to transform data to a capable format so that further analyzing can be done easily.
 """
+import argparse
 from pathlib import Path
 import logging
+import coloredlogs
 import h5py
 import numpy as np
 from src.utils.transf_tools.convert import Convert
 from src.utils.transf_tools.gather import gather
-from src.utils.system.setup_logging import setup_logging
 
-setup_logging()
-LOG = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 def transform(tdms_dir: Path, hdf_dir: Path) -> None:
@@ -27,7 +27,7 @@ def transform(tdms_dir: Path, hdf_dir: Path) -> None:
         .from_tdms(tdms_dir)\
         .to_hdf(hdf_dir / "data").run()
 
-    # Combining all Events and TrendData sets into one hdf5 file with external links if they are not faulty
+    # combine all Events and TrendData sets into one hdf5 file with external links if they are not faulty
     def td_func_to_fulfill(file_path: Path, hdf_path: str) -> bool:
         with h5py.File(file_path, "r") as file:
             grp = file[hdf_path]
@@ -71,9 +71,20 @@ def transform(tdms_dir: Path, hdf_dir: Path) -> None:
            dest_file_path=hdf_dir / "EventDataExtLinks.hdf",
            if_fulfills=ed_func_to_fulfill,
            on_error=False,
-           num_processes=1)
+           num_processes=2)
 
 
 if __name__ == "__main__":
-    transform(tdms_dir=Path("~/project_data/CLIC_DATA_Xbox2_T24PSI_2/").expanduser(),
-              hdf_dir=Path("~/output_files").expanduser())
+    parser = argparse.ArgumentParser(description="Transforms all hdf files from src_dir to dest_dir and gather them"
+                                        "with external links.")
+    parser.add_argument("src_dir", type=Path, help="source directory where tdms files are located")
+    parser.add_argument("dest_dir", type=Path, help="destination directory where hdf files will be placed")
+    parser.add_argument("-v", "--verbose", action="store_true", help="print debug log messages")
+    args = parser.parse_args()
+    if args.verbose:
+        coloredlogs.install(level="DEBUG")
+    else:
+        coloredlogs.install(level="INFO")
+    logger = logging.getLogger(__name__)
+    transform(tdms_dir=args.src_dir.resolve(),
+              hdf_dir=args.dest_dir.resolve())
