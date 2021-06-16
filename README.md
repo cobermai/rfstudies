@@ -45,21 +45,25 @@ transform("source/files/dir", "destination/dir")
 
 ```angular2html ( cleanpy .; tree -A -I "__init__.py|venv|__pycache__|log_files")
 .
-├── log_config.yml              < config file for logging
-├── mypy.ini                    < MyPy config file
+├── log_config.yml              < logging configurations
+├── mypy.ini                    < configuration file for mypy
 ├── README.md                   < explanation file
-├── requirements.txt            < list of required packages
-├── setup_logging.py            < setup the logging mechanism
+├── requirements.system         < list of required system packages
+├── requirements.txt            < list of required python packages and version numbers
 ├── setup.py                    < Setup file for using the project with "pip install mlframework"
+├── sonar-project.properties    < properties for sonar code analyzation tool
 ├── src                         <<< source directory
-│   ├── transformation.py       < tranforms unknown data files to commonly known ones (ex.: .tdms -> .hdf)
+│   ├── transformation.py       < tranforms data in special formats into a handy format (ex.: .tdms -> .hdf)
 │   └── utils                   < utilities
-│       ├── transf_tools        < utilities used in the transformation
-│       │   ├── gather.py       < combines data without copying it
-│       │   └── tdms_read.py    < reads tmds files and transformes them in to hdf files
-│       └── system              
-│── tests                       <<< tests for main code in the source directory
-│   ├── integration             < tests from start to beginning (also called end to end test), NOT IMPLEMENTED YET
-│   ├── unit                    < tests every function/class (also called atomic test)
-│   └── utils                   < utilyties for the testing suite (ex. creating test files)
+│       ├── hdf_tools.py        < tools to handle hdf files
+│       ├── handler_tools       < combines data without copying it
+│       ├── system              < system utils: setup_logging and dev_tools
+│       └── transf_tools        < utilities used in the transformation
+│           ├── convert.py      < converting tool
+│           └── gather.py       < gather data scattered on multiple files
+└── tests                       <<< tests for main code in the source directory
+    ├── integration             < tests from start to beginning (also called end to end test), NOT IMPLEMENTED YET
+    ├── unit                    < tests every function/class (also called atomic test)
+    └── utils                   < utilyties for the testing suite (ex. creating test files)
+
 ```
