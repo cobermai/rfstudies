@@ -104,7 +104,7 @@ class TestConvertFromTdmsToHdf:
             .from_tdms(tdms_dir_path)\
             .to_hdf(hdf_dir_path)
         # ASSERT
-        assert conv_tdms2hdf.get_tdms_file_paths_to_convert() == expected, "with a faulty hdf file with check"
+        assert conv_tdms2hdf.get_tdms_file_paths_to_convert() == expected, "with no healthy hdf file, with check"
 
         # ACT
         h5py.File(hdf_dir_path / "test1.hdf", "w").close()
@@ -112,7 +112,7 @@ class TestConvertFromTdmsToHdf:
             .from_tdms(tdms_dir_path)\
             .to_hdf(hdf_dir_path)
         # ASSERT
-        assert conv_tdms2hdf.get_tdms_file_paths_to_convert() == expected, "with healthy hdf file no check"
+        assert conv_tdms2hdf.get_tdms_file_paths_to_convert() == expected, "with one healthy hdf file, no check"
 
         # ACT
         expected = set(tdms_dir_path.glob("*2.tdms")).union(set(tdms_dir_path.glob("*3.tdms")))
@@ -120,7 +120,7 @@ class TestConvertFromTdmsToHdf:
             .from_tdms(tdms_dir_path) \
             .to_hdf(hdf_dir_path)
         # ASSERT
-        assert conv_tdms2hdf.get_tdms_file_paths_to_convert() == expected, "with a healthy hdf file with check"
+        assert conv_tdms2hdf.get_tdms_file_paths_to_convert() == expected, "with one healthy hdf file, with check"
 
     @staticmethod
     def test_run(tmp_path_factory):
