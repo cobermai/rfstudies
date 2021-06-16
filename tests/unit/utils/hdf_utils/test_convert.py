@@ -7,8 +7,8 @@ from tests.utils.data_creator.file_creator_for_testing import CreatorTestFiles
 from tests.utils.data_creator.tdms_file_creator import CreatorTdmsFile
 
 
-def test_convert_file(tmp_path):
-    """tests the convert_file function"""
+def test__convert_file(tmp_path):
+    """tests the _convert_file function"""
     # ARRANGE
     data_dir_path = tmp_path
     tdms_file_path = data_dir_path / "test.tdms"
@@ -23,7 +23,7 @@ def test_convert_file(tmp_path):
     test_creator.write()
 
     # ACT
-    convert.convert_file(tdms_file_path=tdms_file_path, hdf_dir=data_dir_path)
+    convert._convert_file(tdms_file_path=tdms_file_path, hdf_dir=data_dir_path)  # pylint: disable=protected-access
 
     # ASSERT
     path_of_output = data_dir_path / tdms_file_path.with_suffix(".hdf").name

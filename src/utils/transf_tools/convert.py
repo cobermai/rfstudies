@@ -13,7 +13,7 @@ import h5py
 LOG = logging.getLogger(__name__)
 
 
-def convert_file(tdms_file_path: Path, hdf_dir: Path) -> None:
+def _convert_file(tdms_file_path: Path, hdf_dir: Path) -> None:
     """
     converts the tdms file of tdms_file_path to an hdf file by use of the nptdms converter
     :param tdms_file_path: file path of the tdms file
@@ -113,9 +113,9 @@ class ConvertFromTdmsToHdf(ConvertFromTdms):
         t_tot = time()
         if self.num_processes == 1:
             for path in self.get_tdms_file_paths_to_convert():
-                convert_file(path, self.hdf_dir)
+                _convert_file(path, self.hdf_dir)
         else:
-            convert_func = partial(convert_file, hdf_dir=self.hdf_dir)
+            convert_func = partial(_convert_file, hdf_dir=self.hdf_dir)
             with mp.Pool(self.num_processes) as pool:
                 pool.map(convert_func, self.get_tdms_file_paths_to_convert())
         LOG.debug("In total tdms to hdf5 conversion took: %s sec", time() - t_tot)
