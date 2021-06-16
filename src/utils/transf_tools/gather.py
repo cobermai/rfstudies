@@ -15,8 +15,7 @@ from functools import partial
 from collections.abc import Iterable
 import h5py
 from src.utils.hdf_tools import hdf_path_combine
-
-LOG = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 
 def _get_ext_link_rec(file_path: Path,
@@ -87,7 +86,7 @@ def _get_func_to_fulfill(on_error: bool,
             else:
                 ret = func_to_fulfill(file_path, hdf_path)
         except (ValueError, SystemError, ArithmeticError, AttributeError, LookupError, RuntimeError):
-            LOG.debug("function_to_fulfill error (%s, %s) -> %s", file_path, hdf_path, on_error)
+            log.debug("function_to_fulfill error (%s, %s) -> %s", file_path, hdf_path, on_error)
         return ret
 
     return func_to_fulfill_with_error_handling
@@ -117,4 +116,4 @@ def gather(src_file_paths: Iterable,
                               func_to_fulfill=_get_func_to_fulfill(on_error, if_fulfills))
     with ThreadPool(num_processes) as pool:
         pool.map(multi_proc_func, src_file_paths)
-    LOG.debug("finished Gathering for %s", dest_file_path)
+    log.debug("finished Gathering for %s", dest_file_path)
