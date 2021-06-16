@@ -100,7 +100,7 @@ class TestConvertFromTdmsToHdf:
         expected = set(tdms_dir_path.glob("*.tdms"))
 
         # ACT
-        conv_tdms2hdf = convert.Convert()\
+        conv_tdms2hdf = convert.Convert(check_already_converted=True)\
             .from_tdms(tdms_dir_path)\
             .to_hdf(hdf_dir_path)
         # ASSERT
