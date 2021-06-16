@@ -56,7 +56,7 @@ class ConvertFromTdms(Convert):
     """Adds the from_directory (source) for Convert"""
     def __init__(self, tdms_dir: Path, check_already_converted: bool, num_processes: int):
         """
-        Initalizes the ConvertFromTdms class object, inherits from Convert. tdms_dir is the source directory where the
+        Initializes the ConvertFromTdms class object, inherits from Convert. tdms_dir is the source directory where the
         tdms files to convert are located.
         :param tdms_dir: source directory of tdms files
         :param check_already_converted: only convert the not yet converted files
@@ -79,8 +79,8 @@ class ConvertFromTdmsToHdf(ConvertFromTdms):
     def __init__(self, hdf_dir: Path, tdms_dir: Path, check_already_converted: bool, num_processes: int):
         """
         Initializes the ConvertFromTdmsToHdf class object
-        :param from_tdms: ConverterFromTdms class object
         :param hdf_dir: destination directory of the hdf files
+        :param tdms_dir: ConverterFromTdms class object
         """
         super().__init__(tdms_dir, check_already_converted, num_processes)
         self.hdf_dir = hdf_dir

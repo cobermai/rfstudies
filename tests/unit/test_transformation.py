@@ -31,4 +31,4 @@ def test_transformation(tmp_path_factory) -> None:
         is_equal = os.system(f"h5diff  {path_of_output} {path_of_expected}") == 0
         assert is_equal, f"the transformed file {path_of_output.name} differs from the expected output"
 
-    #TODO test gathering!!
+    # TODO test gathering!!
