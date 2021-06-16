@@ -32,19 +32,19 @@ def get_ext_link_rec(file_path: Path,
     :return: set of external hdf links
     """
     if depth_to_go == 0:
-        ret = {h5py.ExternalLink(file_path, hdf_path)} if func_to_fulfill(file_path, hdf_path) else set()
-    elif depth_to_go > 0:
+        return {h5py.ExternalLink(file_path, hdf_path)} if func_to_fulfill(file_path, hdf_path) else set()
+
+    if depth_to_go > 0:
         with h5py.File(file_path, "r") as file:
-            ret_set = set({})
+            children_set = set()
             for key in file[hdf_path].keys():
-                ret_set.update(set(get_ext_link_rec(file_path=file_path,
+                children_set.update(set(get_ext_link_rec(file_path=file_path,
                                                     hdf_path=hdf_path_combine(hdf_path, key),
                                                     depth_to_go=depth_to_go - 1,
                                                     func_to_fulfill=func_to_fulfill)))
-            ret = ret_set
-    else:
-        raise ValueError("depth_to_go should be a non negative integer")
-    return ret
+            return children_set
+
+    raise ValueError("depth_to_go should be a non negative integer")
 
 
 def hdf_write_ext_links(source_file_path: Path,
