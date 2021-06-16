@@ -19,10 +19,10 @@ from src.utils.hdf_tools import hdf_path_combine
 LOG = logging.getLogger(__name__)
 
 
-def get_ext_link_rec(file_path: Path,
-                     hdf_path: str,
-                     depth_to_go: int,
-                     func_to_fulfill: Callable[[Path, str], bool]) -> set:
+def _get_ext_link_rec(file_path: Path,
+                      hdf_path: str,
+                      depth_to_go: int,
+                      func_to_fulfill: Callable[[Path, str], bool]) -> set:
     """
     recursive function to return external links of hdf files in variable depth
     :param file_path: path of the hdf file
@@ -38,20 +38,20 @@ def get_ext_link_rec(file_path: Path,
         with h5py.File(file_path, "r") as file:
             children_set = set()
             for key in file[hdf_path].keys():
-                children_set.update(set(get_ext_link_rec(file_path=file_path,
-                                                         hdf_path=hdf_path_combine(hdf_path, key),
-                                                         depth_to_go=depth_to_go - 1,
-                                                         func_to_fulfill=func_to_fulfill)))
+                children_set.update(set(_get_ext_link_rec(file_path=file_path,
+                                                          hdf_path=hdf_path_combine(hdf_path, key),
+                                                          depth_to_go=depth_to_go - 1,
+                                                          func_to_fulfill=func_to_fulfill)))
             return children_set
 
     raise ValueError("depth_to_go should be a non negative integer")
 
 
-def hdf_write_ext_links(source_file_path: Path,
-                        dest_file_path: Path,
-                        lock: Lock_Data_Type,
-                        depth: int,
-                        func_to_fulfill: Callable[[Path, str], bool]) -> None:
+def _hdf_write_ext_links(source_file_path: Path,
+                         dest_file_path: Path,
+                         lock: Lock_Data_Type,
+                         depth: int,
+                         func_to_fulfill: Callable[[Path, str], bool]) -> None:
     """
     writes external links from the source file of given depth into the destination file.
     :param source_file_path: file path of the hdf file
@@ -60,10 +60,10 @@ def hdf_write_ext_links(source_file_path: Path,
     :param depth: the depth in which external links will be created
     :param func_to_fulfill: the function that has to be fulfilled in order to be gathered
     """
-    ext_link_list = get_ext_link_rec(file_path=source_file_path,
-                                     hdf_path="/",
-                                     depth_to_go=depth,
-                                     func_to_fulfill=func_to_fulfill)
+    ext_link_list = _get_ext_link_rec(file_path=source_file_path,
+                                      hdf_path="/",
+                                      depth_to_go=depth,
+                                      func_to_fulfill=func_to_fulfill)
     with lock:
         with h5py.File(dest_file_path, "a") as dest_file:
             for link in ext_link_list:
@@ -71,8 +71,8 @@ def hdf_write_ext_links(source_file_path: Path,
                 dest_file[grp_name] = link
 
 
-def get_func_to_fulfill(on_error: bool,
-                        func_to_fulfill: Callable[[Path, str], bool] = None) -> Callable[[Path, str], bool]:
+def _get_func_to_fulfill(on_error: bool,
+                         func_to_fulfill: Callable[[Path, str], bool] = None) -> Callable[[Path, str], bool]:
     """Sets the function_to_fulfill. On True the HdfObject will be added, if False it will not be added.
     Additionally if an error occurs the HdfObject will not be added.
     :param func_to_fulfill: The filtering function/ restriction function/ function to fulfill for an HdfObject to
@@ -110,11 +110,11 @@ def gather(src_file_paths: Iterable,
     :param num_processes: number of processors for parallel gathering
     """
     h5py.File(dest_file_path, "w").close()  # overwrite destination file
-    multi_proc_func = partial(hdf_write_ext_links,
+    multi_proc_func = partial(_hdf_write_ext_links,
                               dest_file_path=dest_file_path,
                               lock=Lock(),
                               depth=depth,
-                              func_to_fulfill=get_func_to_fulfill(on_error, if_fulfills))
+                              func_to_fulfill=_get_func_to_fulfill(on_error, if_fulfills))
     with ThreadPool(num_processes) as pool:
         pool.map(multi_proc_func, src_file_paths)
     LOG.debug("finished Gathering for %s", dest_file_path)

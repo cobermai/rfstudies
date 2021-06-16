@@ -4,7 +4,6 @@ tests for gather module
 from typing import Callable
 from pathlib import Path
 from functools import partial
-import logging
 from multiprocessing import Lock
 import h5py
 import pytest
@@ -40,9 +39,9 @@ def test__get_ext_link_rek(tmp_path) -> None:
                        h5py.ExternalLink(hdf_file_path, "/aaa/ds_at_layer_1")}
 
     # ACT
-    output = gather.get_ext_link_rec(hdf_file_path, "/", 2, _sanity_func)
+    output = gather._get_ext_link_rec(hdf_file_path, "/", 2, _sanity_func)  # pylint: disable=protected-access
     with pytest.raises(ValueError):
-        gather.get_ext_link_rec(hdf_file_path, "/", -10, lambda _, __: True)
+        gather._get_ext_link_rec(hdf_file_path, "/", -10, lambda _, __: True)  # pylint: disable=protected-access
 
     # ASSERT
     def link_tuple_set(link_set) -> set:
@@ -67,7 +66,8 @@ def test__hdf_write_ext_links(tmp_path_factory) -> None:
         file["aaa"].create_dataset("ds_at_layer_1", (1,), int)
 
     # ACT
-    gather.hdf_write_ext_links(source_file_path, dest_file_path, Lock(), 1, lambda x, y: True)
+    gather._hdf_write_ext_links(source_file_path, dest_file_path,  # pylint: disable=protected-access
+                                Lock(), 1, lambda x, y: True)
 
     # ASSERT
     with h5py.File(dest_file_path, "r") as dest_file, h5py.File(source_file_path, "r") as source_file:
@@ -77,14 +77,15 @@ def test__hdf_write_ext_links(tmp_path_factory) -> None:
         assert output == expected_output, f"expected {expected_output}\nbut got {output}"
 
 
-def test_get_func_to_fulfill():
-    """tests get_func_to_fulfill (i.e. checks if the error handling with on_error works)"""
+def test__get_func_to_fulfill():
+    """tests _get_func_to_fulfill (i.e. checks if the error handling with on_error works)"""
     # ### unexpected Errors
     # ARRANGE
     def func_unexpected_error(_file_path: Path, _hdf_path: str):
         raise InterruptedError  # an unexpected error
     # ACT
-    func_to_fulfill_with_error_handling = gather.get_func_to_fulfill(False, func_unexpected_error)
+    func_to_fulfill_with_error_handling = gather\
+        ._get_func_to_fulfill(False, func_unexpected_error)  # pylint: disable=protected-access
     # ASSERT
     with pytest.raises(InterruptedError):
         func_to_fulfill_with_error_handling(Path("/"), "/")
@@ -101,7 +102,8 @@ def test_get_func_to_fulfill():
         on_error = not on_error  # Trying out different error handlers
         fun: Callable = partial(func_expected_errors, expected_error=err)
         # ACT
-        func_to_fulfill_with_error_handling = gather.get_func_to_fulfill(on_error=on_error, func_to_fulfill=fun)
+        func_to_fulfill_with_error_handling = gather\
+            ._get_func_to_fulfill(on_error=on_error, func_to_fulfill=fun)  # pylint: disable=protected-access
         # ASSERT
         assert func_to_fulfill_with_error_handling(Path("/"), "/") == on_error
 
