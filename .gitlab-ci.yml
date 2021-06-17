@@ -19,7 +19,7 @@ linter:
     - pip3 install pylint
     - pip3 install -r requirements.txt
   script:
-    - pylint -j 4 --rcfile .pylintrc src
+    - pylint -j 2 --rcfile .pylintrc src
   allow_failure: true
 
 type_checking:
@@ -27,10 +27,10 @@ type_checking:
   stage: type_checking
   before_script: 
     - pip3 install mypy
-    - mypy --install-types
+#    - mypy --install-types  #this would be a better way of dealing with missing imports
     - pip3 install -r requirements.txt
   script:
-    - mypy src
+    - mypy --ignore-missing-imports src
   allow_failure: true
 
 test_dev:
@@ -41,10 +41,9 @@ test_dev:
     paths:
       - cov.xml
     expire_in: 1 day
-  before_script: 
+  script: 
     - apt update
     - apt install hdf5-tools -y
-  script:
     - pytest ${project_root}/tests --junitxml=report.xml
     - pytest --cov-report xml:cov.xml --cov=${project_root}/src
 
