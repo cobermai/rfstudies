@@ -14,7 +14,8 @@ REQUIREMENTS: dict = {
         'compress_pickle >= 2.0.1',
         'scipy >= 1.6.3',
         'pyyaml>=5.4',
-        'pandas>=1.2.4'
+        'pandas>=1.2.4',
+        'coloredlogs>=15',
     ],
     'test': [
         'pytest >= 6.2.4',
