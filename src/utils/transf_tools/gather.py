@@ -86,7 +86,8 @@ def _get_func_to_fulfill(on_error: bool,
             else:
                 ret = func_to_fulfill(file_path, hdf_path)
         except (ValueError, SystemError, ArithmeticError, AttributeError, LookupError, RuntimeError):
-            log.debug("function_to_fulfill error (%s, %s) -> %s", file_path, hdf_path, on_error)
+            log.info("Caught error for function_to_fulfill on input (%s, %s). Returned on_error=%s",\
+                     file_path, hdf_path, on_error)
         return ret
 
     return func_to_fulfill_with_error_handling
@@ -116,4 +117,4 @@ def gather(src_file_paths: Iterable,
                               func_to_fulfill=_get_func_to_fulfill(on_error, if_fulfills))
     with ThreadPool(num_processes) as pool:
         pool.map(multi_proc_func, src_file_paths)
-    log.debug("finished Gathering for %s", dest_file_path)
+    log.debug("finished Gathering %s", dest_file_path)

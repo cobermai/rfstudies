@@ -44,7 +44,7 @@ class CreatorTestFiles(CreatorTdmsFile):
         inters = set(self.ch_prop_dict.keys()).intersection(set(self.ch_data_dict))
         union = set(self.ch_prop_dict.keys()).union(set(self.ch_data_dict))
         if inters != union:
-            raise RuntimeWarning(f""" ch_prop_dict and ch_data_dict have different keys (=channel names).
+            raise RuntimeWarning(f"""ch_prop_dict and ch_data_dict have different keys (=channel names).
                 Got ch_prop_dict.keys() = {self.ch_prop_dict.keys()} and 
                 ch_data_dict.keys() = {self.ch_data_dict.keys()}.
                 Some channels might be discarded for the creation of the tdms file.""")

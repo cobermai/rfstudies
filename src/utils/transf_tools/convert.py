@@ -21,11 +21,11 @@ def _convert_file(tdms_file_path: Path, hdf_dir: Path) -> None:
     """
     t_0 = time()
     with nptdms.TdmsFile(tdms_file_path) as tdms_file:
-        logger.info("reading tdms file  %s     took: %s sec", tdms_file_path.stem, time() - t_0)
+        logger.debug("reading tdms file  %40s     took: %10.10s sec", tdms_file_path.stem, time() - t_0)
         hdf_file_path = hdf_dir / tdms_file_path.with_suffix(".hdf").name
         t_0 = time()
         tdms_file.as_hdf(hdf_file_path, mode="w", group="/")
-        logger.info("tdms2hdf + writing %s     took: %s sec", tdms_file_path.stem, time() - t_0)
+        logger.debug("tdms2hdf + writing %40s     took: %10.10s sec", tdms_file_path.stem, time() - t_0)
 
 
 class Convert:
