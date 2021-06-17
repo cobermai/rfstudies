@@ -86,7 +86,7 @@ def _get_func_to_fulfill(on_error: bool,
             else:
                 ret = func_to_fulfill(file_path, hdf_path)
         except (ValueError, SystemError, ArithmeticError, AttributeError, LookupError, RuntimeError):
-            log.info("Caught error for function_to_fulfill on input (%s, %s). Returned on_error=%s",\
+            log.info("Caught error for function_to_fulfill on input (%s, %s). Returned on_error=%s",
                      file_path, hdf_path, on_error)
         return ret
 

@@ -33,10 +33,10 @@ def test_transformation(tmp_path_factory) -> None:
         is_equal = os.system(f"h5diff {path_of_output} {path_of_expected}") == 0
         assert is_equal, f"the transformed file {path_of_output.name} differs from the expected output"
     # testing the gathered files
-    for file_name in [ "EventDataExtLinks.hdf", "TrendDataExtLinks.hdf"]:
+    for file_name in ["EventDataExtLinks.hdf", "TrendDataExtLinks.hdf"]:
         with h5py.File(transform_hdf_dir / file_name, "r") as file:
             for key in file.keys():
                 assert "_semicorrupt" in key or "_ok" in key, \
                     "ExternalLinks with healthy data should contain _semicorrupt or _ok in their names"
-                assert not "_corrupt" in key, \
+                assert "_corrupt" not in key, \
                     "ExternalLinks with healthy data should not contain _corrupt in their names"

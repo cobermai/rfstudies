@@ -3,6 +3,7 @@ from pathlib import Path
 import numpy as np
 from tests.utils.data_creator.file_creator_for_testing import CreatorTestFiles
 
+
 def _trend_data_creator(tdms_dir_path: Path, hdf_dir_path: Path, file_stem: Path) -> CreatorTestFiles:
     tdms_creator = CreatorTestFiles(hdf_file_path=hdf_dir_path / file_stem.with_suffix(".hdf"),
                                     tdms_file_path=tdms_dir_path / file_stem.with_suffix(".tdms"),

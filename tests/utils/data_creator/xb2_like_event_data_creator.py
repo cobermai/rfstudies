@@ -106,6 +106,7 @@ def _create_empty(created_tdms_files_dir: Path, created_hdf_files_dir: Path) -> 
                                        file_stem=Path("EventData_20210101_empty"))
     tdms_creator.write()
 
+
 def _create_ok_data(created_tdms_files_dir: Path, created_hdf_files_dir: Path) -> None:
     """creates a tmds file with the specified path that is similar to event data. And tests the functionality of
     the transformation part of the continuous integration."""

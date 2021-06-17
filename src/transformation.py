@@ -23,8 +23,8 @@ def transform(tdms_dir: Path, hdf_dir: Path) -> None:
     Path(hdf_dir, "data").mkdir(parents=False, exist_ok=True)
 
     # read tdms files, convert them to hdf5 and write them into hdf_dir/data/
-    Convert(check_already_converted=True, num_processes=4)\
-        .from_tdms(tdms_dir)\
+    Convert(check_already_converted=True, num_processes=4) \
+        .from_tdms(tdms_dir) \
         .to_hdf(hdf_dir / "data").run()
 
     # combine all Events and TrendData sets into one hdf5 file with external links if they are not faulty
@@ -76,7 +76,7 @@ def transform(tdms_dir: Path, hdf_dir: Path) -> None:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Transforms all hdf files from src_dir to dest_dir and gather them"
-                                        "with external links.")
+                                                 "with external links.")
     parser.add_argument("src_dir", type=Path, help="source directory where tdms files are located")
     parser.add_argument("dest_dir", type=Path, help="destination directory where hdf files will be placed")
     parser.add_argument("-v", "--verbose", action="store_true", help="print debug log messages")

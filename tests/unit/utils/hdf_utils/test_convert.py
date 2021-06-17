@@ -93,9 +93,9 @@ class TestConvertFromTdmsToHdf:
         # ARRANGE
         tdms_dir_path = tmp_path_factory.mktemp("tdms_files")
         hdf_dir_path = tmp_path_factory.mktemp("hdf_files")
-        for index in [1,2,3]:
-            open(tdms_dir_path/f"test{index}.tdms", "w")
-        open(hdf_dir_path/"test1.hdf", "w")
+        for index in [1, 2, 3]:
+            open(tdms_dir_path / f"test{index}.tdms", "w")
+        open(hdf_dir_path / "test1.hdf", "w")
 
         expected = set(tdms_dir_path.glob("*.tdms"))
 
@@ -129,7 +129,7 @@ class TestConvertFromTdmsToHdf:
         hdf_dir_path = tmp_path_factory.mktemp("hdf_files")
         tdms_dir_path = tmp_path_factory.mktemp("tmp_files")
         for index in range(5):
-            CreatorTdmsFile(tdms_dir_path/f"test{index}.tdms", {"root_prop": index}).write()
+            CreatorTdmsFile(tdms_dir_path / f"test{index}.tdms", {"root_prop": index}).write()
         for num_processes in [1, 3]:
             # ACT
             convert.Convert(num_processes=num_processes, check_already_converted=False)\

@@ -30,6 +30,7 @@ def _convert_file(tdms_file_path: Path, hdf_dir: Path) -> None:
 
 class Convert:
     """A very general converter Object, that can be adapted to new data formats."""
+
     def __init__(self,
                  check_already_converted: bool = True,
                  num_processes: int = 2):
@@ -54,6 +55,7 @@ class Convert:
 
 class ConvertFromTdms(Convert):
     """Adds the from_directory (source) for Convert"""
+
     def __init__(self, tdms_dir: Path, check_already_converted: bool, num_processes: int):
         """
         Initializes the ConvertFromTdms class object, inherits from Convert. tdms_dir is the source directory where the
@@ -76,6 +78,7 @@ class ConvertFromTdms(Convert):
 
 class ConvertFromTdmsToHdf(ConvertFromTdms):
     """Adds the destination directory (destination) for ConvertFromTdms"""
+
     def __init__(self, hdf_dir: Path, tdms_dir: Path, check_already_converted: bool, num_processes: int):
         """
         Initializes the ConvertFromTdmsToHdf class object
