@@ -25,6 +25,7 @@ def _hdf_attr_value(value):
 
 class CreatorTestFiles(CreatorTdmsFile):
     """Creator class of tdms and hdf files simultaneously for testing."""
+
     def __init__(self, hdf_file_path: Path, tdms_file_path: Path, root_prop_dict: dict):
         super().__init__(tdms_file_path=tdms_file_path,
                          tdms_root_properties=root_prop_dict)
@@ -45,7 +46,7 @@ class CreatorTestFiles(CreatorTdmsFile):
         union = set(self.ch_prop_dict.keys()).union(set(self.ch_data_dict))
         if inters != union:
             raise RuntimeWarning(f"""ch_prop_dict and ch_data_dict have different keys (=channel names).
-                Got ch_prop_dict.keys() = {self.ch_prop_dict.keys()} and 
+                Got ch_prop_dict.keys() = {self.ch_prop_dict.keys()} and
                 ch_data_dict.keys() = {self.ch_data_dict.keys()}.
                 Some channels might be discarded for the creation of the tdms file.""")
         return inters
