@@ -26,11 +26,11 @@ type_checking:
   image: python:${PY_VERSION}
   stage: type_checking
   before_script: 
-    - check-mypy
     - pip3 install mypy
+    - mypy --install-types
     - pip3 install -r requirements.txt
   script:
-    - mypy --config-file mypy.ini src 
+    - mypy src
   allow_failure: true
 
 test_dev:
@@ -41,10 +41,10 @@ test_dev:
     paths:
       - cov.xml
     expire_in: 1 day
-  script:
-    - ls
+  before_script: 
     - apt update
     - apt install hdf5-tools -y
+  script:
     - pytest ${project_root}/tests --junitxml=report.xml
     - pytest --cov-report xml:cov.xml --cov=${project_root}/src
 
