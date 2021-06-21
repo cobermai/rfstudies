@@ -18,7 +18,7 @@ def test_transformation(tmp_path_factory) -> None:
     created_tdms_dir = tmp_path_factory.mktemp("created_tdms")
     created_hdf_dir = tmp_path_factory.mktemp("created_hdf")
 
-    # create tdms files (trend and event data) similar to xb2 data files
+    # create tdms files and hdf files for testing (trend and event data) similar to xb2 data files
     create_event_data(created_tdms_dir, created_hdf_dir)
     create_trend_data(created_tdms_dir, created_hdf_dir)
 

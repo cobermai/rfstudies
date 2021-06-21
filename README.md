@@ -57,7 +57,6 @@ transform("source/files/dir", "destination/dir")
 │   └── utils                   < utilities
 │       ├── hdf_tools.py        < tools to handle hdf files
 │       ├── handler_tools       < combines data without copying it
-│       ├── system              < system utils: setup_logging and dev_tools
 │       └── transf_tools        < utilities used in the transformation
 │           ├── convert.py      < converting tool
 │           └── gather.py       < gather data scattered on multiple files
