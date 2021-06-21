@@ -8,7 +8,7 @@ import coloredlogs
 import h5py
 import numpy as np
 from src.utils.transf_tools.convert import Convert
-from src.utils.transf_tools.gather import gather
+from src.utils.transf_tools.gather import Gatherer
 
 logger = logging.getLogger(__name__)
 
@@ -36,11 +36,9 @@ def transform(tdms_dir: Path, hdf_dir: Path) -> None:
             num_of_samples = 35
             return len_equal and len(ch_shapes) == num_of_samples
 
-    gather(src_file_paths=hdf_dir.glob("data/Trend*.hdf"),
-           dest_file_path=hdf_dir / "TrendDataExtLinks.hdf",
-           if_fulfills=td_func_to_fulfill,
-           on_error=False,
-           num_processes=4)
+    Gatherer(if_fulfills=td_func_to_fulfill, on_error=False, num_processes=4)\
+        .gather(src_file_paths=hdf_dir.glob("data/Trend*.hdf"),
+                dest_file_path=hdf_dir / "TrendDataExtLinks.hdf")
 
     def ed_func_to_fulfill(file_path: Path, hdf_path: str) -> bool:
         with h5py.File(file_path, "r") as file:
@@ -50,12 +48,12 @@ def transform(tdms_dir: Path, hdf_dir: Path) -> None:
             acquisition_window = 2e-6  # time period of one event is 2 microseconds
 
             # acquisition card NI-5772 see https://www.ni.com/en-us/support/model.ni-5772.html
-            sampling_frequency_ni5772 = 1.6e9  # sampling frequency of the acquisition card
+            sampling_frequency_ni5772 = 1.6e9
             num_of_values_ni5772 = acquisition_window * sampling_frequency_ni5772
             number_of_signals_monitored_with_ni5772 = 8
 
             # acquisition card NI-5761 see https://www.ni.com/en-us/support/model.ni-5761.html
-            sampling_frequency_ni5761 = 2.5e8  # sampling frequency of the acquisition card
+            sampling_frequency_ni5761 = 2.5e8
             num_of_values_ni5761 = acquisition_window * sampling_frequency_ni5761
             number_of_signals_monitored_with_ni5761 = 8
 
@@ -67,11 +65,9 @@ def transform(tdms_dir: Path, hdf_dir: Path) -> None:
                 and ch_len.count(num_of_values_ni5761) == number_of_signals_monitored_with_ni5761 \
                 and not any(has_smelly_values(ch[:]) for ch in grp.values())
 
-    gather(src_file_paths=hdf_dir.glob("data/Event*.hdf"),
-           dest_file_path=hdf_dir / "EventDataExtLinks.hdf",
-           if_fulfills=ed_func_to_fulfill,
-           on_error=False,
-           num_processes=1)
+    Gatherer(if_fulfills=ed_func_to_fulfill, on_error=False, num_processes=1)\
+        .gather(src_file_paths=hdf_dir.glob("data/Event*.hdf"),
+                dest_file_path=hdf_dir / "EventDataExtLinks.hdf")
 
 
 if __name__ == "__main__":

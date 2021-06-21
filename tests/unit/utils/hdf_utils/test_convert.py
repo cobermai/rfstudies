@@ -63,7 +63,7 @@ class TestConvert:
         assert conv_from_tdms.check_already_converted is False
 
 
-class TestConvertFromTdms:
+class TestConvertFromTdms:  # pylint: disable=too-few-public-methods
     """tests the ConvertFromTdms class"""
     @staticmethod
     def test_to_hdf():
@@ -89,7 +89,7 @@ class TestConvertFromTdmsToHdf:
     """tests the ConvertFromTdmsToHdf class"""
     @staticmethod
     def test_get_tdms_file_paths_to_convert(tmp_path_factory):
-        """tests get_tdms_file_paths_to_convert"""
+        """tests get_tdms_file_paths_to_convert """
         # ARRANGE
         tdms_dir_path = tmp_path_factory.mktemp("tdms_files")
         hdf_dir_path = tmp_path_factory.mktemp("hdf_files")
@@ -106,16 +106,18 @@ class TestConvertFromTdmsToHdf:
         # ASSERT
         assert conv_tdms2hdf.get_tdms_file_paths_to_convert() == expected, "with no healthy hdf file, with check"
 
-        # ACT
         h5py.File(hdf_dir_path / "test1.hdf", "w").close()
+
+        # ACT
         conv_tdms2hdf = convert.Convert(check_already_converted=False)\
             .from_tdms(tdms_dir_path)\
             .to_hdf(hdf_dir_path)
         # ASSERT
         assert conv_tdms2hdf.get_tdms_file_paths_to_convert() == expected, "with one healthy hdf file, no check"
 
-        # ACT
         expected = set(tdms_dir_path.glob("*2.tdms")).union(set(tdms_dir_path.glob("*3.tdms")))
+
+        # ACT
         conv_tdms2hdf = convert.Convert(check_already_converted=True) \
             .from_tdms(tdms_dir_path) \
             .to_hdf(hdf_dir_path)

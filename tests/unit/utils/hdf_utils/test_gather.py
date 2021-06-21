@@ -73,13 +73,12 @@ def test__hdf_write_ext_links(tmp_path_factory) -> None:
     with h5py.File(dest_file_path, "r") as dest_file, h5py.File(source_file_path, "r") as source_file:
         assert len(dest_file.keys()) == 1, "too many keys in output list, expected 1"
         expected_output = source_file["aaa"]
-        output = dest_file["test--aaa"]
+        output = dest_file["test-aaa"]
         assert output == expected_output, f"expected {expected_output}\nbut got {output}"
 
 
-def test__get_func_to_fulfill():
-    """tests _get_func_to_fulfill (i.e. checks if the error handling with on_error works)"""
-    # ### unexpected Errors
+def test__get_func_to_fulfill__unexpected_error():
+    """tests _get_func_to_fulfill (checks if the error handling still passes unexpected Errors)"""
     # ARRANGE
     def func_unexpected_error(_file_path: Path, _hdf_path: str):
         raise InterruptedError  # an unexpected error
@@ -90,7 +89,8 @@ def test__get_func_to_fulfill():
     with pytest.raises(InterruptedError):
         func_to_fulfill_with_error_handling(Path("/"), "/")
 
-    # ### expected Errors
+def test__get_func_to_fulfill__expected_error():
+    """tests _get_func_to_fulfill (checks if the error handling for expected errors with on_error works)"""
     # ARRANGE
     error_list = [KeyError, ValueError, SystemError, ArithmeticError, AttributeError, LookupError,
                   NotImplementedError, RuntimeError]
@@ -119,13 +119,12 @@ def test_gather(tmp_path_factory):
             file.create_group("grp")
             file["grp"].create_dataset("ds_at_layer_1", (1,), int)
             file.create_group("discard_this")
-    expected_keys = {'test0--grp', 'test1--grp', 'test2--grp'}
+    expected_keys = {'test0-grp', 'test1-grp', 'test2-grp'}
 
     # ACT
-    gather.gather(src_file_paths=source_dir_path.glob("*.hdf"),
-                  dest_file_path=dest_file_path,
-                  if_fulfills=_sanity_func,
-                  on_error=False)
+    gather.Gatherer(if_fulfills=_sanity_func, on_error=False)\
+        .gather(src_file_paths=source_dir_path.glob("*.hdf"), dest_file_path=dest_file_path, )
+
     # ASSERT
     with h5py.File(dest_file_path, "r") as file:
         output = set(file.keys())

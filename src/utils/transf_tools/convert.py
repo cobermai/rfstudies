@@ -28,7 +28,7 @@ def _convert_file(tdms_file_path: Path, hdf_dir: Path) -> None:
         logger.debug("tdms2hdf + writing %40s     took: %10.10s sec", tdms_file_path.stem, time() - t_0)
 
 
-class Convert:
+class Convert:  # pylint: disable=too-few-public-methods
     """A very general converter Object, that can be adapted to new data formats."""
 
     def __init__(self,

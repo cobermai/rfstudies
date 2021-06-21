@@ -66,7 +66,7 @@ def _hdf_write_ext_links(source_file_path: Path,
     with lock:
         with h5py.File(dest_file_path, "a") as dest_file:
             for link in ext_link_list:
-                grp_name = source_file_path.stem + "-" + link.path.replace("/", "-")
+                grp_name = source_file_path.stem + link.path.replace("/", "-")
                 dest_file[grp_name] = link
 
 
@@ -93,28 +93,35 @@ def _get_func_to_fulfill(on_error: bool,
     return func_to_fulfill_with_error_handling
 
 
-def gather(src_file_paths: Iterable,
-           dest_file_path: Path,
-           if_fulfills: Callable[[Path, str], bool] = None,
+class Gatherer:  # pylint: disable=too-few-public-methods
+    """gathers hdf-groups of many hdf files into one by creating external links that point to the original files.
+    This way the data can be accessed though one without copying the data"""
+    def __init__(self,if_fulfills: Callable[[Path, str], bool] = None,
            on_error: bool = False,
            depth: int = 1,
-           num_processes: int = 2) -> None:
-    """gathers hdf-groups of many hdf files into one by creating external links that point to the original files.
-    This way the data can be accessed though one without copying the data
-    :param src_file_paths: Iterable of Path objects of the source hdf-file-paths
-    :param dest_file_path: Path of the destination hdf file
-    :param if_fulfills: function that needs to be fulfilled in order for the hdf-object to be added to the destination
-    file via external links.
-    :param on_error: what should
-    :param depth: depth where the objects
-    :param num_processes: number of processors for parallel gathering
-    """
-    h5py.File(dest_file_path, "w").close()  # overwrite destination file
-    multi_proc_func = partial(_hdf_write_ext_links,
-                              dest_file_path=dest_file_path,
-                              lock=Lock(),
-                              depth=depth,
-                              func_to_fulfill=_get_func_to_fulfill(on_error, if_fulfills))
-    with ThreadPool(num_processes) as pool:
-        pool.map(multi_proc_func, src_file_paths)
-    log.debug("finished Gathering %s", dest_file_path)
+           num_processes: int = 2):
+        """Initializes the Gatherer
+        :param if_fulfills: function that needs to be fulfilled in order for the hdf-object to be added to the
+        destination file via external links.
+        :param on_error: what should
+        :param depth: depth where the objects
+        :param num_processes: number of processors for parallel gathering"""
+        self.func_to_fulfill= _get_func_to_fulfill(on_error, if_fulfills)
+        self.depth = depth
+        self.num_processes = num_processes
+
+    def gather(self, src_file_paths: Iterable,
+               dest_file_path: Path) -> None:
+        """starts the gathering process
+        :param src_file_paths: Iterable of Path objects of the source hdf-file-paths
+        :param dest_file_path: Path of the destination hdf file
+        """
+        h5py.File(dest_file_path, "w").close()  # overwrite destination file
+        multi_proc_func = partial(_hdf_write_ext_links,
+                                  dest_file_path=dest_file_path,
+                                  lock=Lock(),
+                                  depth=self.depth,
+                                  func_to_fulfill=self.func_to_fulfill)
+        with ThreadPool(self.num_processes) as pool:
+            pool.map(multi_proc_func, src_file_paths)
+        log.debug("finished Gathering %s", dest_file_path)
