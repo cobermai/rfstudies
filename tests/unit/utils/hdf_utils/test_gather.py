@@ -4,7 +4,6 @@ tests for gather module
 from typing import Callable
 from pathlib import Path
 from functools import partial
-from multiprocessing import Lock
 import h5py
 import pytest
 from src.utils.transf_tools import gather
@@ -67,7 +66,7 @@ def test__hdf_write_ext_links(tmp_path_factory) -> None:
 
     # ACT
     gather._hdf_write_ext_links(source_file_path, dest_file_path,  # pylint: disable=protected-access
-                                Lock(), 1, lambda x, y: True)
+                                1, lambda _, __: True)
 
     # ASSERT
     with h5py.File(dest_file_path, "r") as dest_file, h5py.File(source_file_path, "r") as source_file:
@@ -108,24 +107,26 @@ def test__get_func_to_fulfill__expected_error():
         assert func_to_fulfill_with_error_handling(Path("/"), "/") == on_error
 
 
-def test_gather(tmp_path_factory):
-    """tests run with external links"""
-    # ARRANGE
-    dest_file_path = tmp_path_factory.mktemp("dest") / "TestDataExtLinks.hdf"
-    source_dir_path = tmp_path_factory.mktemp("src_files")
-    for index in range(3):
-        source_file_path = source_dir_path / f"test{index}.hdf"
-        with h5py.File(source_file_path, "w") as file:
-            file.create_group("grp")
-            file["grp"].create_dataset("ds_at_layer_1", (1,), int)
-            file.create_group("discard_this")
-    expected_keys = {'test0-grp', 'test1-grp', 'test2-grp'}
+class TestGatherer:  # pylint: disable=too-few-public-methods
+    """class to test the Gatherer"""
+    @staticmethod
+    def test_gather(tmp_path_factory):
+        """tests gather with external links"""
+        # ARRANGE
+        dest_file_path = tmp_path_factory.mktemp("dest") / "TestDataExtLinks.hdf"
+        source_dir_path = tmp_path_factory.mktemp("src_files")
+        for index in range(3):
+            source_file_path = source_dir_path / f"test{index}.hdf"
+            with h5py.File(source_file_path, "w") as file:
+                file.create_group("grp")
+                file["grp"].create_dataset("ds_at_layer_1", (1,), int)
+                file.create_group("discard_this")
+        expected_keys = {'test0-grp', 'test1-grp', 'test2-grp'}
 
-    # ACT
-    gather.Gatherer(if_fulfills=_sanity_func, on_error=False)\
-        .gather(src_file_paths=source_dir_path.glob("*.hdf"), dest_file_path=dest_file_path, )
-
-    # ASSERT
-    with h5py.File(dest_file_path, "r") as file:
-        output = set(file.keys())
-    assert output == expected_keys, f"expected{expected_keys}\nbut got {output}"
+        # ACT
+        gather.Gatherer(if_fulfills=_sanity_func, on_error=False, depth=1, num_processes=2)\
+            .gather(src_file_paths=source_dir_path.glob("*.hdf"), dest_file_path=dest_file_path)
+        # ASSERT
+        with h5py.File(dest_file_path, "r") as file:
+            output = set(file.keys())
+        assert output == expected_keys, f"expected{expected_keys}\nbut got {output}"

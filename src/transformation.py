@@ -66,7 +66,7 @@ def transform(tdms_dir: Path, hdf_dir: Path) -> None:
                 and not any(has_smelly_values(ch[:]) for ch in grp.values())
 
     Gatherer(if_fulfills=ed_func_to_fulfill, on_error=False, num_processes=1)\
-        .gather(src_file_paths=hdf_dir.glob("data/Event*.hdf"),
+        .gather(src_file_paths=hdf_dir.glob("data/EventData_201804*.hdf"),
                 dest_file_path=hdf_dir / "EventDataExtLinks.hdf")
 
 

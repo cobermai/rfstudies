@@ -8,9 +8,6 @@ Currently implemented:
 from typing import Callable
 import logging
 from pathlib import Path
-from multiprocessing import Lock
-from multiprocessing.synchronize import Lock as Lock_Data_Type
-from multiprocessing.pool import ThreadPool
 from functools import partial
 from collections.abc import Iterable
 import h5py
@@ -48,7 +45,6 @@ def _get_ext_link_rec(file_path: Path,
 
 def _hdf_write_ext_links(source_file_path: Path,
                          dest_file_path: Path,
-                         lock: Lock_Data_Type,
                          depth: int,
                          func_to_fulfill: Callable[[Path, str], bool]) -> None:
     """
@@ -63,11 +59,10 @@ def _hdf_write_ext_links(source_file_path: Path,
                                       hdf_path="/",
                                       depth_to_go=depth,
                                       func_to_fulfill=func_to_fulfill)
-    with lock:
-        with h5py.File(dest_file_path, "a") as dest_file:
-            for link in ext_link_list:
-                grp_name = source_file_path.stem + link.path.replace("/", "-")
-                dest_file[grp_name] = link
+    with h5py.File(dest_file_path, "a") as dest_file:
+        for link in ext_link_list:
+            grp_name = source_file_path.stem + link.path.replace("/", "-")
+            dest_file[grp_name] = link
 
 
 def _get_func_to_fulfill(on_error: bool,
@@ -119,9 +114,8 @@ class Gatherer:  # pylint: disable=too-few-public-methods
         h5py.File(dest_file_path, "w").close()  # overwrite destination file
         multi_proc_func = partial(_hdf_write_ext_links,
                                   dest_file_path=dest_file_path,
-                                  lock=Lock(),
                                   depth=self.depth,
                                   func_to_fulfill=self.func_to_fulfill)
-        with ThreadPool(self.num_processes) as pool:
-            pool.map(multi_proc_func, src_file_paths)
+        for path in src_file_paths:
+            multi_proc_func(path)
         log.debug("finished Gathering %s", dest_file_path)
