@@ -4,6 +4,7 @@ import typing
 import h5py
 import pandas as pd
 
+
 def hdf_path_combine(*argv: str) -> str:
     """
     Concatenates hdf path with "/" in between. Works similar to Path(str, str, str) or the / operator for Path objects
