@@ -6,21 +6,20 @@ Sort: sort_by sorts all datasets with respect to one of them"""
 import typing
 import logging
 from pathlib import Path
-from dateutil.parser import parse
+import dateutil.parser
 import numpy as np
-from numpy import typing as npt
+import argparse
 import h5py
-from setup_logging import setup_logging
+import coloredlogs
 from src.utils.hdf_tools import get_datasets
 
-setup_logging()
-LOG = logging.getLogger("test_handler")
+LOG = logging.getLogger(__name__)
 
 
 def is_datetime(val: typing.Any):
     """returns True if val can be parsed by dateutil.parser.parse() and False if not."""
     try:
-        parse(val)
+        dateutil.parser.isoparse(val)
     except (TypeError, ValueError):
         ret = False
     else:
@@ -28,22 +27,7 @@ def is_datetime(val: typing.Any):
     return ret
 
 
-def get_datetime_array_converter_for(example_data: typing.Union[str, bytes]) \
-        -> typing.Callable:
-    """Creates the fastest date-time converter known for other date-times given in the the same format.
-    :param example_data: an example value of datetime format.
-    """
-    zulu_time_ending = b"Z"  # timezone +00:00
-    if isinstance(example_data, bytes) and example_data.endswith(zulu_time_ending):
-        def convert(data) -> npt.ArrayLike[np.datetime64]:
-            return np.array([value.replace(zulu_time_ending, b"") for value in data], np.datetime64)
-    else:
-        def convert(data) -> npt.ArrayLike[np.datetime64]:
-            return np.array([parse(value) for value in data], np.datetime64)
-    return convert
-
-
-def union(source_file_path: Path, dest_file_path: Path) -> None:
+def merge(source_file_path: Path, dest_file_path: Path) -> None:
     """
     In the first layer of the hdf-directory structure there have to be only groups. In each group is required to have
     the same hdf-datasets, they are referred to as dataset-type.
@@ -55,20 +39,22 @@ def union(source_file_path: Path, dest_file_path: Path) -> None:
             h5py.File(dest_file_path, mode="a") as dest_file:
         first_grp = source_file.values().__iter__().__next__()
         for chn in first_grp.keys():  # the channel names are always the same
+            logger.debug("currently merging: %s", chn)
             example_val = first_grp[chn][0]
             if is_datetime(val=example_val):
-                convert = get_datetime_array_converter_for(example_val)
-                data = convert([ts for path in source_file.keys() for ts in source_file[path][chn][:]])
+                data = np.array([dateutil.parser.isoparse(ts).strftime("%Y-%m-%dT%H:%M:%S.%f")
+                                 for path in source_file.keys() for ts in source_file[path][chn][:]],
+                                dtype=np.datetime64)
                 dest_file.create_dataset(name=chn, data=data.astype(dtype=h5py.opaque_dtype(data.dtype)), chunks=True)
             else:
                 data = np.concatenate([source_file[path][chn][:] for path in source_file.keys()])
                 dest_file.create_dataset(name=chn, data=data, chunks=True)
 
 
-def check_corruptness(arr) -> npt.ArrayLike[bool]:  # npt.ArrayLike[typing.Union[np.number, np.datetime64]]
+def check_corruptness(arr):  # npt.ArrayLike[typing.Union[np.number, np.datetime64]]
     """checks if the input array is healthy of corrupt. In this case corrupt means infinite value or nan value.
     :param arr: input array
-    :return: ndarray with boolean values. True if the value in the input cell was healthy, False if it was corrupt."""
+    :return: array with boolean values. True if the value in the input cell was healthy, False if it was corrupt."""
     if np.issubdtype(arr.dtype, np.number):
         ret = np.isnan(arr) | np.isinf(arr)
     elif np.issubdtype(arr.dtype, np.datetime64):
@@ -76,6 +62,7 @@ def check_corruptness(arr) -> npt.ArrayLike[bool]:  # npt.ArrayLike[typing.Union
     else:
         raise NotImplementedError("Corrupt data is only known for numeric and datetime values.")
     return ret
+
 
 def clean_by_row(file_path: Path) -> None:
     """remove "rows" where the check_corruptness function returns at least one True value in the the row.
@@ -88,10 +75,11 @@ def clean_by_row(file_path: Path) -> None:
         for chn in file.keys():
             is_corrupt |= check_corruptness(file[chn][:])
         new_shape = (sum(~is_corrupt),)
-        for key in file.keys():
-            data = file[key][~is_corrupt]
-            file[key].resize(size=new_shape)
-            file[key][...] = data
+        for ch in file.values():
+            logger.debug("cleaning channel: %s", ch)
+            data = ch[~is_corrupt]
+            ch.resize(size=new_shape)
+            ch[...] = data
 
 
 def sort_by(file_path: Path, sort_by_name: str) -> None:
@@ -102,5 +90,35 @@ def sort_by(file_path: Path, sort_by_name: str) -> None:
     """
     with h5py.File(file_path, "r+") as file:
         indices_order = file[sort_by_name][:].argsort()
-        for key in get_datasets(file_path):
-            file[key][...] = file[key][indices_order]
+        for chn in get_datasets(file_path):
+            file[chn][...] = file[chn][indices_order]
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="""
+            Merges all channels(datasets) scattered on multiple groups into large
+            channels(datasets) located at the root.
+            [tdms syntax: root->group->channel, (hdf syntax: root->group->dataset)]""")
+    parser.add_argument("source", type=Path,
+                        help="file path of the source hdf file where the channels(datasets) are scattered on multiple "
+                             "groups.")
+    parser.add_argument("--dest", type=Path, default=Path("combined.hdf"),
+                        help="file path of the destination file where the merged channels(datasets) will be located.")
+    parser.add_argument("-v", "--verbose", action="store_true", help="print debug log messages")
+    parser.add_argument("-c", "--clean", action="store_true", help="remove smelly values")
+    parser.add_argument("--sort_by", type=str, action="store", default="Timestamp",
+                        help="the channel(dataset) name the data will be sorted on.")
+    args = parser.parse_args()
+    if args.verbose:
+        coloredlogs.install(level="DEBUG")
+    else:
+        coloredlogs.install(level="INFO")
+    logger = logging.getLogger(__name__)
+
+    logger.debug("starting merge")
+    merge(source_file_path=args.source.resolve(), dest_file_path=args.dest.resolve())
+    if args.clean:
+        logger.debug("starting clean")
+        clean_by_row(file_path=args.dest.resolve())
+    logger.debug("starting sort_by")
+    sort_by(file_path=args.dest.resolve(), sort_by_name=args.sort_by)
