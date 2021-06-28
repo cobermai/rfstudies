@@ -5,35 +5,39 @@ from functools import partial
 import numpy as np
 import numpy.typing as npt
 import h5py
-from src.utils.handler_tools.feature import Feature
+import tsfresh
+import pandas as pd
+
+from src.utils.hdf_tools import hdf_path_combine
+from src.utils.handler_tools.feature import EventDataFeature
 
 
-def get_features() -> typing.Generator:
+def get_event_data_features() -> typing.Generator:
     """This function generates all Features for the xb2 data set.
     :return: generator of features"""
     for is_type in ["is_log", "is_bd_in_40ms", "is_bd_in_20ms", "is_bd"]:
         func = log_type_translator(is_type)
-        yield Feature(name=is_type, func=func, output_dtype=bool, info=func.__doc__)
+        yield EventDataFeature(name=is_type, func=func, info=func.__doc__)
 
     func_len = pulse_length
     func_amp = pulse_amplitude
     for chn in ['PEI Amplitude', 'PKI Amplitude', 'PSI Amplitude', 'PSR Amplitude']:
-        yield Feature(name="pulse_length", func=func_len, output_dtype=float, working_dataset=chn,
-                      info=func_len.__doc__)
-        yield Feature(name="pulse_amplitude", func=func_amp, output_dtype=float, working_dataset=chn,
-                      info=func_amp.__doc__)
+        yield EventDataFeature(name="pulse_length", func=func_len, working_on_signal=chn,
+                               info=func_len.__doc__)
+        yield EventDataFeature(name="pulse_amplitude", func=func_amp, working_on_signal=chn,
+                               info=func_amp.__doc__)
 
     for chn in ['DC Up', 'DC Down']:
-        yield Feature(name="min", func=apply_func_creator(np.min), output_dtype=float, working_dataset=chn,
-                      info="calculates the minimum of the data")
-        yield Feature(name="D1", func=apply_func_creator(partial(np.quantile, q=.1)), output_dtype=float,
-                      working_dataset=chn, info="calculates the first deciles of the data")
-        yield Feature(name="mean", func=apply_func_creator(np.mean), output_dtype=float, working_dataset=chn,
-                      info="calculates the mean of the data")
-        yield Feature(name="D9", func=apply_func_creator(partial(np.quantile, q=.9)), output_dtype=float,
-                      working_dataset=chn, info="calculates the 9th deciles of the data")
-        yield Feature(name="max", func=apply_func_creator(np.max), output_dtype=float, working_dataset=chn,
-                      info="calculates the maximum of the data")
+        yield EventDataFeature(name="min", func=apply_func_creator(np.min), working_on_signal=chn,
+                               info="calculates the minimum of the data")
+        yield EventDataFeature(name="D1", func=apply_func_creator(partial(np.quantile, q=.1)),
+                               working_on_signal=chn, info="calculates the first deciles of the data")
+        yield EventDataFeature(name="mean", func=apply_func_creator(np.mean), working_on_signal=chn,
+                               info="calculates the mean of the data")
+        yield EventDataFeature(name="D9", func=apply_func_creator(partial(np.quantile, q=.9)),
+                               working_on_signal=chn, info="calculates the 9th deciles of the data")
+        yield EventDataFeature(name="max", func=apply_func_creator(np.max), working_on_signal=chn,
+                               info="calculates the maximum of the data")
 
 
 def log_type_translator(is_type: str) -> typing.Callable[[Path, str], bool]:
@@ -101,3 +105,21 @@ def apply_func_creator(func: typing.Callable) -> typing.Callable[[Path, str], ty
             data: npt.ArrayLike = file[hdf_path][:]
             return func(data)
     return apply_func
+
+def ts_fresh_features(file_path: Path, hdf_path: str):
+    """calculates the mean value where the amplitude is higher than the threshold (=half of the maximal value)."""
+    with h5py.File(file_path, "r") as file:
+        grp = file[hdf_path]
+        df = pd.DataFrame(data={key: grp[key][:] for key in grp.keys() if len(grp[key][:])==3200 and "Amplitude" in key})
+        df['column_sort'] = df.index
+        df_molten = df.melt(id_vars='column_sort')
+        settings = tsfresh.feature_extraction.settings.EfficientFCParameters()
+        return tsfresh.extract_features(timeseries_container=df_molten,
+                                        column_id="variable",
+                                        column_sort="column_sort",
+                                        column_value="value",
+                                        default_fc_parameters=settings,n_jobs=0)
+
+
+df = ts_fresh_features(Path("~/output_files/data/EventData_20180401.hdf").expanduser(), "/Log_2018.04.01-23:39:54.227")
+print(df)
