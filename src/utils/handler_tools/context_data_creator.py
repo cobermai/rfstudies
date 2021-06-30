@@ -1,6 +1,7 @@
 """This module contains a class structure for creating a context data file. The ContextDataCreator class organizes the
 creation of the context data file."""
 import typing
+from dataclasses import dataclass, field
 import logging
 import itertools
 from pathlib import Path
@@ -9,122 +10,134 @@ import multiprocessing as mp
 import tsfresh
 import pandas as pd
 import numpy as np
+import time
 import tqdm
 import h5py
-from src.utils.handler_tools.feature import EventDataFeature
-from src.utils.handler_tools.features_for_xb2 import get_event_data_features
+from src.utils.hdf_tools import hdf_path_combine
+from src.utils.handler_tools.customfeature import RowWiseFeature, EventDataFeature, EventAttributeFeature, TrendDataFeature
+from src.utils.handler_tools.event_attribute_features import get_event_attribute_features
+from src.utils.handler_tools.event_data_features import get_event_data_features
+from src.utils.handler_tools.trend_data_features import get_trend_data_features
+from src.utils.handler_tools.contextdatahandler import ColumnWiseContextDataHandler, RowWiseContextDataHandler
 
 logger = logging.getLogger(__name__)
+CUT_OFF = range(1000)  # itertools.count(0)
+
+def tsfresh_from_df(df: pd.DataFrame, settings):
+    df['column_sort'] = df.index
+    df_molten = df.melt(id_vars='column_sort', value_name="tsfresh", var_name="channel")
+    return tsfresh.extract_features(timeseries_container=df_molten,
+                                    column_id="channel",
+                                    column_sort="column_sort",
+                                    column_value="tsfresh",
+                                    default_fc_parameters=settings,
+                                    n_jobs=0 if settings==tsfresh.feature_extraction.MinimalFCParameters() else 4,
+                                    disable_progressbar=True).T
 
 
-#def task(feature: EventDataFeature,
-#         ed_file_path: Path,
-#         dest_file_path: Path):
-#    """
-#    One task is calculating one feature for the whole dataset.
-#    :param feature: the Feature object to calculate
-#    :param src_file_path: the file path of the source file
-#    :param dest_file_path: the file path of the destination file, where the features will be stored
-#    :param write_lock: the lock for writing into the destination file path
-#    """
-#    logger.debug("calculate feature %s for %s", feature.name, feature.dest_hdf_path)
-#    vec = feature.apply(ed_file_path)
-#    logger.debug("finished calculating feature %s for %s", feature.name, feature.dest_hdf_path)
-#    return vec
+def tsfresh_on_event_data(data):
+    def gen_df(data):
+        num_values = 3200
+        df = pd.DataFrame({key: val for key, val in data.items() if len(val) == num_values if "Amplitude" in key})
+        yield tsfresh_from_df(df=df, settings=tsfresh.feature_extraction.MinimalFCParameters())  # EfficientFCParameters()
 
-def task_calculate_tsfresh(key: typing.Iterable, ed_file_path: Path):
-    ret = pd.DataFrame()
-    for number_of_samples in [3200, 500]:
-        with h5py.File(ed_file_path, "r") as file:
-            grp = file[key]
-            data = {key: grp[key][:] for key in grp.keys()
-                        if len(grp[key][:]) == number_of_samples and "Amplitude" in key}
-        df = pd.DataFrame(data=data)
-        df['column_sort'] = df.index
-        df_molten = df.melt(id_vars='column_sort')
-        settings = tsfresh.feature_extraction.EfficientFCParameters()  # here we can add custom features
-        ret[[key for key in data.keys()]] = tsfresh.extract_features(timeseries_container=df_molten,
-                                        column_id="variable",
-                                        column_sort="column_sort",
-                                        column_value="value",
-                                        default_fc_parameters=settings,
-                                        n_jobs=0, disable_progressbar=True).T # run serial
-    return ret
+        df = pd.DataFrame({key: val for key, val in data.items() if len(val) == num_values if "Phase" in key})
+        yield tsfresh_from_df(df=df, settings=tsfresh.feature_extraction.MinimalFCParameters())
+
+        num_values = 500
+        df = pd.DataFrame({key: val for key, val in data.items() if len(val) == num_values})
+        yield tsfresh_from_df(df=df, settings=tsfresh.feature_extraction.MinimalFCParameters())
+
+    return list(gen_df(data))
 
 
-class ContextDataCreator:
+@dataclass
+class ContextDataDirector:
     """operates the creation of the context data file (a file filled with calculated features for each group in the
      input file."""
+    ed_file_path: Path
+    td_file_path: Path
+    dest_file_path: Path
+    chunk_size: int = 10
+    num_events: int = field(init=False)
 
-    def __init__(self, ed_file_path: Path,
-                 td_file_path: Path,
-                 dest_file_path: Path,
-                 get_features):
-        self.ed_file_path: Path = ed_file_path
-        self.td_file_path: Path = td_file_path
-        self.dest_file_path: Path = dest_file_path
-        self.get_event_data_features: typing.Callable[[], typing.Iterable[EventDataFeature]] = get_features
+    def __post_init__(self):
         with h5py.File(self.ed_file_path, "r") as file:
-            self.len: int = len(file)  # = number of keys
-        self.chunk_size = 20
-        self.data_chunk: dict = {}
+            self.num_events: int = len(file)  # number of event keys
+            self.num_events = len([x for x in CUT_OFF])
 
-    def write_data_chunk(self, i: int, df: pd.DataFrame):
-        if i == 0:
-            self.data_chunk.update({chn: {feature: np.empty(self.chunk_size, dtype=float)
-                                         for feature in df.index}
-                               for chn in df.columns})
-        for chn in df.columns:
-            for feature in df.index:
-                self.data_chunk[chn][feature][i] = df[chn][feature]
+    def manage_features(self):
+        t0 = time.time()
+        feature_list = list(get_event_attribute_features(self.num_events))
+        self.manage_event_attribute_features(feature_list)
+        print("took ", time.time() - t0)
 
-    def calc_tsfresh_features(self, num_processors: int = 4):
-        """assigns the tasks, calculating a chunk of tsfresh features, to multiple processors.
-        :param num_processors: the number of threads for multiprocessing"""
-        h5py.File(self.dest_file_path, "w").close()
+        t0 = time.time()
+        feature_list = list(get_event_data_features())
+        self.manage_event_data_features(feature_list)
+        print("took ", time.time() - t0)
 
-        with h5py.File(self.ed_file_path, "r") as src_file:
-            length = len(src_file)
-        init_dest = True
+        t0 = time.time()
+        feature_list = list(get_trend_data_features(self.num_events, self.td_file_path))
+        self.manage_trend_data_features(feature_list)
+        print("took ", time.time() - t0)
 
-        for start in range(0, length and 2*self.chunk_size, self.chunk_size):
-            chunk_slice = slice(start, start + self.chunk_size and length)
-            # TODO: propper chunks
-            partial_task = partial(task_calculate_tsfresh, ed_file_path=self.ed_file_path)
+    def manage_event_attribute_features(self, features: typing.List):
+        # calculate features
+        with h5py.File(self.ed_file_path, "r") as file:
+            attrs_gen = (grp.attrs for grp in file.values())
+            for attrs, index in zip(attrs_gen, CUT_OFF):
+                for feature in features:
+                    feature.vec[index] = feature.func(attrs)
+        # write them to the context data
+        cw_handler = ColumnWiseContextDataHandler(self.dest_file_path, length=self.num_events)
+        for feature in features:
+            cw_handler.write(feature)
 
-            with mp.Pool(num_processors) as pool:
-                with h5py.File(self.ed_file_path, "r") as src_file:
-                    keys = (key for key, _ in zip(src_file.keys(), range(self.chunk_size)))
-                    self.data_chunk = {}
-                    for df, i in zip(pool.imap(partial_task, keys), itertools.count(0)):
-                        self.write_data_chunk(i, df)
+    def manage_trend_data_features(self, features: typing.List):
+        with h5py.File(self.td_file_path, "r") as trend_data_file, \
+            h5py.File(self.dest_file_path, "r") as context_data_file:
+            trend_ts = np.array(trend_data_file["Timestamp"][:])
+            event_ts = np.array(context_data_file["Timestamp"][:])
+            loc = np.searchsorted(trend_ts, event_ts) - 1
+        cw_handler = ColumnWiseContextDataHandler(self.dest_file_path, length=self.num_events)
+        for feature in features:
+            feature.vec = feature.calc(loc)
+            cw_handler.write(feature)
 
-                    with h5py.File(self.dest_file_path, "a") as dest_file:
-                        # init dest file datasets and groups
-                        if init_dest:
-                            init_dest = False
-                            for chn, ch in self.data_chunk.items():
-                                for feature_name, values in ch.items():
-                                    dest_chn = dest_file.require_group(chn)
-                                    dest_chn.create_dataset(name=feature_name, shape=self.chunk_size, dtype=float, chunks=True)
-                        # write into destination
-                        for chn, ch in self.data_chunk.items():
-                            for feature_name, values in ch.items():
-                                dest_file[chn][feature_name][chunk_slice] = self.data_chunk[chn][feature_name][:]
 
-    #def calc_custom_features(self, num_processors: int = 2):
-    #    partial_task = partial(task, ed_file_path=self.ed_file_path)
-    #    with h5py.File(self.ed_file_path, "r") as file:
-    #        keys = [key for key, _ in zip(file.keys(), range(12))]
-    #    with mp.Pool(num_processors) as pool:
-    #        for key in tqdm.tqdm(pool.imap(keys)):
-    #            print(partial_task(key))
+    def manage_event_data_features(self, features: typing.List):
+        rw_handler = RowWiseContextDataHandler(self.dest_file_path, length=self.num_events)
+        rw_handler.init_features(features)
 
+        with h5py.File(self.ed_file_path, "r") as file:
+            def data_gen() -> typing.Generator:
+                for grp in file.values():
+                    yield {key: channel[:] for key, channel in grp.items()}
+
+            for data, index in zip(data_gen(), CUT_OFF):
+                custom_features_vals = [feature.apply(data) for feature in features]
+                def custom_features_vals_store(feature_vals: typing.List[RowWiseFeature]) -> typing.Generator:
+                    for feature, val in zip(features, feature_vals):
+                        yield (feature.full_hdf_path, val)
+
+                rw_handler.write_row(index, custom_features_vals_store(custom_features_vals))
+
+                def tsfresh_vals_store(tsfresh_df_list: typing.List) -> typing.Generator:
+                    for df in tsfresh_df_list:
+                        for row_index, row in df.iterrows():
+                            for column_index, value in row.items():
+                                yield (hdf_path_combine(str(column_index), str(row_index)), value)
+                if index==0:
+                    rw_handler.init_tsfresh(tsfresh_vals_store(tsfresh_on_event_data(data)))
+                rw_handler.write_row(index, tsfresh_vals_store(tsfresh_on_event_data(data)))
 
 
 if __name__=="__main__":
-    creator = ContextDataCreator(ed_file_path=Path("~/output_files/EventDataExtLinks.hdf").expanduser(),
-                                 td_file_path=Path("~/output_files/TrendDataExtLinks.hdf").expanduser(),
-                                 dest_file_path=Path("~/output_files/contextd.hdf").expanduser(),
-                                 get_features=get_event_data_features())
-    creator.calc_tsfresh_features(num_processors=4)
+
+    creator = ContextDataDirector(ed_file_path=Path("~/output_files/EventDataExtLinks.hdf").expanduser(),
+                                  td_file_path=Path("~/output_files/combined.hdf").expanduser(),
+                                  dest_file_path=Path("~/output_files/contextd.hdf").expanduser(),
+                                  )
+    h5py.File(creator.dest_file_path, "w").close()
+    creator.manage_features()
