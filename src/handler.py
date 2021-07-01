@@ -1,33 +1,30 @@
-"""In this module the union clean_by_row and sort_by function is applied on the trend data and the context data
+"""In this module the merge clean_by_row and sort_by function is applied on the trend data and the context data
 creator is called."""
 import logging
 from pathlib import Path
-import h5py
-from setup_logging import setup_logging
-from src.utils.handler_tools.union import union, clean_by_row, sort_by
-from src.utils.handler_tools.features_for_xb2 import get_features
-from src.utils.handler_tools.context_data_creator import ContextDataCreator
+import argparse
+import coloredlogs
+from src.utils.handler_tools.context_data_creator import ContextDataDirector
 
-setup_logging()
-LOG = logging.getLogger("test_handler")
+logger = logging.getLogger(__name__)
 
 
 if __name__ == "__main__":
-    src_file_path = Path("~/output_files/TrendDataExtLinks.hdf").expanduser()
+    parser = argparse.ArgumentParser(description="for xbox2 dataset: extract features for ml")
+    parser.add_argument("td", type=Path, help="file path of an hdf file where all TrendData is merged into one dataset"
+                                              "for each signal.")
+    parser.add_argument("ed", type=Path, help="file path of an hdf file where all EventData groups are gathered (e.g."
+                                              "with ExternalLinks).")
+    parser.add_argument("dest", type=Path, help="file path of the hdf fiel where the features will be written.")
+    parser.add_argument("-v", "--verbose", action="store_true", help="print debug log messages")
+    args = parser.parse_args()
+    if args.verbose:
+        coloredlogs.install(level="DEBUG")
+    else:
+        coloredlogs.install(level="INFO")
+    logger = logging.getLogger(__name__)
 
-    dest_file_path = Path("~/output_files/combined_td.hdf").expanduser()
-    h5py.File(dest_file_path, mode="w").close()
-
-    union(source_file_path=src_file_path, dest_file_path=dest_file_path)
-    clean_by_row(file_path=dest_file_path)
-    sort_by(file_path=dest_file_path, sort_by_name="Timestamp")
-
-
-    src_file_path = Path("~/output_files/EventDataExtLinks.hdf").expanduser()
-    dest_file_path = Path("~/output_files/context_data.hdf").expanduser()
-    h5py.File(dest_file_path, "w").close()  # overwrite destination file
-
-    cd_creator = ContextDataCreator(src_file_path=src_file_path,
-                                    dest_file_path=dest_file_path,
-                                    get_features=get_features)
-    cd_creator.calc_features()
+    cd_creator = ContextDataDirector(ed_file_path=args.ed.resolve(),
+                                     td_file_path=args.td.resolve(),
+                                     dest_file_path=args.dest)
+    cd_creator.manage_features()
