@@ -70,17 +70,17 @@ class ContextDataDirector:
         t0 = time.time()
         feature_list = list(get_event_attribute_features(self.num_events))
         self.manage_event_attribute_features(feature_list)
-        print("took ", time.time() - t0)
+        print("event attribute features took ", time.time() - t0)
 
         t0 = time.time()
         feature_list = list(get_event_data_features())
         self.manage_event_data_features(feature_list)
-        print("took ", time.time() - t0)
+        print("event data      features took ", time.time() - t0)
 
         t0 = time.time()
         feature_list = list(get_trend_data_features(self.num_events, self.td_file_path))
         self.manage_trend_data_features(feature_list)
-        print("took ", time.time() - t0)
+        print("trend data      features took ", time.time() - t0)
 
     def manage_event_attribute_features(self, features: typing.List):
         # calculate features
