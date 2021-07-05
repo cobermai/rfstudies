@@ -1,13 +1,9 @@
 """This module contains a class class that defines machine learning features. The Feature class contains the functions
 apply and write."""
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import typing
 import logging
-from pathlib import Path
 import numpy as np
-import numpy.typing as npt
-import h5py
-from src.utils.hdf_tools import hdf_path_combine
 from src.utils.hdf_tools import hdf_path_combine
 
 log = logging.getLogger(__name__)
@@ -15,50 +11,58 @@ log = logging.getLogger(__name__)
 
 @dataclass
 class CustomFeature:
-    """A feature is a statistical property of a time series (min, max, mean, pulse_amplitude, pulse_length, etc).
-    One object represents one Feature and can be applied on an hdf5 dataset via the apply function and written via write
-    This is the base class"""
-    name: str
-    func: typing.Callable
-    output_dtype: typing.Any  # some h5py compatible data type
-    hdf_path: str  # hdf_path of in the context data file
-    info: str
-
+    """A feature is a statistical property of a time series (min, max, mean, pulse_amplitude, pulse_length, etc) or a
+    measurement that is also related to the time series.
+    One object represents one Feature and can be applied on an hdf5 dataset or attribute."""
+    name: str  # name of the feature, also the name of the dataset in the full_hdf_path
+    func: typing.Callable  # the feature function
+    hdf_path: str  # hdf_path is the path of the hdf-group where the feature with self.name will be placed in the
+    # context data file (= destination file)
+    info: str  # will be written into the
 
     @property
-    def full_hdf_path(self):
+    def full_hdf_path(self) -> str:
+        """returns the full hdf path, of the feature. starting from root, ending with the hdf-dataset name."""
         return hdf_path_combine(self.hdf_path, self.name)
 
 
-init_later = object()
 @dataclass
 class ColumnWiseFeature(CustomFeature):
+    """a parent class of all features calculated and written all at once (=column wise)."""
     length: int
-    vec: typing.Any = init_later
+    output_dtype: typing.Union[type, np.dtype]
+    vec: typing.Any = field(init=False)
+
     def __post_init__(self):
         self.vec = np.empty(shape=(self.length,), dtype=self.output_dtype)
 
 
 class EventAttributeFeature(ColumnWiseFeature):
-    """calculates features from the event data attributes."""
+    """represents features read from the event attributes"""
+    def calc(self, index: int, attrs):
+        """calculates the event attribute feature by applying self.funcand writes it to the self.vec at the given index.
+        :param index: index of the event and thus location where the calculated feature will be written.
+        :param attrs: attribute of the event data """
+        self.vec[index] = self.func(attrs)
+
 
 class TrendDataFeature(ColumnWiseFeature):
-    """This feature class creates features out of trend data and existing context_data calculated by the
-    EventDataFeatures."""
-    def calc(self, selection):
+    """represents features read from the trend data."""
+    def calc_all(self, selection):
         """
         applies the feature function on the trend data and the pre calculated context_data
-        :param td_file_path: file path of the source file (an hdf file)
+        :param selection: selection of interest from the trend data
         :return: numpy array of datatype self.dtype
         """
         return self.func(selection)
 
 
 class RowWiseFeature(CustomFeature):
-    """"""
-
-class EventDataFeature(RowWiseFeature):
-    """calculates features from the event data."""
+    """A parent class of all features calculated row by row (=event by event)."""
     def apply(self, data):
         """applies the function of the feature to the given data and returns the feature value."""
         return self.func(data[self.hdf_path])
+
+
+class EventDataFeature(RowWiseFeature):
+    """represents features from the event data. The feature.func is processes the time series."""

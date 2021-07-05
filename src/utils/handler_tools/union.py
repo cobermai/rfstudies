@@ -4,17 +4,12 @@ to be separated in different groups.
 Clean: The clean_by_row cleans "corrupt" values row by row after all datasets have been united.
 Sort: sort_by sorts all datasets with respect to one of them"""
 import typing
-import logging
 from pathlib import Path
 from dateutil.parser import parse
 import numpy as np
 from numpy import typing as npt
 import h5py
-from setup_logging import setup_logging
 from src.utils.hdf_tools import get_datasets
-
-setup_logging()
-LOG = logging.getLogger("test_handler")
 
 
 def is_datetime(val: typing.Any):
@@ -26,6 +21,13 @@ def is_datetime(val: typing.Any):
     else:
         ret = True
     return ret
+
+
+def get_first_value(file: h5py.File):
+    """returns the first hdf-object in the list of values. Instead of 'for x in file.values()[:1]:' this is:
+    :param file: a file object of the h5py module
+    :return: the first hdf object of the value iterable"""
+    return file.values().__iter__().__next__()
 
 
 def get_datetime_array_converter_for(example_data: typing.Union[str, bytes]) \
@@ -53,7 +55,7 @@ def union(source_file_path: Path, dest_file_path: Path) -> None:
     """
     with h5py.File(source_file_path, mode="r") as source_file, \
             h5py.File(dest_file_path, mode="a") as dest_file:
-        first_grp = source_file.values().__iter__().__next__()
+        first_grp = get_first_value(source_file)
         for chn in first_grp.keys():  # the channel names are always the same
             example_val = first_grp[chn][0]
             if is_datetime(val=example_val):
@@ -77,13 +79,14 @@ def check_corruptness(arr) -> npt.ArrayLike[bool]:  # npt.ArrayLike[typing.Union
         raise NotImplementedError("Corrupt data is only known for numeric and datetime values.")
     return ret
 
+
 def clean_by_row(file_path: Path) -> None:
     """remove "rows" where the check_corruptness function returns at least one True value in the the row.
     A column is referred to as a dataset of the hdf file.
     A row is referred to as the values from all columns with the same index.
     :param file_path: the path of the hdf  file with the datasets. (already united with unite())"""
     with h5py.File(file_path, "r+") as file:
-        shape = file.values().__iter__().__next__().shape  # shape of the first dataset
+        shape = get_first_value(file).shape  # shape of the first dataset
         is_corrupt = np.zeros(shape, dtype=bool)
         for chn in file.keys():
             is_corrupt |= check_corruptness(file[chn][:])

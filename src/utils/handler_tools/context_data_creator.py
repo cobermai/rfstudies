@@ -3,21 +3,16 @@ creation of the context data file."""
 import typing
 from dataclasses import dataclass, field
 import logging
-import itertools
 from pathlib import Path
-from functools import partial
-import multiprocessing as mp
-import tsfresh
-import pandas as pd
 import numpy as np
-import time
-import tqdm
 import h5py
+from tqdm import tqdm
+import tsfresh
 from src.utils.hdf_tools import hdf_path_combine
-from src.utils.handler_tools.customfeature import RowWiseFeature, EventDataFeature, EventAttributeFeature, TrendDataFeature
-from src.utils.handler_tools.event_attribute_features import get_event_attribute_features
-from src.utils.handler_tools.event_data_features import get_event_data_features
-from src.utils.handler_tools.trend_data_features import get_trend_data_features
+from src.utils.handler_tools.features.attribute import get_event_attribute_features
+from src.utils.handler_tools.features.event import get_event_data_features
+from src.utils.handler_tools.features.trend import get_trend_data_features
+from src.utils.handler_tools.features.tsfresh import get_tsfresh
 from src.utils.handler_tools.contextdatahandler import ColumnWiseContextDataHandler, RowWiseContextDataHandler
 
 logger = logging.getLogger(__name__)
@@ -58,13 +53,11 @@ class ContextDataDirector:
     ed_file_path: Path
     td_file_path: Path
     dest_file_path: Path
-    chunk_size: int = 10
     num_events: int = field(init=False)
 
     def __post_init__(self):
         with h5py.File(self.ed_file_path, "r") as file:
             self.num_events: int = len(file)  # number of event keys
-            self.num_events = len([x for x in CUT_OFF])
 
     def manage_features(self):
         t0 = time.time()
@@ -75,9 +68,8 @@ class ContextDataDirector:
         t0 = time.time()
         feature_list = list(get_event_data_features())
         self.manage_event_data_features(feature_list)
-        print("event data      features took ", time.time() - t0)
+        print("event data features calculation took ", time.time() - start)
 
-        t0 = time.time()
         feature_list = list(get_trend_data_features(self.num_events, self.td_file_path))
         self.manage_trend_data_features(feature_list)
         print("trend data      features took ", time.time() - t0)
@@ -86,55 +78,45 @@ class ContextDataDirector:
         # calculate features
         with h5py.File(self.ed_file_path, "r") as file:
             attrs_gen = (grp.attrs for grp in file.values())
-            for attrs, index in zip(attrs_gen, CUT_OFF):
+            for attrs, index in zip(attrs_gen, itertools.count(0)):
                 for feature in features:
                     feature.vec[index] = feature.func(attrs)
         # write them to the context data
         cw_handler = ColumnWiseContextDataHandler(self.dest_file_path, length=self.num_events)
         for feature in features:
-            cw_handler.write(feature)
+            cw_handler.write_clm(feature)
+
+    def manage_event_data_features(self, features: typing.List) -> None:
+        """manages the calculation and writing of event data features, so features that are calculated from the event
+        data time series. It calculates some custom features written in the event data features and tsfresh features.
+        :param features: a list of EventDataFeatures"""
+        rw_handler = RowWiseContextDataHandler(self.dest_file_path, length=self.num_events)
+        with h5py.File(self.ed_file_path, "r") as file:
+            data_gen = ({key: channel[:] for key, channel in grp.items()} for grp in file.values())
+            for data, index in tqdm(zip(data_gen, itertools.count(0))):
+                features_vals = [feature.apply(data) for feature in features]
+                val_gen = zip(features, features_vals)
+                rw_handler.write_row_custom_features(index, val_gen)
+
+                tsfresh_df = get_tsfresh(data, tsfresh.feature_extraction.MinimalFCParameters())
+                val_gen = ((hdf_path_combine(str(clm_id), str(row_id)), val)
+                           for row_id, row in tsfresh_df.iterrows()
+                           for clm_id, val in row.items())
+                rw_handler.write_row_from_external(index, val_gen)
 
     def manage_trend_data_features(self, features: typing.List):
         with h5py.File(self.td_file_path, "r") as trend_data_file, \
-            h5py.File(self.dest_file_path, "r") as context_data_file:
+                h5py.File(self.dest_file_path, "r") as context_data_file:
             trend_ts = np.array(trend_data_file["Timestamp"][:])
             event_ts = np.array(context_data_file["Timestamp"][:])
             loc = np.searchsorted(trend_ts, event_ts) - 1
         cw_handler = ColumnWiseContextDataHandler(self.dest_file_path, length=self.num_events)
         for feature in features:
-            feature.vec = feature.calc(loc)
-            cw_handler.write(feature)
+            feature.vec = feature.calc_all(loc)
+            cw_handler.write_clm(feature)
 
 
-    def manage_event_data_features(self, features: typing.List):
-        rw_handler = RowWiseContextDataHandler(self.dest_file_path, length=self.num_events)
-        rw_handler.init_features(features)
-
-        with h5py.File(self.ed_file_path, "r") as file:
-            def data_gen() -> typing.Generator:
-                for grp in file.values():
-                    yield {key: channel[:] for key, channel in grp.items()}
-
-            for data, index in zip(data_gen(), CUT_OFF):
-                custom_features_vals = [feature.apply(data) for feature in features]
-                def custom_features_vals_store(feature_vals: typing.List[RowWiseFeature]) -> typing.Generator:
-                    for feature, val in zip(features, feature_vals):
-                        yield (feature.full_hdf_path, val)
-
-                rw_handler.write_row(index, custom_features_vals_store(custom_features_vals))
-
-                def tsfresh_vals_store(tsfresh_df_list: typing.List) -> typing.Generator:
-                    for df in tsfresh_df_list:
-                        for row_index, row in df.iterrows():
-                            for column_index, value in row.items():
-                                yield (hdf_path_combine(str(column_index), str(row_index)), value)
-                if index==0:
-                    rw_handler.init_tsfresh(tsfresh_vals_store(tsfresh_on_event_data(data)))
-                rw_handler.write_row(index, tsfresh_vals_store(tsfresh_on_event_data(data)))
-
-
-if __name__=="__main__":
-
+if __name__ == "__main__":
     creator = ContextDataDirector(ed_file_path=Path("~/output_files/EventDataExtLinks.hdf").expanduser(),
                                   td_file_path=Path("~/output_files/combined.hdf").expanduser(),
                                   dest_file_path=Path("~/output_files/contextd.hdf").expanduser(),
