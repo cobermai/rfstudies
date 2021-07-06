@@ -4,7 +4,7 @@ import logging
 from pathlib import Path
 import argparse
 import coloredlogs
-from src.utils.handler_tools.context_data_creator import ContextDataDirector
+from src.utils.handler_tools.context_data_creator import ContextDataCreator
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +24,7 @@ if __name__ == "__main__":
         coloredlogs.install(level="INFO")
     logger = logging.getLogger(__name__)
 
-    cd_creator = ContextDataDirector(ed_file_path=args.ed.resolve(),
-                                     td_file_path=args.td.resolve(),
-                                     dest_file_path=args.dest)
+    cd_creator = ContextDataCreator(ed_file_path=args.ed.resolve(),
+                                    td_file_path=args.td.resolve(),
+                                    dest_file_path=args.dest)
     cd_creator.manage_features()

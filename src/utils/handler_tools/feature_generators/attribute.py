@@ -2,7 +2,7 @@
 import typing
 import numpy as np
 import h5py
-from src.utils.handler_tools.customfeature import EventAttributeFeature
+from src.utils.handler_tools.feature_class import EventAttributeFeature
 
 
 def get_event_attribute_features(length: int) -> typing.Generator:
@@ -16,7 +16,7 @@ def get_event_attribute_features(length: int) -> typing.Generator:
                                 output_dtype=h5py.opaque_dtype('M8[us]'),
                                 info=get_timestamp.__doc__)
 
-    for is_type in ["is_log", "is_bd_in_40ms", "is_bd_in_20ms", "is_bd"]:
+    for is_type in ["is_healthy", "is_bd_in_40ms", "is_bd_in_20ms", "is_bd"]:
         func = log_type_creator(is_type)
         yield EventAttributeFeature(name=is_type,
                                     func=func,
@@ -31,7 +31,7 @@ def log_type_creator(type_of_interest: str) -> typing.Callable:
     False in the other cases.
     :param type_of_interest: string of the type of interest (in {"is_log", "is_bd_in_40ms", "is_bd_in_20ms", "is_bd"})
     """
-    log_type_dict = {"is_log": 0, "is_bd_in_40ms": 1, "is_bd_in_20ms": 2, "is_bd": 3}
+    log_type_dict = {"is_healthy": 0, "is_bd_in_40ms": 1, "is_bd_in_20ms": 2, "is_bd": 3}
 
     def is_type(attrs) -> bool:
         """

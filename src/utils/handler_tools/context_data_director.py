@@ -4,7 +4,7 @@ from pathlib import Path
 import typing
 from dataclasses import dataclass
 import h5py
-from src.utils.handler_tools.customfeature import ColumnWiseFeature
+from src.utils.handler_tools.feature_class import ColumnWiseFeature
 
 
 @dataclass
