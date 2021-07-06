@@ -38,11 +38,13 @@ def hdf_to_df(file_path: Path, hdf_path: str = "/"):
         return pd.DataFrame(data={path[1:].replace("/", "__").replace(" ", "_"): file[path][:]
                                   for path in get_datasets(file_path, hdf_path=hdf_path, mode="r")})
 
+
 def hdf_to_df_selection(file_path: Path, selection, hdf_path: str = "/"):
     """Converts hdf files with the write format into hdf files. This will be extended to further functionality."""
     with h5py.File(file_path, "r") as file:
         return pd.DataFrame(data={path[1:].replace("/", "__").replace(" ", "_"): file[path][selection]
                                   for path in get_datasets(file_path, hdf_path=hdf_path, mode="r")})
+
 
 if __name__ == "__main__":
     df = hdf_to_df(Path("~/output_files/context_data.h5").expanduser())
