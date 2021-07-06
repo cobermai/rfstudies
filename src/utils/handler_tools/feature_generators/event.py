@@ -2,7 +2,7 @@
 import typing
 from functools import partial
 import numpy as np
-from src.utils.handler_tools.customfeature import EventDataFeature
+from src.utils.handler_tools.feature_class import EventDataFeature
 
 
 def get_event_data_features() -> typing.Generator:

@@ -3,7 +3,7 @@ from pathlib import Path
 import typing
 import numpy as np
 import h5py
-from src.utils.handler_tools.customfeature import TrendDataFeature
+from src.utils.handler_tools.feature_class import TrendDataFeature
 
 
 def get_trend_data_features(length: int, trend_data_file_path: Path) -> typing.Generator:
