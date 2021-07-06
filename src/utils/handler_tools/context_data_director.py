@@ -18,6 +18,7 @@ class ColumnWiseContextDataHandler(ContextDataHandler):  # pylint: disable=too-f
     """makes creating the context data easier for column wise writing. Column wise means writing for single feature
     applied on all all events.
     """
+
     def write_clm(self, feature: ColumnWiseFeature) -> None:
         """writes a column placed in feature.vec into a specific path given by feature.full_hdf_path. If that path does
         not exist, it will be created.
@@ -35,6 +36,7 @@ class ColumnWiseContextDataHandler(ContextDataHandler):  # pylint: disable=too-f
 class RowWiseContextDataHandler(ContextDataHandler):
     """makes creating the context data easier for row wise writing. Row wise means writing all row wise features
     applied on a single event. """
+
     def write_row_custom_features(self, index: int, data_iter: typing.Iterable):
         """writes a single value into all specified hdf paths. if the destination hdf path does not exist, it will be
         created.
@@ -46,10 +48,10 @@ class RowWiseContextDataHandler(ContextDataHandler):
             for feature, value in data_iter:
                 dataset = file.get(feature.full_hdf_path, None)
                 if dataset is None:
-                    dataset = file.require_dataset(feature.full_hdf_path,
-                                              shape=(self.length,),
-                                              dtype=type(value),
-                                              chunks=True)
+                    dataset = file.require_dataset(name=feature.full_hdf_path,
+                                                   shape=(self.length,),
+                                                   dtype=type(value),
+                                                   chunks=True)
                     dataset.attrs.create(name="info", data=feature.info)
                 dataset[index] = value
 
@@ -64,9 +66,9 @@ class RowWiseContextDataHandler(ContextDataHandler):
             for hdf_path, value in data_iter:
                 dataset = file.get(hdf_path, None)
                 if dataset is None:
-                    dataset = file.require_dataset(hdf_path,
-                                              shape=(self.length,),
-                                              dtype=type(value),
-                                              chunks=True)
+                    dataset = file.require_dataset(name=hdf_path,
+                                                   shape=(self.length,),
+                                                   dtype=type(value),
+                                                   chunks=True)
                     # no info string will be added
                 dataset[index] = value

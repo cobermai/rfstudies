@@ -18,10 +18,10 @@ def get_tsfresh(data, settings, njobs=0) -> pd.DataFrame:
         df_molten = df_molten.append(df_tmp.melt(id_vars='column_sort', value_name="tsfresh", var_name="channel"))
 
     df_ret = tsfresh.extract_features(timeseries_container=df_molten,
-                                          column_id="channel",
-                                          column_sort="column_sort",
-                                          column_value="tsfresh",
-                                          default_fc_parameters=settings,
-                                          n_jobs=njobs,
-                                          disable_progressbar=True).T
+                                      column_id="channel",
+                                      column_sort="column_sort",
+                                      column_value="tsfresh",
+                                      default_fc_parameters=settings,
+                                      n_jobs=njobs,
+                                      disable_progressbar=True).T
     return df_ret

@@ -39,6 +39,7 @@ class ColumnWiseFeature(CustomFeature):
 
 class EventAttributeFeature(ColumnWiseFeature):
     """represents features read from the event attributes"""
+
     def calc(self, index: int, attrs):
         """calculates the event attribute feature by applying self.funcand writes it to the self.vec at the given index.
         :param index: index of the event and thus location where the calculated feature will be written.
@@ -48,6 +49,7 @@ class EventAttributeFeature(ColumnWiseFeature):
 
 class TrendDataFeature(ColumnWiseFeature):
     """represents features read from the trend data."""
+
     def calc_all(self, selection):
         """
         applies the feature function on the trend data and the pre calculated context_data
@@ -59,6 +61,7 @@ class TrendDataFeature(ColumnWiseFeature):
 
 class RowWiseFeature(CustomFeature):
     """A parent class of all features calculated row by row (=event by event)."""
+
     def apply(self, data):
         """applies the function of the feature to the given data and returns the feature value."""
         return self.func(data[self.hdf_path])

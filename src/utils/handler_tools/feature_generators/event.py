@@ -18,7 +18,7 @@ def get_event_data_features() -> typing.Generator:
 
     for chn in ['DC Up', 'DC Down']:
         yield EventDataFeature(name="D1", func=apply_func_creator(partial(np.quantile, q=.1)),
-                                hdf_path=chn, info="calculates the first deciles of the data")
+                               hdf_path=chn, info="calculates the first deciles of the data")
         yield EventDataFeature(name="D9", func=apply_func_creator(partial(np.quantile, q=.9)),
                                hdf_path=chn, info="calculates the 9th deciles of the data")
 
