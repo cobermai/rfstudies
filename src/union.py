@@ -6,9 +6,9 @@ Sort: sort_by sorts all datasets with respect to one of them"""
 import typing
 import logging
 from pathlib import Path
+import argparse
 import dateutil.parser
 import numpy as np
-import argparse
 import h5py
 import coloredlogs
 from src.utils.hdf_tools import get_datasets
@@ -38,17 +38,21 @@ def merge(source_file_path: Path, dest_file_path: Path) -> None:
     with h5py.File(source_file_path, mode="r") as source_file, \
             h5py.File(dest_file_path, mode="a") as dest_file:
         first_grp = source_file.values().__iter__().__next__()
-        for chn in first_grp.keys():  # the channel names are always the same
-            logger.debug("currently merging: %s", chn)
-            example_val = first_grp[chn][0]
+        for channel_name, first_channel in first_grp.items():  # the channel names are always the same
+            logger.debug("currently merging: %s", channel_name)
+            example_val = first_channel[0]
             if is_datetime(val=example_val):
                 data = np.array([dateutil.parser.isoparse(ts).strftime("%Y-%m-%dT%H:%M:%S.%f")
-                                 for path in source_file.keys() for ts in source_file[path][chn][:]],
+                                 for grp in source_file.values() for ts in grp[channel_name][:]],
                                 dtype=np.datetime64)
-                dest_file.create_dataset(name=chn, data=data.astype(dtype=h5py.opaque_dtype(data.dtype)), chunks=True)
+                dest_file.create_dataset(name=channel_name,
+                                         data=data.astype(dtype=h5py.opaque_dtype(data.dtype)),
+                                         chunks=True)
             else:
-                data = np.concatenate([source_file[path][chn][:] for path in source_file.keys()])
-                dest_file.create_dataset(name=chn, data=data, chunks=True)
+                data = np.concatenate([grp[channel_name][:] for grp in source_file.values()])
+                dest_file.create_dataset(name=channel_name,
+                                         data=data,
+                                         chunks=True)
 
 
 def check_corruptness(arr):  # npt.ArrayLike[typing.Union[np.number, np.datetime64]]
@@ -72,14 +76,14 @@ def clean_by_row(file_path: Path) -> None:
     with h5py.File(file_path, "r+") as file:
         shape = file.values().__iter__().__next__().shape  # shape of the first dataset
         is_corrupt = np.zeros(shape, dtype=bool)
-        for chn in file.keys():
-            is_corrupt |= check_corruptness(file[chn][:])
+        for channel in file.values():
+            is_corrupt |= check_corruptness(channel[:])
         new_shape = (sum(~is_corrupt),)
-        for ch in file.values():
-            logger.debug("cleaning channel: %s", ch)
-            data = ch[~is_corrupt]
-            ch.resize(size=new_shape)
-            ch[...] = data
+        for channel in file.values():
+            logger.debug("cleaning channel: %s", channel)
+            data = channel[~is_corrupt]
+            channel.resize(size=new_shape)
+            channel[...] = data
 
 
 def sort_by(file_path: Path, sort_by_name: str) -> None:
@@ -90,8 +94,8 @@ def sort_by(file_path: Path, sort_by_name: str) -> None:
     """
     with h5py.File(file_path, "r+") as file:
         indices_order = file[sort_by_name][:].argsort()
-        for chn in get_datasets(file_path):
-            file[chn][...] = file[chn][indices_order]
+        for channel_name in get_datasets(file_path):
+            file[channel_name][...] = file[channel_name][indices_order]
 
 
 if __name__ == "__main__":
@@ -102,23 +106,20 @@ if __name__ == "__main__":
     parser.add_argument("source", type=Path,
                         help="file path of the source hdf file where the channels(datasets) are scattered on multiple "
                              "groups.")
-    parser.add_argument("--dest", type=Path, default=Path("combined.hdf"),
+    parser.add_argument("--dest", type=Path, default=Path("./combined.hdf"),
                         help="file path of the destination file where the merged channels(datasets) will be located.")
     parser.add_argument("-v", "--verbose", action="store_true", help="print debug log messages")
     parser.add_argument("-c", "--clean", action="store_true", help="remove smelly values")
     parser.add_argument("--sort_by", type=str, action="store", default="Timestamp",
                         help="the channel(dataset) name the data will be sorted on.")
     args = parser.parse_args()
-    if args.verbose:
-        coloredlogs.install(level="DEBUG")
-    else:
-        coloredlogs.install(level="INFO")
+    coloredlogs.install(level="DEBUG" if args.verbose else "INFO")
     logger = logging.getLogger(__name__)
 
-    logger.debug("starting merge")
+    logger.debug("start merge")
     merge(source_file_path=args.source.resolve(), dest_file_path=args.dest.resolve())
     if args.clean:
-        logger.debug("starting clean")
+        logger.debug("start clean")
         clean_by_row(file_path=args.dest.resolve())
-    logger.debug("starting sort_by")
+    logger.debug("start sort_by")
     sort_by(file_path=args.dest.resolve(), sort_by_name=args.sort_by)
