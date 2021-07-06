@@ -14,7 +14,8 @@ def get_event_attribute_features(length: int) -> typing.Generator:
                                 length=length,
                                 hdf_path="/",
                                 output_dtype=h5py.opaque_dtype('M8[us]'),
-                                info=get_timestamp.__doc__)
+                                info="The timestamp of the EventData is a property of the event group. It is given in "
+                                     "a datetime format with micro seconds precision.")
 
     for is_type in ["is_healthy", "is_bd_in_40ms", "is_bd_in_20ms", "is_bd"]:
         func = log_type_creator(is_type)
@@ -23,7 +24,10 @@ def get_event_attribute_features(length: int) -> typing.Generator:
                                     length=length,
                                     hdf_path="/",
                                     output_dtype=bool,
-                                    info=func.__doc__)
+                                    info="These values originated from the Log_Type assigned by the CLIC-Team."
+                                         "Originally the Log_Type property had values in {0,1,2,3} where 0 stood for a"
+                                         "healthy or normal log signal, and 3 for a breakdown. The label 1 and 2 stood"
+                                         "for breakdown in 20ms and 40ms, so the signals prior to a breakdown.")
 
 
 def log_type_creator(type_of_interest: str) -> typing.Callable:
