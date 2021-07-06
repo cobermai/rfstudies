@@ -2,7 +2,6 @@
 creation of the context data file."""
 import typing
 from dataclasses import dataclass, field
-import time
 import itertools
 import logging
 from pathlib import Path
@@ -39,10 +38,8 @@ class ContextDataCreator:
         feature_list = list(get_event_attribute_features(self.num_events))
         self.manage_event_attribute_features(feature_list)
 
-        start = time.time()
         feature_list = list(get_event_data_features())
         self.manage_event_data_features(feature_list)
-        print("event data features calculation took ", time.time() - start)
 
         feature_list = list(get_trend_data_features(self.num_events, self.td_file_path))
         self.manage_trend_data_features(feature_list)
