@@ -12,9 +12,12 @@ def get_event_data_features() -> typing.Generator:
     func_amp = pulse_amplitude
     for chn in ['PEI Amplitude', 'PKI Amplitude', 'PSI Amplitude', 'PSR Amplitude']:
         yield EventDataFeature(name="pulse_length", func=func_len, hdf_path=chn,
-                               info=func_len.__doc__)
+                               info="The pulse length is the pulse duration in mirco seconds. The pulse is defined as "
+                                    "the region where the amplitude is higher than the threshold "
+                                    "(=half of maximal value)")
         yield EventDataFeature(name="pulse_amplitude", func=func_amp, hdf_path=chn,
-                               info=func_amp.__doc__)
+                               info="The Pulse Amplitude is the mean value of the pulse. The pulse is defined as the "
+                                    "region where the amplitude is higher than the threshold (=half of maximal value)")
 
     for chn in ['DC Up', 'DC Down']:
         yield EventDataFeature(name="D1", func=apply_func_creator(partial(np.quantile, q=.1)),
@@ -24,7 +27,7 @@ def get_event_data_features() -> typing.Generator:
 
 
 def pulse_length(data) -> float:
-    """calculates the duration in micro seconds where the amplitude is higher than the threshold
+    """calculates the pulse duration in micro seconds where the amplitude is higher than the threshold
     (=half of the maximal value)."""
     acquisition_window = 2  # in micro seconds
     threshold = data.max() / 2
