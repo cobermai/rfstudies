@@ -14,7 +14,7 @@ from src.utils.handler_tools.feature_generators.attribute import get_event_attri
 from src.utils.handler_tools.feature_generators.event import get_event_data_features
 from src.utils.handler_tools.feature_generators.trend import get_trend_data_features
 from src.utils.handler_tools.feature_generators.tsfresh import get_tsfresh
-from src.utils.handler_tools.context_data_director import ColumnWiseContextDataHandler, RowWiseContextDataHandler
+from src.utils.handler_tools.context_data_writer import ColumnWiseContextDataWriter, RowWiseContextDataWriter
 
 logger = logging.getLogger(__name__)
 
@@ -54,7 +54,7 @@ class ContextDataCreator:
                 for feature in features:
                     feature.calc(index, attrs)
         # write them to the context data
-        cw_handler = ColumnWiseContextDataHandler(self.dest_file_path, length=self.num_events)
+        cw_handler = ColumnWiseContextDataWriter(self.dest_file_path, length=self.num_events)
         for feature in features:
             cw_handler.write_clm(feature)
 
@@ -62,7 +62,7 @@ class ContextDataCreator:
         """manages the calculation and writing of event data features, so features that are calculated from the event
         data time series. It calculates some custom features written in the event data features and tsfresh features.
         :param features: a list of EventDataFeatures"""
-        rw_handler = RowWiseContextDataHandler(self.dest_file_path, length=self.num_events)
+        rw_handler = RowWiseContextDataWriter(self.dest_file_path, length=self.num_events)
         with h5py.File(self.ed_file_path, "r") as file:
             data_gen = ({key: channel[:] for key, channel in grp.items()} for grp in file.values())
             for data, index in tqdm(zip(data_gen, itertools.count(0))):
@@ -84,7 +84,7 @@ class ContextDataCreator:
             trend_ts = np.array(trend_data_file["Timestamp"][:])
             event_ts = np.array(context_data_file["Timestamp"][:])
             loc = np.searchsorted(trend_ts, event_ts) - 1
-        cw_handler = ColumnWiseContextDataHandler(self.dest_file_path, length=self.num_events)
+        cw_handler = ColumnWiseContextDataWriter(self.dest_file_path, length=self.num_events)
         for feature in features:
             feature.vec = feature.calc_all(loc)
             cw_handler.write_clm(feature)

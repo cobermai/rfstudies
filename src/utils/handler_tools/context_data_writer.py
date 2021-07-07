@@ -8,13 +8,13 @@ from src.utils.handler_tools.feature_class import ColumnWiseFeature
 
 
 @dataclass
-class ContextDataHandler:
+class ContextDataWriter:
     """An abstract context data handler class. Different writing methods are inherited."""
     context_data_file_path: Path
     length: int
 
 
-class ColumnWiseContextDataHandler(ContextDataHandler):  # pylint: disable=too-few-public-methods
+class ColumnWiseContextDataWriter(ContextDataWriter):  # pylint: disable=too-few-public-methods
     """makes creating the context data easier for column wise writing. Column wise means writing for single feature
     applied on all all events.
     """
@@ -33,7 +33,7 @@ class ColumnWiseContextDataHandler(ContextDataHandler):  # pylint: disable=too-f
             dataset.attrs.create(name="info", data=feature.info)
 
 
-class RowWiseContextDataHandler(ContextDataHandler):
+class RowWiseContextDataWriter(ContextDataWriter):
     """makes creating the context data easier for row wise writing. Row wise means writing all row wise features
     applied on a single event. """
 
