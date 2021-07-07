@@ -77,10 +77,7 @@ if __name__ == "__main__":
     parser.add_argument("dest_dir", type=Path, help="destination directory where hdf files will be placed")
     parser.add_argument("-v", "--verbose", action="store_true", help="print debug log messages")
     args = parser.parse_args()
-    if args.verbose:
-        coloredlogs.install(level="DEBUG")
-    else:
-        coloredlogs.install(level="INFO")
+    coloredlogs.install(level="INFO" if args.verbose else "DEBUG")
     logger = logging.getLogger(__name__)
     transform(tdms_dir=args.src_dir.resolve(),
               hdf_dir=args.dest_dir.resolve())
