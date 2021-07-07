@@ -67,14 +67,13 @@ class ContextDataCreator:
             data_gen = ({key: channel[:] for key, channel in grp.items()} for grp in file.values())
             for data, index in tqdm(zip(data_gen, itertools.count(0))):
                 features_vals = [feature.apply(data) for feature in features]
-                val_gen = zip(features, features_vals)
-                rw_handler.write_row_custom_features(index, val_gen)
+                rw_handler.write_row_custom_features(index=index, data_iter=zip(features, features_vals))
 
                 tsfresh_df = get_tsfresh(data, tsfresh.feature_extraction.MinimalFCParameters())
                 val_gen = ((hdf_path_combine(str(clm_id), str(row_id)), val)
                            for row_id, row in tsfresh_df.iterrows()
                            for clm_id, val in row.items())
-                rw_handler.write_row_from_external(index, val_gen)
+                rw_handler.write_row_from_external(index=index, data_iter=val_gen)
 
     def manage_trend_data_features(self, features: typing.List) -> None:
         """manage the reading and writing of the trend data features, it reads and writes the closest preceding trend
