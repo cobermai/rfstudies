@@ -67,8 +67,8 @@ class CreatorTestFiles(CreatorTdmsFile):
         # create hdf group
         with h5py.File(self.hdf_file_path, "a") as file:
             file.create_group(grp_name)
-            for key in self.grp_prop_dict:
-                file[grp_name].attrs.create(key, _hdf_attr_value(self.grp_prop_dict[key]))
+            for key, val in self.grp_prop_dict.items():
+                file[grp_name].attrs.create(key, _hdf_attr_value(val))
             for chn in ch_set:
                 file[grp_name].create_dataset(name=chn, data=_hdf_array(self.ch_data_dict[chn]))
                 for key in self.ch_prop_dict[chn].keys():
