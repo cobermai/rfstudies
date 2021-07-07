@@ -91,17 +91,18 @@ def _get_func_to_fulfill(on_error: bool,
 class Gatherer:  # pylint: disable=too-few-public-methods
     """gathers hdf-groups of many hdf files into one by creating external links that point to the original files.
     This way the data can be accessed though one without copying the data"""
-    def __init__(self,if_fulfills: Callable[[Path, str], bool] = None,
-           on_error: bool = False,
-           depth: int = 1,
-           num_processes: int = 2):
+
+    def __init__(self, if_fulfills: Callable[[Path, str], bool] = None,
+                 on_error: bool = False,
+                 depth: int = 1,
+                 num_processes: int = 2):
         """Initializes the Gatherer
         :param if_fulfills: function that needs to be fulfilled in order for the hdf-object to be added to the
         destination file via external links.
         :param on_error: what should
         :param depth: depth where the objects
         :param num_processes: number of processors for parallel gathering"""
-        self.func_to_fulfill= _get_func_to_fulfill(on_error, if_fulfills)
+        self.func_to_fulfill = _get_func_to_fulfill(on_error, if_fulfills)
         self.depth = depth
         self.num_processes = num_processes
 

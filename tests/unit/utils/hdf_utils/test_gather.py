@@ -88,6 +88,7 @@ def test__get_func_to_fulfill__unexpected_error():
     with pytest.raises(InterruptedError):
         func_to_fulfill_with_error_handling(Path("/"), "/")
 
+
 def test__get_func_to_fulfill__expected_error():
     """tests _get_func_to_fulfill (checks if the error handling for expected errors with on_error works)"""
     # ARRANGE
