@@ -105,7 +105,8 @@ def sort_by(file_path: Path, sort_by_name: str) -> None:
     with h5py.File(file_path, "r+") as file:
         indices_order = file[sort_by_name][:].argsort()
         for channel in file.values():
-            channel[...] = channel[indices_order]
+            data = channel[:]
+            channel[...] = data[indices_order]
 
 
 if __name__ == "__main__":

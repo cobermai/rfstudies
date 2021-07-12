@@ -81,9 +81,41 @@ def test_convert_iso8601_to_datetime__without_attrs(tmp_path):
     is_equal = os.system(f"h5diff {work_file_path} {expected_file_path}") == 0
     assert is_equal
 
-def test_is_datetime():
-    assert union.is_datetime("asdf")==False
-    assert union.is_datetime(1)==False
-    assert union.is_datetime("1")==False
-    assert union.is_datetime(b"2021-01-01T00:00:00.000000Z")==True
-    assert union.is_datetime("2021-01-01T00:00:00.000000Z")==True
+def test_clean_row_by_row(tmp_path):
+    # ARRANGE
+    work_file_path = tmp_path / "test.h5"
+    expected_file_path = tmp_path / "expected.h5"
+
+    with h5py.File(work_file_path, "w") as file:
+        data = np.array([0, 1, 2, 3, "NaT"], dtype="datetime64[us]")
+        file.create_dataset(name="d0", data=data.astype(h5py.opaque_dtype(data.dtype)), chunks=True)
+        file.create_dataset(name="d1", data=[0, np.nan, 2, 3, 4], chunks=True)
+        file.create_dataset(name="d2", data=[0., 1., 2., np.nan, 4.], chunks=True)
+    with h5py.File(expected_file_path, "w") as file:
+        data = np.array([0, 2], dtype="datetime64[us]")
+        file.create_dataset(name=f"d0", data=data.astype(h5py.opaque_dtype(data.dtype)))
+        file.create_dataset(name=f"d1", data=[0, 2])
+        file.create_dataset(name=f"d2", data=[0., 2.])
+
+    # ACT
+    union.clean_by_row(work_file_path)
+
+    # ASSERT
+    is_equal = os.system(f"h5diff {work_file_path} {expected_file_path}") == 0
+    assert is_equal
+
+
+def test_sort_by(tmp_path):
+    # ARRANGE
+    work_file_path = tmp_path / "test.h5"
+
+    with h5py.File(work_file_path, "w") as file:
+        file.create_dataset(name="d0", data=[0, 1, 2, 3, 4], chunks=True)
+        file.create_dataset(name="d1", data=[4, 3, 2, 1, 0], chunks=True)
+
+    # ACT
+    union.sort_by(work_file_path, "d1")
+
+    # ASSERT
+    with h5py.File(work_file_path, "r") as file:
+        assert np.all(np.diff(file["d1"][:]) >= 0)
