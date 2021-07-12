@@ -18,32 +18,41 @@ def hdf_path_combine(*argv: str) -> str:
     return path
 
 
-def get_datasets(file_path: Path, hdf_path: str = "/", mode="r+") -> typing.Generator:
-    """a generator that returns all dataset names of an hdf-file with hdf-path root hdf_path
-    :param file_path: the path of the hdf  file with the datasets.
-    :param hdf_path: root path where searching for datasets should be started
-    :param mode: the mode with which the hdf file should be read. This matters because of how hdf files work internally
+def get_all_dataset_items(file) -> typing.Generator:
+    """a generator that returns all items that are children of the value hdf object
+    :param value: the value to recursively go through all values
     """
-    with h5py.File(file_path, mode=mode) as file:
-        if isinstance(file[hdf_path], h5py.Dataset):
-            yield hdf_path
+    def return_items(path, val):
+        if isinstance(val, h5py.Dataset):
+            yield path, val
         else:
-            for key in file[hdf_path].keys():
-                yield from get_datasets(file_path, hdf_path=hdf_path_combine(hdf_path, key), mode=mode)
+            for key, val in val.items():
+                yield from ((hdf_path_combine(path, key), val) for key, val in return_items(key, val))
+    yield from return_items("/", file)
+
+def get_all_dataset_values(value) -> typing.Generator:
+    """a generator that returns all values that are children of the value hdf object
+    :param value: the value to recursively go through all values
+    """
+    if isinstance(value, h5py.Dataset):
+        yield value
+    else:
+        for val in value.values():
+            yield from get_all_dataset_values(val)
 
 
 def hdf_to_df(file_path: Path, hdf_path: str = "/"):
     """Converts hdf files with the write format into hdf files. This will be extended to further functionality."""
     with h5py.File(file_path, "r") as file:
-        return pd.DataFrame(data={path[1:].replace("/", "__").replace(" ", "_"): file[path][:]
-                                  for path in get_datasets(file_path, hdf_path=hdf_path, mode="r")})
+        return pd.DataFrame(data={path[1:].replace("/", "__").replace(" ", "_"): val[:]
+                                  for path, val in get_all_dataset_items(file)})
 
 
 def hdf_to_df_selection(file_path: Path, selection, hdf_path: str = "/"):
     """Converts hdf files with the write format into hdf files. This will be extended to further functionality."""
     with h5py.File(file_path, "r") as file:
-        return pd.DataFrame(data={path[1:].replace("/", "__").replace(" ", "_"): file[path][selection]
-                                  for path in get_datasets(file_path, hdf_path=hdf_path, mode="r")})
+        return pd.DataFrame(data={path[1:].replace("/", "__").replace(" ", "_"): val[selection]
+                                  for path, val in get_all_dataset_items(file)})
 
 
 if __name__ == "__main__":

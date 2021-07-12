@@ -7,24 +7,13 @@ import typing
 import logging
 from pathlib import Path
 import argparse
-import dateutil.parser
 import numpy as np
 import h5py
 import coloredlogs
-from src.utils.hdf_tools import get_datasets
+import pandas as pd
+from src.utils.hdf_tools import get_all_dataset_items
 
-LOG = logging.getLogger(__name__)
-
-
-def is_datetime(val: typing.Any):
-    """returns True if val can be parsed by dateutil.parser.parse() and False if not."""
-    try:
-        dateutil.parser.isoparse(val)
-    except (TypeError, ValueError):
-        ret = False
-    else:
-        ret = True
-    return ret
+logger = logging.getLogger(__name__)
 
 
 def merge(source_file_path: Path, dest_file_path: Path) -> None:
@@ -40,19 +29,41 @@ def merge(source_file_path: Path, dest_file_path: Path) -> None:
         first_grp = source_file.values().__iter__().__next__()
         for channel_name, first_channel in first_grp.items():  # the channel names are always the same
             logger.debug("currently merging: %s", channel_name)
-            example_val = first_channel[0]
-            if is_datetime(val=example_val):
-                data = np.array([dateutil.parser.isoparse(ts).strftime("%Y-%m-%dT%H:%M:%S.%f")
-                                 for grp in source_file.values() for ts in grp[channel_name][:]],
-                                dtype=np.datetime64)
-                dest_file.create_dataset(name=channel_name,
-                                         data=data.astype(dtype=h5py.opaque_dtype(data.dtype)),
-                                         chunks=True)
+            data = np.concatenate([grp[channel_name][:] for grp in source_file.values()])
+            dest_file.create_dataset(name=channel_name, data=data, chunks=True)
+
+
+def is_datetime(val: typing.Any):
+    """returns True if val can be parsed by dateutil.parser.parse() and False if not."""
+    try:
+        pd.to_datetime(str(val.decode() if isinstance(val, bytes) else val), format="%Y-%m-%dT%H:%M:%S.%f")
+    except (TypeError, ValueError):
+        return False
+    return True
+
+def convert_iso8601_to_datetime(file_path: Path, also_convert_attrs: bool = True):
+    def convert_attrs(hdf_key: str, hdf_obj):
+        for attrs_key, val in hdf_obj.attrs.items():
+            try:
+                del hdf_obj.attrs[attrs_key]
+                val = pd.to_datetime(val.astype(str), format="%Y-%m-%dT%H:%M:%S.%f")
+            except ValueError:
+                pass
             else:
-                data = np.concatenate([grp[channel_name][:] for grp in source_file.values()])
-                dest_file.create_dataset(name=channel_name,
-                                         data=data,
-                                         chunks=True)
+                val = val.to_numpy(np.datetime64)
+                hdf_obj.attrs.create(name=attrs_key, data=np.array(val).astype(h5py.opaque_dtype(val.dtype)))
+                #hdf_obj.attrs[attrs_key] = np.array([val]).astype(h5py.opaque_dtype(val.dtype))  # overwrites old dictionary entry
+
+    with h5py.File(file_path, mode="r+") as file:
+        if also_convert_attrs:
+            convert_attrs("/", file)
+            file.visititems(convert_attrs)
+
+        for key, channel in list(get_all_dataset_items(file)):
+            if is_datetime(channel[0]):
+                data = pd.to_datetime(channel[:].astype(str), format="%Y-%m-%dT%H:%M:%S.%f").to_numpy(np.datetime64)
+                del file[key]
+                file.create_dataset(name=key, data=data.astype(h5py.opaque_dtype(data.dtype)))
 
 
 def check_corruptness(arr):  # npt.ArrayLike[typing.Union[np.number, np.datetime64]]
@@ -88,14 +99,14 @@ def clean_by_row(file_path: Path) -> None:
 
 def sort_by(file_path: Path, sort_by_name: str) -> None:
     """
-    sorts all datasets with respect to one specific dataset (sort_by_name), inplace.
+    sorts all datasets with respect to one specifkeyic dataset (sort_by_name), inplace.
     :param file_path: the path of the hdf  file with the datasets. (already united with unite())
     :param sort_by_name: name of the dataset to be sorted
     """
     with h5py.File(file_path, "r+") as file:
         indices_order = file[sort_by_name][:].argsort()
-        for channel_name in get_datasets(file_path):
-            file[channel_name][...] = file[channel_name][indices_order]
+        for channel in file.values():
+            channel[...] = channel[indices_order]
 
 
 if __name__ == "__main__":
@@ -110,6 +121,8 @@ if __name__ == "__main__":
                         help="file path of the destination file where the merged channels(datasets) will be located.")
     parser.add_argument("-v", "--verbose", action="store_true", help="print debug log messages")
     parser.add_argument("-c", "--clean", action="store_true", help="remove smelly values")
+    parser.add_argument("--convert_datetime", action="store_true", help="convert iso8601 datetime strings to datetime"
+                                                                        "format")
     parser.add_argument("--sort_by", type=str, action="store", default="Timestamp",
                         help="the channel(dataset) name the data will be sorted on.")
     args = parser.parse_args()
@@ -118,6 +131,8 @@ if __name__ == "__main__":
 
     logger.debug("start merge")
     merge(source_file_path=args.source.resolve(), dest_file_path=args.dest.resolve())
+    if args.convert_datetime:
+        convert_iso8601_to_datetime(file_path=args.dest.resolve())
     if args.clean:
         logger.debug("start clean")
         clean_by_row(file_path=args.dest.resolve())
