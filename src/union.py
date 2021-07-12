@@ -41,8 +41,12 @@ def is_datetime(val: typing.Any):
         return False
     return True
 
-def convert_iso8601_to_datetime(file_path: Path, also_convert_attrs: bool = True):
+def convert_iso8601_to_datetime(file_path: Path, also_convert_attrs: bool = True) -> None:
+    """converts strings of iso8601 format to numpy datetime format and stores it.
+    :param file_path: Path of the hdf file to convert.
+    :param also_convert_attrs: boolean value to define if attrs datetime should be converted too."""
     def convert_attrs(hdf_key: str, hdf_obj):
+        """This visitor function (hdf.File.visititems()) converts all the attributes of the given hdf_obj."""
         for attrs_key, val in hdf_obj.attrs.items():
             try:
                 del hdf_obj.attrs[attrs_key]
