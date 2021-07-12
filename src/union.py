@@ -33,30 +33,21 @@ def merge(source_file_path: Path, dest_file_path: Path) -> None:
             dest_file.create_dataset(name=channel_name, data=data, chunks=True)
 
 
-def is_datetime(val: typing.Any):
-    """returns True if val can be parsed by dateutil.parser.parse() and False if not."""
-    try:
-        pd.to_datetime(str(val.decode() if isinstance(val, bytes) else val), format="%Y-%m-%dT%H:%M:%S.%f")
-    except (TypeError, ValueError):
-        return False
-    return True
-
 def convert_iso8601_to_datetime(file_path: Path, also_convert_attrs: bool = True) -> None:
-    """converts strings of iso8601 format to numpy datetime format and stores it.
+    """converts datasets and attributes of strings of iso8601 format to numpy datetime format.
     :param file_path: Path of the hdf file to convert.
     :param also_convert_attrs: boolean value to define if attrs datetime should be converted too."""
     def convert_attrs(hdf_key: str, hdf_obj):
         """This visitor function (hdf.File.visititems()) converts all the attributes of the given hdf_obj."""
         for attrs_key, val in hdf_obj.attrs.items():
             try:
-                del hdf_obj.attrs[attrs_key]
                 val = pd.to_datetime(val.astype(str), format="%Y-%m-%dT%H:%M:%S.%f")
             except ValueError:
                 pass
             else:
                 val = val.to_numpy(np.datetime64)
+                del hdf_obj.attrs[attrs_key]
                 hdf_obj.attrs.create(name=attrs_key, data=np.array(val).astype(h5py.opaque_dtype(val.dtype)))
-                #hdf_obj.attrs[attrs_key] = np.array([val]).astype(h5py.opaque_dtype(val.dtype))  # overwrites old dictionary entry
 
     with h5py.File(file_path, mode="r+") as file:
         if also_convert_attrs:
@@ -64,8 +55,12 @@ def convert_iso8601_to_datetime(file_path: Path, also_convert_attrs: bool = True
             file.visititems(convert_attrs)
 
         for key, channel in list(get_all_dataset_items(file)):
-            if is_datetime(channel[0]):
-                data = pd.to_datetime(channel[:].astype(str), format="%Y-%m-%dT%H:%M:%S.%f").to_numpy(np.datetime64)
+            try:
+                data = pd.to_datetime(channel[:].astype(str), format="%Y-%m-%dT%H:%M:%S.%f")
+            except ValueError:
+                pass
+            else:
+                data = data.to_numpy(np.datetime64)
                 del file[key]
                 file.create_dataset(name=key, data=data.astype(h5py.opaque_dtype(data.dtype)))
 
@@ -136,6 +131,7 @@ if __name__ == "__main__":
     logger.debug("start merge")
     merge(source_file_path=args.source.resolve(), dest_file_path=args.dest.resolve())
     if args.convert_datetime:
+        logger.debug("start convert_iso8601_to_datetime")
         convert_iso8601_to_datetime(file_path=args.dest.resolve())
     if args.clean:
         logger.debug("start clean")
