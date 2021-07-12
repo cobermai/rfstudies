@@ -3,7 +3,6 @@ Unite: unites all hdf-datasets of the source file with the same name into one la
 to be separated in different groups.
 Clean: The clean_by_row cleans "corrupt" values row by row after all datasets have been united.
 Sort: sort_by sorts all datasets with respect to one of them"""
-import typing
 import logging
 from pathlib import Path
 import argparse
@@ -27,7 +26,7 @@ def merge(source_file_path: Path, dest_file_path: Path) -> None:
     with h5py.File(source_file_path, mode="r") as source_file, \
             h5py.File(dest_file_path, mode="a") as dest_file:
         first_grp = source_file.values().__iter__().__next__()
-        for channel_name, first_channel in first_grp.items():  # the channel names are always the same
+        for channel_name in first_grp.keys():  # the channel names are always the same
             logger.debug("currently merging: %s", channel_name)
             data = np.concatenate([grp[channel_name][:] for grp in source_file.values()])
             dest_file.create_dataset(name=channel_name, data=data, chunks=True)
@@ -37,7 +36,7 @@ def convert_iso8601_to_datetime(file_path: Path, also_convert_attrs: bool = True
     """converts datasets and attributes of strings of iso8601 format to numpy datetime format.
     :param file_path: Path of the hdf file to convert.
     :param also_convert_attrs: boolean value to define if attrs datetime should be converted too."""
-    def convert_attrs(hdf_key: str, hdf_obj):
+    def convert_attrs(_: str, hdf_obj):
         """This visitor function (hdf.File.visititems()) converts all the attributes of the given hdf_obj."""
         for attrs_key, val in hdf_obj.attrs.items():
             try:
@@ -98,7 +97,7 @@ def clean_by_row(file_path: Path) -> None:
 
 def sort_by(file_path: Path, sort_by_name: str) -> None:
     """
-    sorts all datasets with respect to one specifkeyic dataset (sort_by_name), inplace.
+    sorts all datasets with respect to one specific dataset (given by the key), done inplace.
     :param file_path: the path of the hdf  file with the datasets. (already united with unite())
     :param sort_by_name: name of the dataset to be sorted
     """

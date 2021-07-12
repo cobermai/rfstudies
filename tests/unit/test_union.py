@@ -1,4 +1,6 @@
-from pathlib import Path
+"""
+tests the union module
+"""
 import h5py
 import os
 import numpy as np
@@ -7,6 +9,7 @@ from src import union
 
 
 def test_merge(tmp_path):
+    """tests merge"""
     # ARRANGE
     src_file_path = tmp_path / "src.h5"
     dest_file_path = tmp_path / "dest.h5"
@@ -18,13 +21,18 @@ def test_merge(tmp_path):
     with h5py.File(expected_file_path, "w") as file:
         for k in [1, 2]:
             file.create_dataset(f"dataset{k}", data=[1, k, 2, k])
+
     # ACT
     union.merge(src_file_path, dest_file_path)
+
     # ASSERT
-    is_equal = os.system(f"h5diff {dest_file_path} {expected_file_path}")==0
+    is_equal = os.system(f"h5diff {dest_file_path} {expected_file_path}") == 0
     assert is_equal
 
+
 def test_convert_iso8601_to_datetime__with_attrs(tmp_path):
+    """tests conversion of iso datetime strings to datetime format. It tests conversion of datasets and attributes."""
+    # ARRANGE
     work_file_path = tmp_path / "test.h5"
     expected_file_path = tmp_path / "expected.h5"
 
@@ -47,14 +55,17 @@ def test_convert_iso8601_to_datetime__with_attrs(tmp_path):
         grp = file.create_group("test")
         grp.attrs.create("at2", data=attr_data_converted)
         grp.create_dataset("ds2", data=data_converted)
+
     # ACT
     union.convert_iso8601_to_datetime(work_file_path)
+
     # ASSERT
-    is_equal = os.system(f"h5diff {work_file_path} {expected_file_path}")==0
+    is_equal = os.system(f"h5diff {work_file_path} {expected_file_path}") == 0
     assert is_equal
 
 
 def test_convert_iso8601_to_datetime__without_attrs(tmp_path):
+    """tests conversion of iso strings to datetime without converting attributes, so only hdf-datsets."""
     work_file_path = tmp_path / "test.h5"
     expected_file_path = tmp_path / "expected.h5"
 
@@ -75,13 +86,17 @@ def test_convert_iso8601_to_datetime__without_attrs(tmp_path):
         grp = file.create_group("test")
         grp.attrs.create("at2", data=attr_data)
         grp.create_dataset("ds2", data=data_converted)
+
     # ACT
     union.convert_iso8601_to_datetime(work_file_path, also_convert_attrs=False)
+
     # ASSERT
     is_equal = os.system(f"h5diff {work_file_path} {expected_file_path}") == 0
     assert is_equal
 
+
 def test_clean_row_by_row(tmp_path):
+    """tests clean row by row"""
     # ARRANGE
     work_file_path = tmp_path / "test.h5"
     expected_file_path = tmp_path / "expected.h5"
@@ -106,6 +121,7 @@ def test_clean_row_by_row(tmp_path):
 
 
 def test_sort_by(tmp_path):
+    """tests sort_by"""
     # ARRANGE
     work_file_path = tmp_path / "test.h5"
 
