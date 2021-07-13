@@ -26,5 +26,5 @@ if __name__ == "__main__":
 
     cd_creator = ContextDataCreator(ed_file_path=args.ed.resolve(),
                                     td_file_path=args.td.resolve(),
-                                    dest_file_path=args.dest)
+                                    dest_file_path=args.dest.resolve())
     cd_creator.manage_features()
