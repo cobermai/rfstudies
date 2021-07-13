@@ -58,13 +58,14 @@ class TrendDataFeature(ColumnWiseFeature):
         """
         return self.func(selection)
 
-
+@dataclass
 class RowWiseFeature(CustomFeature):
     """A parent class of all features calculated row by row (=event by event)."""
+    working_on_channel: str
 
     def apply(self, data):
         """applies the function of the feature to the given data and returns the feature value."""
-        return self.func(data[self.hdf_path])
+        return self.func(data[self.working_on_channel])
 
 
 class EventDataFeature(RowWiseFeature):

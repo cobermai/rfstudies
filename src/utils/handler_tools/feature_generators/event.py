@@ -11,20 +11,40 @@ def get_event_data_features() -> typing.Generator:
     func_len = pulse_length
     func_amp = pulse_amplitude
     for chn in ['PEI Amplitude', 'PKI Amplitude', 'PSI Amplitude', 'PSR Amplitude']:
-        yield EventDataFeature(name="pulse_length", func=func_len, hdf_path=chn,
+        yield EventDataFeature(name="pulse_length",
+                               func=func_len,
+                               hdf_path=chn,
+                               working_on_channel=chn,
                                info="The pulse length is the pulse duration in mirco seconds. The pulse is defined as "
                                     "the region where the amplitude is higher than the threshold "
                                     "(=half of maximal value)")
-        yield EventDataFeature(name="pulse_amplitude", func=func_amp, hdf_path=chn,
+        yield EventDataFeature(name="pulse_amplitude",
+                               func=func_amp,
+                               working_on_channel=chn,
+                               hdf_path=chn,
                                info="The Pulse Amplitude is the mean value of the pulse. The pulse is defined as the "
                                     "region where the amplitude is higher than the threshold (=half of maximal value)")
 
     for chn in ['DC Up', 'DC Down']:
-        yield EventDataFeature(name="D1", func=apply_func_creator(partial(np.quantile, q=.1)),
-                               hdf_path=chn, info="calculates the first deciles of the data")
-        yield EventDataFeature(name="D9", func=apply_func_creator(partial(np.quantile, q=.9)),
+        yield EventDataFeature(name="D1",
+                               func=apply_func_creator(partial(np.quantile, q=.1)),
+                               working_on_channel=chn,
+                               hdf_path=chn,
+                               info="calculates the first deciles of the data")
+        yield EventDataFeature(name="D9", func=apply_func_creator(partial(np.quantile, q=.9)), working_on_channel=chn,
                                hdf_path=chn, info="calculates the 9th deciles of the data")
 
+    yield EventDataFeature(name="is_bd",
+                           func=dc_up_threshold_func,
+                           working_on_channel="DC Up",
+                           hdf_path="/",
+                           info="Decides if event is a breakdown with a threshold of -0.01 on the DC Up signal."
+                                "So if the min of DC Up is < -0.01 it is labeled as a breakdown.")
+
+def dc_up_threshold_func(data) -> float:
+    """checks if any of the signals is below the threshold."""
+    threshold = -0.01  # Threshold defined by RF Cavity Experts
+    return np.any(data < threshold)
 
 def pulse_length(data) -> float:
     """calculates the pulse duration in micro seconds where the amplitude is higher than the threshold

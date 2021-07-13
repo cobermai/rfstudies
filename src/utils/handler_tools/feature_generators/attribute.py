@@ -22,7 +22,7 @@ def get_event_attribute_features(length: int) -> typing.Generator:
         yield EventAttributeFeature(name=is_type,
                                     func=func,
                                     length=length,
-                                    hdf_path="/",
+                                    hdf_path="/clic_label/",
                                     output_dtype=bool,
                                     info="These values originated from the Log_Type assigned by the CLIC-Team."
                                          "Originally the Log_Type property had values in {0,1,2,3} where 0 stood for a"
@@ -53,7 +53,7 @@ def log_type_creator(type_of_interest: str) -> typing.Callable:
     return is_type
 
 
-def get_timestamp(attrs) -> np.datetime64:
+def get_timestamp(attrs):
     """
     returns the Timestamp from group properties/attribute in numpy datetime format
     :param file_path: h5py attribute viewer
