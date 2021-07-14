@@ -10,7 +10,7 @@ import numpy as np
 import h5py
 import coloredlogs
 import pandas as pd
-from src.utils.hdf_tools import get_all_dataset_items
+from src.utils.hdf_tools import get_all_dataset_items, get_all_dataset_values
 
 logger = logging.getLogger(__name__)
 
@@ -103,7 +103,7 @@ def sort_by(file_path: Path, sort_by_name: str) -> None:
     """
     with h5py.File(file_path, "r+") as file:
         indices_order = file[sort_by_name][:].argsort()
-        for channel in file.values():
+        for channel in get_all_dataset_values(file):
             data = channel[:]
             channel[...] = data[indices_order]
 
