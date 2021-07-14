@@ -64,7 +64,7 @@ def convert_iso8601_to_datetime(file_path: Path, also_convert_attrs: bool = True
                 file.create_dataset(name=key, data=data.astype(h5py.opaque_dtype(data.dtype)))
 
 
-def check_corruptness(arr):  # npt.ArrayLike[typing.Union[np.number, np.datetime64]]
+def _check_corruptness(arr):  # npt.ArrayLike[typing.Union[np.number, np.datetime64]]
     """checks if the input array is healthy of corrupt. In this case corrupt means infinite value or nan value.
     :param arr: input array
     :return: array with boolean values. True if the value in the input cell was healthy, False if it was corrupt."""
@@ -86,7 +86,7 @@ def clean_by_row(file_path: Path) -> None:
         shape = file.values().__iter__().__next__().shape  # shape of the first dataset
         is_corrupt = np.zeros(shape, dtype=bool)
         for channel in file.values():
-            is_corrupt |= check_corruptness(channel[:])
+            is_corrupt |= _check_corruptness(channel[:])
         new_shape = (sum(~is_corrupt),)
         for channel in file.values():
             logger.debug("cleaning channel: %s", channel)
