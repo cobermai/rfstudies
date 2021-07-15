@@ -10,10 +10,10 @@ import h5py
 from tqdm import tqdm
 import tsfresh
 from src.utils.hdf_tools import hdf_path_combine
-from src.utils.handler_tools.feature_generators.attribute import get_event_attribute_features
-from src.utils.handler_tools.feature_generators.event import get_event_data_features
-from src.utils.handler_tools.feature_generators.trend import get_trend_data_features
-from src.utils.handler_tools.feature_generators.tsfresh import get_tsfresh
+from src.utils.handler_tools.xbox2_features.attribute import get_event_attribute_features
+from src.utils.handler_tools.xbox2_features.event import get_event_data_features
+from src.utils.handler_tools.xbox2_features.trend import get_trend_data_features
+from src.utils.handler_tools.xbox2_features.tsfresh import get_tsfresh
 from src.utils.handler_tools.context_data_writer import ColumnWiseContextDataWriter, RowWiseContextDataWriter
 
 logger = logging.getLogger(__name__)
@@ -93,7 +93,7 @@ class ContextDataCreator:
 if __name__ == "__main__":
     creator = ContextDataCreator(ed_file_path=Path("~/output_files/EventDataExtLinks.hdf").expanduser(),
                                  td_file_path=Path("~/output_files/combined.hdf").expanduser(),
-                                 dest_file_path=Path("~/output_files/contextd.hdf").expanduser(),
+                                 dest_file_path=Path("~/output_files/context.hdf").expanduser(),
                                  )
-    h5py.File(creator.dest_file_path, "w").close()
+    #h5py.File(creator.dest_file_path, "w").close()
     creator.manage_features()
