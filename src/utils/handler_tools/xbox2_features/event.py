@@ -46,7 +46,7 @@ def dc_up_threshold_func(data) -> bool:
     """checks if any of the signals is below the threshold.
     :param data: a vector of values of the group working_on_dataset (see EventDataFeature.working_on_dataset)"""
     threshold = -0.01  # Threshold defined by RF Cavity Experts
-    return np.any(data < threshold)
+    return bool(np.any(data < threshold))
 
 
 def pulse_length(data) -> float:
