@@ -8,7 +8,7 @@ def get_tsfresh(data, settings, njobs=0) -> pd.DataFrame:
     dataframe and returns it.
     :param data: a dictionary of {vec_name:data_vector}
     :param settings: the tsfresh feature settings.
-    :param njobs: the number of cores used to calculate the features. Attension, for features that can be calculated
+    :param njobs: the number of cores used to calculate the features. Attention, for features that can be calculated
     quickly, using multiple cores can have a big overhead.
     :return: dataframe of calculated features. Columns are the input data vector names and index are  the features."""
     df_molten = pd.DataFrame()

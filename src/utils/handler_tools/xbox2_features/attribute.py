@@ -40,7 +40,7 @@ def log_type_creator(type_of_interest: str) -> typing.Callable:
     def is_type(attrs) -> bool:
         """
         This function translates the 'Log Type' group properties of the event data into a boolean value.
-        :param file_path: h5py attribute viewer
+        :param attrs: the h5py.AttributeManager of an hdf.Group object
         :return: True if (is_log -> 0, is_bd_in40ms -> 1, is_bd_in20ms -> 2, is_bd -> 3) in other cases return False
         """
         label = attrs["Log Type"]
@@ -56,7 +56,7 @@ def log_type_creator(type_of_interest: str) -> typing.Callable:
 def get_timestamp(attrs):
     """
     returns the Timestamp from group properties/attribute in numpy datetime format
-    :param file_path: h5py attribute viewer
+    :param attrs: the h5py.AttributeManager of an hdf.Group object
     :return: numpy datetime format of the timestamp
     """
     datetime_str = attrs["Timestamp"][:-1]

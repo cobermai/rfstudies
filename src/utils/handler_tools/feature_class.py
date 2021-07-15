@@ -41,15 +41,16 @@ class EventAttributeFeature(ColumnWiseFeature):
     """represents features read from the event attributes"""
 
     def calc(self, index: int, attrs):
-        """calculates the event attribute feature by applying self.funcand writes it to the self.vec at the given index.
+        """
+        calculates the event attribute feature by applying self.func and writes it to the self.vec at the given index.
         :param index: index of the event and thus location where the calculated feature will be written.
         :param attrs: attribute of the event data """
         self.vec[index] = self.func(attrs)
 
 
 class TrendDataFeature(ColumnWiseFeature):
-    """represents features read from the trend data."""
-
+    """Features for time series from the TrendData.
+    The feature.func selects the wanted values from the time series."""
     def calc_all(self, selection):
         """
         applies the feature function on the trend data and the pre calculated context_data
@@ -58,15 +59,17 @@ class TrendDataFeature(ColumnWiseFeature):
         """
         return self.func(selection)
 
+
 @dataclass
 class RowWiseFeature(CustomFeature):
     """A parent class of all features calculated row by row (=event by event)."""
-    working_on_group: str
+    working_on_dataset: str
 
     def apply(self, data):
-        """applies the function of the feature to the given data and returns the feature value."""
-        return self.func(data[self.working_on_group])
+        """applies the feature.func to the given time series and returns the feature value."""
+        return self.func(data[self.working_on_dataset])
 
 
 class EventDataFeature(RowWiseFeature):
-    """represents features from the event data. The feature.func is processes the time series."""
+    """Features for time series from the EventData.
+    The feature.func processes the time series."""
