@@ -24,7 +24,8 @@ def get_trend_data_features(length: int, trend_data_file_path: Path) -> typing.G
 def select(trend_data_file_path: Path, key: str):
     """creates and returns a function that selects a given selection from the dataset at the predefined key."""
     def selection(indices_selection):
-        """returns a selection of one signal of the trend data."""
+        """returns a selection of one signal of the trend data.
+        :param indices_selection: selection of indices to return (array of boolean values)"""
         with h5py.File(trend_data_file_path, "r") as file:
             return np.array(file[key])[indices_selection]
     return selection

@@ -9,20 +9,25 @@ context_data_file_path = Path("~/output_files/contextd.hdf").expanduser()
 
 
 with h5py.File(context_data_file_path, "r") as file:
-    selection = np.logical_or(file["is_bd_in_40ms"][:], file["is_bd_in_20ms"][:], file["is_log"][:])
-    # querying datetime is not possible. See pandas numexpr.necompiler.getType
+    is_bd_in_two_pulses = file["is_bd_in_40ms"][:]
+    is_bd_in_next_pulse = file["is_bd_in_20ms"][:]
+    is_bd = file["is_bd"][:]
+
+    #
     event_ts = file["Timestamp"][:]
     trend_ts = file["PrevTrendData/Timestamp"][:]
-    diff = event_ts - trend_ts
-    threshold = diff.sort_values(ascending=True)[int(len(diff) / 40)]  # alternatively pd.to_timedelta(2,"s")
-    filter_timestamp_diff = diff < threshold
+    time_diff = event_ts - trend_ts
+    time_diff_threshold = pd.to_timedelta(2, "s")
+    filter_timestamp_diff = time_diff < time_diff_threshold
 
-    selection = np.logical_and(selection, filter_timestamp_diff)
+    # only define healthy pulses with a time difference to the previous trend data of < 2s
+    is_healthy = file["clic_label/is_healthy"][:] | filter_timestamp_diff
 
-    is_log = file["is_log"]
-    selection[is_log] = np.random.choice(a=[True, False],
-                                         size=(sum(is_log),),
-                                         p=[0.025, 0.975])  # select 2.5% of log signals randomly
+    # select all breakdown and directly preceding pulses
+    selection = (is_bd_in_two_pulses | is_bd_in_next_pulse | is_bd)
+
+    # select 2.5% of the healthy pulses randomly
+    selection[is_healthy] = np.random.choice(a=[True, False], size=(sum(is_healthy),), p=[0.025, 0.975])
 
 df = hdf_to_df_selection(context_data_file_path, selection=selection)
 

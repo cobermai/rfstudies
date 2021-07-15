@@ -15,7 +15,7 @@ if __name__ == "__main__":
                                               "for each signal.")
     parser.add_argument("ed", type=Path, help="file path of an hdf file where all EventData groups are gathered (e.g."
                                               "with ExternalLinks).")
-    parser.add_argument("dest", type=Path, help="file path of the hdf fiel where the features will be written.")
+    parser.add_argument("dest", type=Path, help="file path of the hdf file where the features will be written.")
     parser.add_argument("-v", "--verbose", action="store_true", help="print debug log messages")
     args = parser.parse_args()
     if args.verbose:
