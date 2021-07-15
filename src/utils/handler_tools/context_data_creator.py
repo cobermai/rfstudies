@@ -107,6 +107,7 @@ class ContextDataCreator:
             file.create_dataset(name="is_bd", data=is_bd)
             file.create_dataset(name="is_bd_in_20ms", data=np.append(is_bd[1:], [False]))
             file.create_dataset(name="is_bd_in_40ms", data=np.append(is_bd[2:], [False, False]))
+            file.create_dataset(name="is_healthy", data=file["clic_label/is_healthy"])
 
 
 if __name__ == "__main__":
