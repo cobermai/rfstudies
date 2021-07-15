@@ -42,7 +42,7 @@ def get_event_data_features() -> typing.Generator:
                                 "So if the min of DC Up is < -0.01 it is labeled as a breakdown.")
 
 
-def dc_up_threshold_func(data) -> float:
+def dc_up_threshold_func(data) -> bool:
     """checks if any of the signals is below the threshold.
     :param data: a vector of values of the group working_on_dataset (see EventDataFeature.working_on_dataset)"""
     threshold = -0.01  # Threshold defined by RF Cavity Experts
