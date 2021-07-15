@@ -44,6 +44,9 @@ class ContextDataCreator:
         feature_list = list(get_trend_data_features(self.num_events, self.td_file_path))
         self.manage_trend_data_features(feature_list)
 
+        self.feature_post_processing()
+
+
     def manage_event_attribute_features(self, features: typing.List) -> None:
         """manages the reading and writing of attributes in the event data.
         :param features: a list of EventAttributeFeatures"""
@@ -88,6 +91,21 @@ class ContextDataCreator:
         for feature in features:
             feature.vec = feature.calc_all(loc)
             cw_handler.write_clm(feature)
+
+    def feature_post_processing(self):
+        with h5py.File(self.dest_file_path, "r+") as file:
+            clic_label = file["/clic_label"]
+
+            dc_up_threshold_label = file["dc_up_threshold_reached"][:]
+            is_bd = clic_label["is_bd_in_40ms"][:-2] & \
+                    clic_label["is_bd_in_20ms"][1:-1] & \
+                    clic_label["is_bd"][2:] &\
+                    dc_up_threshold_label[2:]
+            is_bd = np.append([False, False], is_bd)
+
+            file.create_dataset(name="is_bd", data=is_bd)
+            file.create_dataset(name="is_bd_in_20ms", data=np.append(is_bd[1:], [False]))
+            file.create_dataset(name="is_bd_in_40ms", data=np.append(is_bd[2:], [False, False]))
 
 
 if __name__ == "__main__":
