@@ -3,9 +3,10 @@ from pathlib import Path
 import h5py
 import numpy as np
 import pandas as pd
+from sklearn.model_selection import train_test_split
 from src.utils.hdf_tools import hdf_to_df_selection
 
-context_data_file_path = Path("~/output_files/contextd.hdf").expanduser()
+context_data_file_path = Path("~/output_files/context.hdf").expanduser()
 
 
 with h5py.File(context_data_file_path, "r") as file:
@@ -21,7 +22,7 @@ with h5py.File(context_data_file_path, "r") as file:
     filter_timestamp_diff = time_diff < time_diff_threshold
 
     # only define healthy pulses with a time difference to the previous trend data of < 2s
-    is_healthy = file["clic_label/is_healthy"][:] | filter_timestamp_diff
+    is_healthy = file["clic_label/is_healthy"][:] & filter_timestamp_diff
 
     # select all breakdown and directly preceding pulses
     selection = (is_bd_in_two_pulses | is_bd_in_next_pulse | is_bd)
@@ -31,7 +32,11 @@ with h5py.File(context_data_file_path, "r") as file:
 
 df = hdf_to_df_selection(context_data_file_path, selection=selection)
 
-clm_for_training = df.columns.difference(pd.Index(["Timestamp", "PrevTrendData__Timestamp", "is_bd", "is_log",
+clm_for_training = df.columns.difference(pd.Index(["Timestamp", "PrevTrendData__Timestamp", "is_bd", "is_healthy",
                                                    "is_bd_in_20ms", "is_bd_in_40ms"]))
 X = df[clm_for_training].to_numpy(dtype=float)
-Y = df["is_log"].to_numpy(dtype=int)
+Y = df["is_healthy"].to_numpy(dtype=bool)
+
+seed = 31415
+X_train, X_tmp, Y_train, Y_tmp = train_test_split(X, Y, train_size=0.7, random_state=seed)
+X_valid, X_test, Y_valid, Y_test = train_test_split(X_tmp, Y_tmp, test_size=0.50, random_state=seed)
