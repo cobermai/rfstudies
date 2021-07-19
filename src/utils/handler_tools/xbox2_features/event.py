@@ -45,7 +45,7 @@ def get_event_data_features() -> typing.Generator:
 def dc_up_threshold_func(data) -> bool:
     """checks if any of the signals is below the threshold.
     :param data: a vector of values of the group working_on_dataset (see EventDataFeature.working_on_dataset)"""
-    threshold = -0.01  # Threshold defined by RF Cavity Experts
+    threshold = -0.05  # Threshold defined by RF Cavity Experts
     return bool(np.any(data < threshold))
 
 
