@@ -1,7 +1,7 @@
-"""This module contains three straight forward functions for hdf-files: unite, clean, sort_by. (
-Unite: unites all hdf-datasets of the source file with the same name into one large dataset. The datasets are expected
+"""This module contains three straight forward functions for hdf-files: merge, clean, sort_by. (
+Merge: merges all hdf-datasets of the source file with the same name into one large dataset. The datasets are expected
 to be separated in different groups.
-Clean: The clean_by_row cleans "corrupt" values row by row after all datasets have been united.
+Clean: The clean_by_row cleans "corrupt" values row by row after all datasets have been merged.
 Sort: sort_by sorts all datasets with respect to one of them"""
 import logging
 from pathlib import Path
@@ -19,9 +19,9 @@ def merge(source_file_path: Path, dest_file_path: Path) -> None:
     """
     In the first layer of the hdf-directory structure there have to be only groups. In each group is required to have
     the same hdf-datasets, they are referred to as dataset-type.
-    for each dataset-type: unites (concatenates) all datasets of the same dataset-type from all groups.
-    :param source_file_path: file of the un-united groups with same data set names
-    :param dest_file_path: file where the united datasets will be stored
+    for each dataset-type: merges (concatenates) all datasets of the same dataset-type from all groups.
+    :param source_file_path: file of the un-merged groups with same data set names
+    :param dest_file_path: file where the merged datasets will be stored
     """
     with h5py.File(source_file_path, mode="r") as source_file, \
             h5py.File(dest_file_path, mode="a") as dest_file:
@@ -81,7 +81,7 @@ def clean_by_row(file_path: Path) -> None:
     """remove "rows" where the check_corruptness function returns at least one True value in the the row.
     A column is referred to as a dataset of the hdf file.
     A row is referred to as the values from all columns with the same index.
-    :param file_path: the path of the hdf  file with the datasets. (already united with unite())"""
+    :param file_path: the path of the hdf  file with the datasets. (already merged with merge())"""
     with h5py.File(file_path, "r+") as file:
         shape = file.values().__iter__().__next__().shape  # shape of the first dataset
         is_corrupt = np.zeros(shape, dtype=bool)
@@ -98,7 +98,7 @@ def clean_by_row(file_path: Path) -> None:
 def sort_by(file_path: Path, sort_by_name: str) -> None:
     """
     sorts all datasets with respect to one specific dataset (given by the key), done inplace.
-    :param file_path: the path of the hdf  file with the datasets. (already united with unite())
+    :param file_path: the path of the hdf  file with the datasets. (already merged with merge())
     :param sort_by_name: name of the dataset to be sorted
     """
     with h5py.File(file_path, "r+") as file:
