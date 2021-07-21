@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
-
+from model.classifier import Classifier
 from src.utils.hdf_tools import hdf_to_df_selection
 
 
@@ -81,10 +81,29 @@ def train_valid_test_split(X, y, splits: tuple) -> typing.Tuple:
 
     return train, valid, test
 
+def modeling(X_train, X_valid, X_test, y_train, y_valid, y_test, idx_train, idx_valid, idx_test):
+    """
+    function creates model an makes predictions with input data
+    :param X: data array of shape (event, sample, feature)
+    """
+    cf = Classifier(X_train, X_valid, y_train, y_valid, idx_train, idx_valid)
+    cf.fit_classifier()
+    probabilities = cf.predict(X_test)
+    cf.eval_classifications(y_test, probabilities)
+
 
 if __name__ == '__main__':
     c_path = Path("~/cernbox_projects_local/CLIC_data_transfert/Xbox2_hdf/context.hdf").expanduser()
 
     X, y = select_data(context_data_file_path=c_path)
 
-    train_test_split(X, y, (0.7, 0.2, 0.1))
+    X = X[..., np.newaxis]
+    X = np.nan_to_num(X)
+
+    X_scaled = scale_data(X)
+
+    train, valid, test = train_test_split(X, y, (0.7, 0.2, 0.1))
+
+    # modeling(train, valid, test)
+
+
