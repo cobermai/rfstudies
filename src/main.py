@@ -18,9 +18,7 @@ def select_data(context_data_file_path: Path) -> typing.Tuple:
         is_bd_in_next_pulse = file["is_bd_in_20ms"][:]
         is_bd = file["is_bd"][:]
 
-        event_ts = file["Timestamp"][:]
-        trend_ts = file["PrevTrendData/Timestamp"][:]
-        time_diff = event_ts - trend_ts
+        time_diff = file["Timestamp"][:] - file["PrevTrendData/Timestamp"][:]
         time_diff_threshold = pd.to_timedelta(2, "s")
         filter_timestamp_diff = time_diff < time_diff_threshold
 
