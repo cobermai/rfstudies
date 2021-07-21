@@ -1,12 +1,13 @@
 """example code how to select from context data and prepare data for machine learning. """
 import typing
 from pathlib import Path
+from collections import namedtuple
 import h5py
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
-from collections import namedtuple
+
 from src.utils.hdf_tools import hdf_to_df_selection
 
 
@@ -67,18 +68,16 @@ def train_valid_test_split(X, y, splits: tuple) -> typing.Tuple:
     if splits[0] == 1:
         raise ValueError('Training set fraction cannot be 1')
 
+    idx = np.arange(len(X))
+    X_train, X_tmp, y_train, y_tmp, idx_train, idx_tmp = \
+        train_test_split(X, y, idx, train_size=splits[0])
+    X_valid, X_test, y_valid, y_test, idx_valid, idx_test = \
+        train_test_split(X_tmp, y_tmp, idx_tmp, train_size=splits[1] / (1 - (splits[0])))
 
-    id = np.arange(len(X))
-    X_train, X_temp, y_train, y_temp, id_train, id_temp = \
-        train_test_split(X, y, id, train_size=splits[0])
-
-    X_valid, X_test, y_valid, y_test, id_valid, id_test = \
-        train_test_split(X_temp, y_temp, id_temp, train_size=splits[1] / (1 - (splits[0])))
-
-    data = namedtuple("data", ["X", "y", "id"])
-    train = data(X_train, y_train, id_train)
-    valid = data(X_valid, y_valid, id_valid)
-    test = data(X_test, y_test, id_test)
+    data = namedtuple("data", ["X", "y", "idx"])
+    train = data(X_train, y_train, idx_train)
+    valid = data(X_valid, y_valid, idx_valid)
+    test = data(X_test, y_test, idx_test)
 
     return train, valid, test
 

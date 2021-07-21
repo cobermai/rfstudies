@@ -31,9 +31,8 @@ def test__train_valid_test_split():
     # ASSERT
     assert set(X) == set(train.X).union(valid.X).union(test.X)
     assert set(y) == set(train.y).union(valid.y).union(test.y)
-    id = np.arange(10)
-    assert set(id) == set(train.id).union(valid.id).union(test.id)
     length = len(X)
+    assert set(range(length)) == set(train.idx).union(valid.idx).union(test.idx)
     splits_output = len(train.X) / length, len(valid.X) / length, len(test.X) / length
     assert splits_output == splits_expected
 
