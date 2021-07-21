@@ -13,10 +13,10 @@ import tsfresh
 from src.union import sort_by
 from src.utils.hdf_tools import hdf_path_combine
 from src.utils.handler_tools.context_data_creator import ContextDataCreator
-from src.utils.handler_tools.xbox2_features.attribute import get_event_attribute_features
-from src.utils.handler_tools.xbox2_features.event import get_event_data_features
-from src.utils.handler_tools.xbox2_features.trend import get_trend_data_features
-from src.utils.handler_tools.xbox2_features.tsfresh import get_tsfresh
+from src.xbox2_speciffic.feature_definition.attribute import get_event_attribute_features
+from src.xbox2_speciffic.feature_definition.event import get_event_data_features
+from src.xbox2_speciffic.feature_definition.trend import get_trend_data_features
+from src.xbox2_speciffic.feature_definition.tsfresh import get_tsfresh
 from src.utils.handler_tools.context_data_writer import ColumnWiseContextDataWriter, RowWiseContextDataWriter
 
 logger = logging.getLogger(__name__)
