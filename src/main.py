@@ -61,12 +61,17 @@ def train_valid_test_split(X, y, splits: tuple) -> typing.Tuple:
     :param splits: tuple specifying splitting fractions (training, validation, test)
     :return: train, valid, test: tuple containing split data as named tuples
     """
+    if sum(splits)==1 and len(splits)==3 and all(splits>0):
+        raise Warning('Splits should sum to 1 and have three float values between 0 and 1')
+    if splits(0)==0:
+        raise ValueError('Training set fraction cannot be 1')
+
     idx = np.arange(len(X))
     X_train, X_temp, y_train, y_temp, idx_train, idx_temp = \
-        train_test_split(X, y, idx, test_size=splits(0))
+        train_test_split(X, y, idx, test_size=1-splits(0))
 
     X_valid, X_test, y_valid, y_test, idx_valid, idx_test = \
-        train_test_split(X_temp, y_temp, idx_temp, test_size=splits(2)/(1-(splits(0))))
+        train_test_split(X_temp, y_temp, idx_temp, test_size=splits(1)/(1-(splits(0))))
 
     data = namedtuple("data", ["X", "y", "id"])
     train = data(X_train, y_train, idx_train)
@@ -81,4 +86,4 @@ if __name__ == '__main__':
 
     X, y = select_data(context_data_file_path=c_path)
 
-    train, valid, test = train_test_split(X, y, (0.7, 0.2, 0.1))
+    train_test_split(X, y, (0.7, 0.2, 0.1))
