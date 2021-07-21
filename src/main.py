@@ -71,18 +71,14 @@ def train_validation_test_split(X, y, splits: tuple) -> typing.Tuple:
 
     # idea for only a single output
     # split_data = X_train, X_valid, X_test, \
-    #        y_train, y_valid, y_test, \
-    #        idx_train, idx_valid, idx_test
-    #
-    # return split_datarain_rain_"""example code how to select from context data and prepare data for machine learning. """
-import typing
-from pathlib import Path
-import h5py
-import numpy as np
-import pandas as pd
-from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import train_test_split
-from src.utils.hdf_tools import hdf_to_df_selection
+    #         y_train, y_valid, y_test, \
+    #         idx_train, idx_valid, idx_test
+    # #
+    # return split_data
+
+    return X_train, X_valid, X_test, \
+            y_train, y_valid, y_test, \
+            idx_train, idx_valid, idx_test
 
 def select_data(context_data_file_path: Path) -> typing.Tuple:
     """
