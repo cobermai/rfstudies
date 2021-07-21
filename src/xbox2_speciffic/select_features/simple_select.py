@@ -4,7 +4,6 @@ import typing
 import h5py
 import numpy as np
 import pandas as pd
-from sklearn.model_selection import train_test_split
 from src.utils.hdf_tools import hdf_to_df_selection
 
 context_data_file_path = Path("~/output_files/context.hdf").expanduser()

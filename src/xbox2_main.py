@@ -5,8 +5,8 @@ from pathlib import Path
 from collections import namedtuple
 import numpy as np
 import tensorflow as tf
-import tensorflow.keras as keras
-from tensorflow.keras.layers import Input, Dense, Dropout, Activation
+from tensorflow import keras
+from tensorflow.keras.layers import Input, Dense
 import sklearn
 from sklearn.model_selection import train_test_split
 from sklearn.utils.class_weight import compute_class_weight
@@ -26,7 +26,7 @@ def transformation(work_dir: Path):
     combined_trend_data_path = work_dir / "combined.hdf"
 
     hdf_tools.merge(source_file_path=gathered_trend_data,
-                dest_file_path=combined_trend_data_path)
+                    dest_file_path=combined_trend_data_path)
     hdf_tools.convert_iso8601_to_datetime(file_path=combined_trend_data_path)
     hdf_tools.sort_by(file_path=combined_trend_data_path, sort_by_name="Timestamp")
 
@@ -48,6 +48,7 @@ def class_weights_for_onehot(y):
     weights = compute_class_weight('balanced', classes=np.unique(y_class), y=y_class)
     return dict(enumerate(weights))
 
+
 def get_model(train):
     input_shape = train.x.shape[1:]
     output_len = train.y.shape[1]
@@ -62,6 +63,7 @@ def get_model(train):
     model.compile(loss='categorical_crossentropy', optimizer=keras.optimizers.Adam(),
                   metrics=[keras.metrics.Accuracy(), keras.metrics.CategoricalAccuracy(), keras.metrics.AUC()])
     return model
+
 
 def modelling():
     """MODELLING"""
@@ -84,8 +86,8 @@ def modelling():
     batch_size = 64
     num_epochs = 300
     class_weights = class_weights_for_onehot(train.y)
-    hist = model.fit(train.x, train.y, batch_size=batch_size, validation_split=0.2, epochs=num_epochs,
-                     class_weight=class_weights, verbose=True)
+    model.fit(train.x, train.y, batch_size=batch_size, validation_split=0.2, epochs=num_epochs,
+              class_weight=class_weights, verbose=True)
 
     print(model.test_on_batch(x=test.x, y=test.y, return_dict=True))
 
