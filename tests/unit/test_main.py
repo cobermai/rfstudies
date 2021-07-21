@@ -2,6 +2,7 @@
 tests the main module
 """
 import numpy as np
+import pytest
 from src import main
 
 
@@ -18,34 +19,30 @@ def test__scale_data():
     assert (X_output == X_expected).all()
 
 
-def test__train_validation_test_split():
+def test__train_valid_test_split():
     # ARRANGE
-
-    # something that looks like input data
-    X = np.array([[[0, 0, 0], [1, 1, 1]]])
-
-    # something that looks like labels
-    y = np.array([[[True], [False], [True], [False],
-                   [True], [False], [True], [False]
-                   [True], [False]]])
-
-    # expected split data outputs
-    X_expected = np.array([[[-1, -1, -1], [1, 1, 1]]])
-    y_expected = np.array([[[True], [False], [True], [False],
-                            [True], [False], [True]]])
-
-    # Don't know if we need to test this
-    idx_expected = 1, 3, 4, 7, 5, 4, 9
-
-    splits_expected = 0.7, 0.2, 0.1
+    X = np.array(range(10, 20))
+    y = np.array(range(20, 30))
+    splits_expected = 0.7, 0.1, 0.2
 
     # ACT
-    # Maybe force random seed to check correct random selection to test correct split?
-    X_output, y_output, idx_output = main.train_validation_test_split(X, y, splits_expected)
-
-    splits_output = len(X_train) / len(X), len(X_valid) / len(X), len(X_test) / len(X)
+    train, valid, test = main.train_valid_test_split(X, y, splits_expected)
 
     # ASSERT
+    assert set(X) == set(train.X).union(valid.X).union(test.X)
+    assert set(y) == set(train.y).union(valid.y).union(test.y)
+    id = np.arange(10)
+    assert set(id) == set(train.id).union(valid.id).union(test.id)
+    length = len(X)
+    splits_output = len(train.X) / length, len(valid.X) / length, len(test.X) / length
+    assert splits_output == splits_expected
 
-    assert X_output == X_expected and y_output == y_expected and \
-           idx_output == idx_expected and splits_output == splits_expected
+
+def test__train_valid_test_split_errors():
+    # ARRANGE
+    X = np.array(range(10, 20))
+    y = np.array(range(20, 30))
+
+    # ACT
+    with pytest.raises(ValueError):
+        main.train_valid_test_split(X, y, (0, 0, 0))
