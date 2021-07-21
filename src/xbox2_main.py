@@ -12,7 +12,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.utils.class_weight import compute_class_weight
 from src.transformation import transform
 from src.handler import XBox2ContextDataCreator
-from src import union
+from src.utils import hdf_tools
 from src.xbox2_speciffic.select_features.simple_select import select_data
 
 
@@ -25,10 +25,10 @@ def transformation(work_dir: Path):
     gathered_trend_data = work_dir / "TrendDataExtLinks.hdf"
     combined_trend_data_path = work_dir / "combined.hdf"
 
-    union.merge(source_file_path=gathered_trend_data,
+    hdf_tools.merge(source_file_path=gathered_trend_data,
                 dest_file_path=combined_trend_data_path)
-    union.convert_iso8601_to_datetime(file_path=combined_trend_data_path)
-    union.sort_by(file_path=combined_trend_data_path, sort_by_name="Timestamp")
+    hdf_tools.convert_iso8601_to_datetime(file_path=combined_trend_data_path)
+    hdf_tools.sort_by(file_path=combined_trend_data_path, sort_by_name="Timestamp")
 
 
 def data_handling(work_dir: Path):

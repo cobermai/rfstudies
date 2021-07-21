@@ -10,8 +10,7 @@ import numpy as np
 import h5py
 from tqdm import tqdm
 import tsfresh
-from src.union import sort_by
-from src.utils.hdf_tools import hdf_path_combine
+from src.utils.hdf_tools import hdf_path_combine, sort_by
 from src.utils.handler_tools.context_data_creator import ContextDataCreator
 from src.xbox2_speciffic.feature_definition.attribute import get_event_attribute_features
 from src.xbox2_speciffic.feature_definition.event import get_event_data_features
