@@ -9,6 +9,7 @@ from sklearn.model_selection import train_test_split
 from collections import namedtuple
 from src.utils.hdf_tools import hdf_to_df_selection
 
+
 def select_data(context_data_file_path: Path) -> typing.Tuple:
     """
     :param context_data_file_path: path to hdf5 context data file
@@ -41,6 +42,7 @@ def select_data(context_data_file_path: Path) -> typing.Tuple:
     y = df["is_healthy"].to_numpy(dtype=int)
     return X, y
 
+
 def scale_data(X):
     """
     function scales data for prediction with standard scaler
@@ -53,6 +55,7 @@ def scale_data(X):
         X_scaled[:, :, feature_index] = StandardScaler().fit_transform(X[:, :, feature_index].T).T
     return X_scaled
 
+
 def train_valid_test_split(X, y, splits: tuple) -> typing.Tuple:
     """
     splits data into training, testing and validation set using random sampling
@@ -61,22 +64,21 @@ def train_valid_test_split(X, y, splits: tuple) -> typing.Tuple:
     :param splits: tuple specifying splitting fractions (training, validation, test)
     :return: train, valid, test: tuple containing split data as named tuples
     """
-    if sum(splits)==1 and len(splits)==3 and all(splits>0):
-        raise Warning('Splits should sum to 1 and have three float values between 0 and 1')
-    if splits(0)==0:
+    if splits[0] == 1:
         raise ValueError('Training set fraction cannot be 1')
 
-    idx = np.arange(len(X))
-    X_train, X_temp, y_train, y_temp, idx_train, idx_temp = \
-        train_test_split(X, y, idx, test_size=1-splits(0))
 
-    X_valid, X_test, y_valid, y_test, idx_valid, idx_test = \
-        train_test_split(X_temp, y_temp, idx_temp, test_size=splits(1)/(1-(splits(0))))
+    id = np.arange(len(X))
+    X_train, X_temp, y_train, y_temp, id_train, id_temp = \
+        train_test_split(X, y, id, train_size=splits[0])
+
+    X_valid, X_test, y_valid, y_test, id_valid, id_test = \
+        train_test_split(X_temp, y_temp, id_temp, train_size=splits[1] / (1 - (splits[0])))
 
     data = namedtuple("data", ["X", "y", "id"])
-    train = data(X_train, y_train, idx_train)
-    valid = data(X_valid, y_valid, idx_valid)
-    test = data(X_test, y_test, idx_test)
+    train = data(X_train, y_train, id_train)
+    valid = data(X_valid, y_valid, id_valid)
+    test = data(X_test, y_test, id_test)
 
     return train, valid, test
 
