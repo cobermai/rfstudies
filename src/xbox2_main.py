@@ -17,6 +17,7 @@ from src.xbox2_speciffic.select_features.simple_select import select_data
 
 
 def transformation(work_dir: Path):
+    """TRANSFORMATION"""
     src_dir = Path("~/project_data/CLIC_DATA_Xbox2_T24PSI_2/").expanduser()
     transform(tdms_dir=src_dir,
               hdf_dir=work_dir)
@@ -31,6 +32,7 @@ def transformation(work_dir: Path):
 
 
 def data_handling(work_dir: Path):
+    """DATA HANDLING"""
     gathered_event_data_path = work_dir / "EventDataExtLinks.hdf"
     context_data_file_path = work_dir / "context.hdf"
     combined_trend_data_path = work_dir / "combined.hdf"
@@ -62,6 +64,7 @@ def get_model(train):
     return model
 
 def modelling():
+    """MODELLING"""
     X, y = select_data()
     X = np.nan_to_num(X)  # tensorflow does not like nan values as input. Remove them in any kind of way
     y = y.reshape(-1, 1)
