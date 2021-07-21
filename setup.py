@@ -16,7 +16,7 @@ REQUIREMENTS: dict = {
         'pyyaml>=5.4',
         'pandas>=1.2.4',
         'coloredlogs>=15',
-        'sklearn>=0.24.2',
+        'scikit-learn>=0.24.2',
     ],
     'test': [
         'pytest >= 6.2',
