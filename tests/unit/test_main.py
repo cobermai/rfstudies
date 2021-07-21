@@ -18,7 +18,7 @@ def test__scale_data():
     assert (X_output == X_expected).all()
 
 
-def test__train_test_split():
+def test__train_validation_test_split():
     # ARRANGE
 
     # something that looks like input data
@@ -41,7 +41,7 @@ def test__train_test_split():
 
     # ACT
     # Maybe force random seed to check correct random selection to test correct split?
-    X_output, y_output, idx_output = main.train_test_split(X, y, splits_expected)
+    X_output, y_output, idx_output = main.train_validation_test_split(X, y, splits_expected)
 
     splits_output = len(X_train) / len(X), len(X_valid) / len(X), len(X_test) / len(X)
 

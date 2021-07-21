@@ -52,7 +52,7 @@ def scale_data(X):
         X_scaled[:, :, feature_index] = StandardScaler().fit_transform(X[:, :, feature_index].T).T
     return X_scaled
 
-def train_test_split(X, y, splits: tuple) -> typing.Tuple:
+def train_validation_test_split(X, y, splits: tuple) -> typing.Tuple:
     """
     splits data into training, testing and validation set using random sampling
     :param X: input data array of shape (event, sample, feature)
@@ -67,7 +67,7 @@ def train_test_split(X, y, splits: tuple) -> typing.Tuple:
         train_test_split(X, y, idx, test_size=splits(0))
 
     X_valid, X_test, y_valid, y_test, idx_valid, idx_test = \
-        train_test_split(X_temp, y_temp, idx_temp, teest_size=splits(2)/(1-(splits(0)))
+        train_test_split(X_temp, y_temp, idx_temp, test_size=splits(2)/(1-(splits(0)))
 
     # idea for only a single output
     # split_data = X_train, X_valid, X_test, \
