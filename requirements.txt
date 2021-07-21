@@ -9,4 +9,4 @@ pytest>=6.2.4
 python_dateutil>=2.8
 tqdm>=4.61
 tsfresh>=0.18.0
-sklearn>=0.24.2
+scikit-learn>=0.24.2
