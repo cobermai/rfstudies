@@ -83,13 +83,13 @@ def train_valid_test_split(X, y, splits: tuple) -> typing.Tuple:
 
 def modeling(train, valid, test):
     """
-    function creates model an makes predictions with input data
+    function creates model and makes predictions with input data
     :param X: data array of shape (event, sample, feature)
     """
-    cf = Classifier(train, valid)
-    cf.fit_classifier()
-    probabilities = cf.predict(test.X)
-    cf.eval_classifications(test.y, probabilities)
+    clf = Classifier(train, valid)
+    clf.fit_classifier()
+    probabilities = clf.predict(test.X)
+    clf.eval_classifications(test.y, probabilities)
 
 
 if __name__ == '__main__':
@@ -102,7 +102,7 @@ if __name__ == '__main__':
 
     X_scaled = scale_data(X)
 
-    train, valid, test = train_valid_test_split(X, y, (0.7, 0.2, 0.1))
+    train, valid, test = train_valid_test_split(X_scaled, y, (0.7, 0.2, 0.1))
 
     modeling(train, valid, test)
 
