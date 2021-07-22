@@ -79,13 +79,13 @@ class XBox2ContextDataCreator(ContextDataCreator):
     def manage_event_data_and_tsfresh_features(self, event_data_features: typing.List) -> None:
         """manages the calculation and writing of event data features, so features that are calculated from the event
         data time series. It calculates some custom features written in the event data features and tsfresh features.
-        :param features: a list of EventDataFeatures"""
+        :param event_data_features: a list of EventDataFeatures"""
         rw_handler = RowWiseContextDataWriter(self.dest_file_path, length=self.num_events)
         with h5py.File(self.ed_file_path, "r") as file:
             data_gen = ({key: channel[:] for key, channel in grp.items()} for grp in file.values())
             for data, index in tqdm(zip(data_gen, itertools.count(0))):
-                feature_values = [feature.apply(data) for feature in event_data_features]
-                rw_handler.write_row_custom_features(index=index, data_iter=zip(event_data_features, feature_values))
+                for feature in event_data_features:
+                    feature.calculate_single(data)
 
                 tsfresh_df = get_tsfresh(data, tsfresh.feature_extraction.MinimalFCParameters())
                 val_gen = ((hdf_path_combine(str(clm_id), str(row_id)), val)
@@ -93,6 +93,9 @@ class XBox2ContextDataCreator(ContextDataCreator):
                            for clm_id, val in row.items())
                 rw_handler.write_row_from_external(index=index, data_iter=val_gen)
 
+        column_wise_handler = ColumnWiseContextDataWriter(self.dest_file_path, length=self.num_events)
+        for feature in event_data_features:
+            column_wise_handler.write_clm(feature.vec)
 
     def feature_post_processing(self):
         """After the other features have been calculated, some new features will be added resulting from the ones
@@ -130,6 +133,6 @@ if __name__ == "__main__":
     logger = logging.getLogger(__name__)
 
     cd_creator = XBox2ContextDataCreator(ed_file_path=args.ed.resolve(),
-                                    td_file_path=args.td.resolve(),
-                                    dest_file_path=args.dest.resolve())
+                                         td_file_path=args.td.resolve(),
+                                         dest_file_path=args.dest.resolve())
     cd_creator.manage_features()
