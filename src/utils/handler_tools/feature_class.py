@@ -40,7 +40,7 @@ class ColumnWiseFeature(CustomFeature):
 class EventAttributeFeature(ColumnWiseFeature):
     """represents features read from the event attributes"""
 
-    def calc(self, index: int, attrs):
+    def calculate_single(self, index: int, attrs):
         """
         calculates the event attribute feature by applying self.func and writes it to the self.vec at the given index.
         :param index: index of the event and thus location where the calculated feature will be written.
@@ -51,7 +51,7 @@ class EventAttributeFeature(ColumnWiseFeature):
 class TrendDataFeature(ColumnWiseFeature):
     """Features for time series from the TrendData.
     The feature.func selects the wanted values from the time series."""
-    def calc_all(self, selection):
+    def calculate_all(self, selection):
         """
         applies the feature function on the trend data and the pre calculated context_data
         :param selection: selection of interest from the trend data
