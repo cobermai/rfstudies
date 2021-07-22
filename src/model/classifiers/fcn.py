@@ -1,6 +1,6 @@
 import tensorflow.keras as keras
 
-class Classifier_FCN:
+class ClassifierFcn:
     """Fully convolutional neural network, initially proposed by https://github.com/hfawaz/dl-4-tsc"""
     def __init__(self, output_directory, input_shape, nb_classes, verbose=False, build=True):
         """Initialization of model parameters"""
