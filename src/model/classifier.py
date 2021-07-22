@@ -12,24 +12,24 @@ class Classifier:
     """
     Classifier class which acts as wrapper for tensorflow models.
     """
-    def __init__(self, X_train, X_valid, y_train, y_valid, idx_train, idx_valid, build=True):
+    def __init__(self, train, valid, build=True):
         """Initialization of input data and hyperparameters"""
-        self.X_train = X_train
-        self.y_train = y_train
-        self.idx_train = idx_train
-        self.X_valid = X_valid
-        self.y_valid = y_valid
-        self.idx_valid = idx_valid
-        self.nb_classes = len(np.unique(np.concatenate((y_train, y_valid), axis=0)))
+        self.X_train = train.X
+        self.y_train = train.y
+        self.idx_train = train.idx
+        self.X_valid = valid.X
+        self.y_valid = valid.y
+        self.idx_valid = valid.idx
+        self.nb_classes = len(np.unique(np.concatenate((train.y, valid.y), axis=0)))
         self.classifier_name = "fcn"
         self.output_directory = "/home/cobermai/PycharmProjects/mlframework/src/output/"
         if not os.path.isdir(self.output_directory):
             os.makedirs(self.output_directory[:-1])
-        self.input_shape = X_train.shape[1:]
+        self.input_shape = train.X.shape[1:]
         self.train_time = 0
         self.train_hist = []
         if build:
-            self.classifier = self.create_classifier
+            self.classifier = self.create_classifier()
         return
 
     def create_classifier(self):

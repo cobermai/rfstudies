@@ -17,6 +17,7 @@ REQUIREMENTS: dict = {
         'pandas>=1.2.4',
         'coloredlogs>=15',
         'scikit-learn>=0.24.2',
+        'tensorflow>=2.5.0',
     ],
     'test': [
         'pytest >= 6.2',
