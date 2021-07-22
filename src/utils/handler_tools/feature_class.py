@@ -58,13 +58,15 @@ class TrendDataFeature(ColumnWiseFeature):
         return self.func(selection)
 
 
+@dataclass
 class EventDataFeature(ColumnWiseFeature):
     """Features for time series from the EventData.
         The feature.func processes the time series."""
+    working_on_dataset: str
 
     def calculate_single(self, index: int, data):
         """
         calculates the event attribute feature by applying self.func and writes it to the self.vec at the given index.
         :param index: index of the event and thus location where the calculated feature will be written.
         :param data: all data of a single event from the event data"""
-        self.vec[index] = self.func(data)
+        self.vec[index] = self.func(data[self.working_on_dataset])

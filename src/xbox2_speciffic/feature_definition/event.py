@@ -5,7 +5,7 @@ import numpy as np
 from src.utils.handler_tools.feature_class import EventDataFeature
 
 
-def get_event_data_features() -> typing.Generator:
+def get_event_data_features(length) -> typing.Generator:
     """This function generates all custom EventDataFeatures for the xbox2 data set.
     :return: generator of features"""
     func_len = pulse_length
@@ -13,6 +13,8 @@ def get_event_data_features() -> typing.Generator:
     for chn in ['PEI Amplitude', 'PKI Amplitude', 'PSI Amplitude', 'PSR Amplitude']:
         yield EventDataFeature(name="pulse_length",
                                func=func_len,
+                               length=length,
+                               output_dtype=float,
                                hdf_path=chn,
                                working_on_dataset=chn,
                                info="The pulse length is the pulse duration in mirco seconds. The pulse is defined as "
@@ -21,6 +23,8 @@ def get_event_data_features() -> typing.Generator:
         yield EventDataFeature(name="pulse_amplitude",
                                func=func_amp,
                                working_on_dataset=chn,
+                               length=length,
+                               output_dtype=float,
                                hdf_path=chn,
                                info="The Pulse Amplitude is the mean value of the pulse. The pulse is defined as the "
                                     "region where the amplitude is higher than the threshold (=half of maximal value)")
@@ -29,14 +33,23 @@ def get_event_data_features() -> typing.Generator:
         yield EventDataFeature(name="D1",
                                func=apply_func_creator(partial(np.quantile, q=.1)),
                                working_on_dataset=chn,
+                               length=length,
+                               output_dtype=float,
                                hdf_path=chn,
                                info="calculates the first deciles of the data")
-        yield EventDataFeature(name="D9", func=apply_func_creator(partial(np.quantile, q=.9)), working_on_dataset=chn,
-                               hdf_path=chn, info="calculates the 9th deciles of the data")
+        yield EventDataFeature(name="D9",
+                               func=apply_func_creator(partial(np.quantile, q=.9)),
+                               working_on_dataset=chn,
+                               length=length,
+                               output_dtype=float,
+                               hdf_path=chn,
+                               info="calculates the 9th deciles of the data")
 
     yield EventDataFeature(name="dc_up_threshold_reached",
                            func=dc_up_threshold_func,
                            working_on_dataset="DC Up",
+                           length=length,
+                           output_dtype=bool,
                            hdf_path="/",
                            info="Decides if event is a breakdown with a threshold of -0.01 on the DC Up signal."
                                 "So if the min of DC Up is < -0.01 it is labeled as a breakdown.")
