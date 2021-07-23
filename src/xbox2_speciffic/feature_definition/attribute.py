@@ -10,7 +10,7 @@ def get_event_attribute_features(length: int) -> typing.Generator:
     :param length: number of values that will be calculated by each feature.
     :return: generator of features"""
     yield EventAttributeFeature(name="Timestamp",
-                                func=get_timestamp,
+                                func=_get_timestamp,
                                 length=length,
                                 hdf_path="/",
                                 output_dtype=h5py.opaque_dtype('M8[us]'),
@@ -18,7 +18,7 @@ def get_event_attribute_features(length: int) -> typing.Generator:
                                      "a datetime format with micro seconds precision.")
 
     for is_type in ["is_healthy", "is_bd_in_40ms", "is_bd_in_20ms", "is_bd"]:
-        func = log_type_creator(is_type)
+        func = _log_type_creator(is_type)
         yield EventAttributeFeature(name=is_type,
                                     func=func,
                                     length=length,
@@ -30,7 +30,7 @@ def get_event_attribute_features(length: int) -> typing.Generator:
                                          "for breakdown in 20ms and 40ms, so the signals prior to a breakdown.")
 
 
-def log_type_creator(type_of_interest: str) -> typing.Callable:
+def _log_type_creator(type_of_interest: str) -> typing.Callable:
     """creates functions that return True if the input value matches the translation of the is_type label and
     False in the other cases.
     :param type_of_interest: string of the type of interest (in {"is_log", "is_bd_in_40ms", "is_bd_in_20ms", "is_bd"})
@@ -53,7 +53,7 @@ def log_type_creator(type_of_interest: str) -> typing.Callable:
     return is_type
 
 
-def get_timestamp(attrs):
+def _get_timestamp(attrs):
     """
     returns the Timestamp from group properties/attribute in numpy datetime format
     :param attrs: the h5py.AttributeManager of an hdf.Group object
