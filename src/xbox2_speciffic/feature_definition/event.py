@@ -8,11 +8,9 @@ from src.utils.handler_tools.feature_class import EventDataFeature
 def get_event_data_features(length) -> typing.Generator:
     """This function generates all custom EventDataFeatures for the xbox2 data set.
     :return: generator of features"""
-    func_len = pulse_length
-    func_amp = pulse_amplitude
     for chn in ['PEI Amplitude', 'PKI Amplitude', 'PSI Amplitude', 'PSR Amplitude']:
         yield EventDataFeature(name="pulse_length",
-                               func=func_len,
+                               func=pulse_length,
                                length=length,
                                output_dtype=float,
                                hdf_path=chn,
@@ -21,7 +19,7 @@ def get_event_data_features(length) -> typing.Generator:
                                     "the region where the amplitude is higher than the threshold "
                                     "(=half of maximal value)")
         yield EventDataFeature(name="pulse_amplitude",
-                               func=func_amp,
+                               func=pulse_amplitude,
                                working_on_dataset=chn,
                                length=length,
                                output_dtype=float,
