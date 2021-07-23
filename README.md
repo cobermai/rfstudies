@@ -15,33 +15,50 @@ This is a framework for machine learning. It consists of three steps:
    * explain results and validate by application
     
 
-### Requirements
-In order to follow the installation guide it is required to install
+### System Requirements
+The system requirements of the mlframework are:
+- Linux OS (tested for [Ubuntu](https://ubuntu.com/download/desktop), [CentOS 7](https://www.centos.org/))
+- [Python](https://www.python.org/) >= 3.8 <4
+- [hdf5 tools](https://support.hdfgroup.org/HDF5/doc/RM/Tools/)
+
+we further recommend the use of:
+- pip, package management
+- virtualenv to ensure package compatability
+
+To install the system requirements on derbian based systems (eg. Ubuntu) using the package manager `apt`, type the following into the command line:
 ```bash
-# for debian based systems
 apt update
-sudo xargs apt install <requirements.system
-
+sudo xargs apt install <system_requirements/requirements_deb.system
 ```
-### Installation in CERN environment
-for an installation in the CERN environment follow the [Acc-Py](https://wikis.cern.ch/display/ACCPY/Getting+started+with+Acc-Py) guide.
-
-### Installation local
+for rpm based systems (eg. CentOS 7) using the system package manager `yum`, type the following into the command line:
 ```bash
-git clone https://gitlab.cern.ch/machine-protection-ml/mlframework.git # Clone the gitlab project
-git checkout mlframework #  and checkout the branch mlframework
-cd mlframework
-pip3 install virtualenv
-virtualenv venv
-source ./venv/bin/activate
-pip3 install -r requirements.txt
+yum update
+sudo xargs yum install <system_requirements/requirements_rpm.system
 ```
-### Usage
-```python
-# Transformation from .tdms files source/files/path/ to destination/path/
-from src.transformation import transform
-transform("source/files/dir", "destination/dir")
+***Further information about installation in the CERN environment:*** 
+can be found in the detailed [Acc-Py](https://wikis.cern.ch/display/ACCPY/Getting+started+with+Acc-Py) guide.
+
+### Installation
+You get a copy of the whole mlframework repository by cloning it:
+```bash
+git clone https://gitlab.cern.ch/machine-protection-ml/mlframework.git  # Clone the gitlab project
+cd mlframework  # step into folder
 ```
+We recommend using a virtual environment to manage python packages. To initialize the virtual environment and source it
+use:
+```bash
+virtualenv venv  # init the virtualenv
+source venv/bin/activate  # source project
+```
+You can install the project via pip directly: 
+```bash
+pip install .
+```
+or install the requirements manually:
+```bash
+pip install -r requirements.txt
+```
+
 
 ```angular2html ( cleanpy .; tree -A -I "__init__.py|venv|__pycache__|log_files")
 .
