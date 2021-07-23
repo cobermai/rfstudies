@@ -53,6 +53,12 @@ def get_event_data_features(length) -> typing.Generator:
                                 "So if the min of DC Up is < -0.01 it is labeled as a breakdown.")
 
 
+def _get_data_above_half_max(data):
+    """returns data that has a value higher than half of the maximal value."""
+    threshold = data.max()/2
+    return data[data > threshold]
+
+
 def _dc_up_threshold_func(data) -> bool:
     """checks if any of the signals is below the threshold.
     :param data: a vector of values of the group working_on_dataset (see EventDataFeature.working_on_dataset)"""
@@ -66,18 +72,16 @@ def _pulse_length(data) -> float:
     :param data: a vector of values of the group working_on_dataset (see EventDataFeature.working_on_dataset)
     """
     acquisition_window = 2  # in micro seconds
-    threshold = data.max() / 2
-    num_total_values = data.shape[0]
-    num_of_high_values = (data > threshold).sum()
-    return acquisition_window * (num_of_high_values / num_total_values)
+    num_total_values = len(data)
+    num_relatively_large_values = len(_get_data_above_half_max(data))
+    return acquisition_window * (num_relatively_large_values / num_total_values)
 
 
 def _pulse_amplitude(data) -> float:
     """calculates the mean value where the amplitude is higher than the threshold (=half of the maximal value).
     :param data: a vector of values of the group working_on_dataset (see EventDataFeature.working_on_dataset)
     """
-    threshold = data.max() / 2
-    return data[data > threshold].mean()
+    return _get_data_above_half_max(data).mean()
 
 
 def _apply_func_creator(func: typing.Callable) -> typing.Callable:
