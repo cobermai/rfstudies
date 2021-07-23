@@ -71,12 +71,11 @@ def _check_corruptness(arr):  # npt.ArrayLike[typing.Union[np.number, np.datetim
     :param arr: input array
     :return: array with boolean values. True if the value in the input cell was healthy, False if it was corrupt."""
     if np.issubdtype(arr.dtype, np.number):
-        ret = np.isnan(arr) | np.isinf(arr)
+        return np.isnan(arr) | np.isinf(arr)
     elif np.issubdtype(arr.dtype, np.datetime64):
-        ret = np.isnat(arr)
+        return np.isnat(arr)
     else:
         raise NotImplementedError("Corrupt data is only known for numeric and datetime values.")
-    return ret
 
 
 def clean_by_row(file_path: Path) -> None:
