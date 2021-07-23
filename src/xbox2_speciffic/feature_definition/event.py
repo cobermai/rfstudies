@@ -69,7 +69,8 @@ def _dc_up_threshold_func(data) -> bool:
 def _pulse_length(data) -> float:
     """calculates the pulse duration in micro seconds where the amplitude is higher than the threshold
     (=half of the maximal value).
-    :param data: a vector of values of the group working_on_dataset (see EventDataFeature.working_on_dataset)
+    :param data: a vector of values of the group working_on_dataset
+    (see :func:`~src.utils.handler_tools.feature_class.EventDataFeature.working_on_dataset` )
     """
     acquisition_window = 2  # in micro seconds
     num_total_values = len(data)
