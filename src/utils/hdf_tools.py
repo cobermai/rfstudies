@@ -66,16 +66,17 @@ def convert_iso8601_to_datetime(file_path: Path, also_convert_attrs: bool = True
                 file.create_dataset(name=key, data=data.astype(h5py.opaque_dtype(data.dtype)))
 
 
-def _check_corruptness(arr):  # npt.ArrayLike[typing.Union[np.number, np.datetime64]]
+def _check_corruptness(arr: np.ndarray):
     """checks if the input array is healthy of corrupt. In this case corrupt means infinite value or nan value.
     :param arr: input array
     :return: array with boolean values. True if the value in the input cell was healthy, False if it was corrupt."""
     if np.issubdtype(arr.dtype, np.number):
-        return np.isnan(arr) | np.isinf(arr)
+        is_corrupt = np.isnan(arr) | np.isinf(arr)
     elif np.issubdtype(arr.dtype, np.datetime64):
-        return np.isnat(arr)
+        is_corrupt = np.isnat(arr)
     else:
         raise NotImplementedError("Corrupt data is only known for numeric and datetime values.")
+    return is_corrupt
 
 
 def clean_by_row(file_path: Path) -> None:
@@ -121,7 +122,8 @@ def hdf_path_combine(*argv: str) -> str:
     return path
 
 
-def _get_all_dataset_items_rec(hdf_path, hdf_obj) -> typing.Generator:
+def _get_all_dataset_items_rec(hdf_path: str,
+                               hdf_obj: typing.Union[h5py.File, h5py.Dataset, h5py.Group]) -> typing.Generator:
     if isinstance(hdf_obj, h5py.Dataset):
         yield hdf_path, hdf_obj
     else:
@@ -137,7 +139,7 @@ def get_all_dataset_items(hdf_obj, path: str = "/") -> typing.Generator:
     yield from _get_all_dataset_items_rec(path, hdf_obj)
 
 
-def get_all_dataset_values(value) -> typing.Generator:
+def get_all_dataset_values(value: typing.Union[h5py.File, h5py.Dataset, h5py.Group]) -> typing.Generator:
     """a generator that returns all values that are children of the value hdf object
     :param value: the value to recursively go through all values
     """

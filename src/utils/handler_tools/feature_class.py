@@ -3,6 +3,7 @@ apply and write."""
 from dataclasses import dataclass, field
 import typing
 import logging
+import h5py
 import numpy as np
 from src.utils.hdf_tools import hdf_path_combine
 
@@ -39,7 +40,7 @@ class ColumnWiseFeature(CustomFeature):
 
 class EventAttributeFeature(ColumnWiseFeature):
     """represents features read from the event attributes"""
-    def calculate_single(self, index: int, attrs):
+    def calculate_single(self, index: int, attrs: h5py.AttributeManager):
         """
         calculates the event attribute feature by applying self.func and writes it to the self.vec at the given index.
         :param index: index of the event and thus location where the calculated feature will be written.
@@ -49,7 +50,7 @@ class EventAttributeFeature(ColumnWiseFeature):
 class TrendDataFeature(ColumnWiseFeature):
     """Features for time series from the TrendData.
     The feature.func selects the wanted values from the time series."""
-    def calculate_all(self, selection):
+    def calculate_all(self, selection: np.ndarray):
         """
         applies the feature function on the trend data and the pre calculated context_data
         :param selection: selection of interest from the trend data
@@ -64,7 +65,7 @@ class EventDataFeature(ColumnWiseFeature):
         The feature.func processes the time series."""
     working_on_dataset: str
 
-    def calculate_single(self, index: int, data):
+    def calculate_single(self, index: int, data: np.ndarray):
         """
         calculates the event attribute feature by applying self.func and writes it to the self.vec at the given index.
         :param index: index of the event and thus location where the calculated feature will be written.

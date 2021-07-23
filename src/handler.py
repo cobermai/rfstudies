@@ -60,7 +60,7 @@ class XBox2ContextDataCreator(ContextDataCreator):
         # write them to the context data
         column_wise_handler = ColumnWiseContextDataWriter(self.dest_file_path, length=self.num_events)
         for feature in features:
-            column_wise_handler.write_clm(feature)
+            column_wise_handler.write_column(feature)
 
     def manage_trend_data_features(self, features: typing.List) -> None:
         """manage the reading and writing of the trend data features, it reads and writes the closest preceding trend
@@ -74,28 +74,28 @@ class XBox2ContextDataCreator(ContextDataCreator):
         cw_handler = ColumnWiseContextDataWriter(self.dest_file_path, length=self.num_events)
         for feature in features:
             feature.vec = feature.calculate_all(loc)
-            cw_handler.write_clm(feature)
+            cw_handler.write_column(feature)
 
     def manage_event_data_and_tsfresh_features(self, event_data_features: typing.List) -> None:
         """manages the calculation and writing of event data features, so features that are calculated from the event
         data time series. It calculates some custom features written in the event data features and tsfresh features.
         :param event_data_features: a list of EventDataFeatures"""
-        rw_handler = RowWiseContextDataWriter(self.dest_file_path, length=self.num_events)
+        row_wise_handler = RowWiseContextDataWriter(self.dest_file_path, length=self.num_events)
         with h5py.File(self.ed_file_path, "r") as file:
             data_gen = ({key: channel[:] for key, channel in grp.items()} for grp in file.values())
             for data, index in tqdm(zip(data_gen, itertools.count(0))):
                 for feature in event_data_features:
                     feature.calculate_single(index, data)
 
-                tsfresh_df = get_tsfresh(data, tsfresh.feature_extraction.MinimalFCParameters())
+                tsfresh_df = get_tsfresh(data=data, settings=tsfresh.feature_extraction.MinimalFCParameters())
                 val_gen = ((hdf_path_combine(str(clm_id), str(row_id)), val)
                            for row_id, row in tsfresh_df.iterrows()
                            for clm_id, val in row.items())
-                rw_handler.write_row_from_external(index=index, data_iter=val_gen)
+                row_wise_handler.write_row_from_external(index=index, data_iter=val_gen)
 
         column_wise_handler = ColumnWiseContextDataWriter(self.dest_file_path, length=self.num_events)
         for feature in event_data_features:
-            column_wise_handler.write_clm(feature)
+            column_wise_handler.write_column(feature)
 
     def feature_post_processing(self):
         """After the other features have been calculated, some new features will be added resulting from the ones

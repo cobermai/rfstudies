@@ -50,23 +50,24 @@ def get_event_data_features(length) -> typing.Generator:
                            output_dtype=bool,
                            hdf_path="/",
                            info="Decides if event is a breakdown with a threshold of -0.01 on the DC Up signal."
-                                "So if the min of DC Up is < -0.01 it is labeled as a breakdown.")
+                                "So if the min of DC Up is < (threshold assigned by experts) it is labeled as a "
+                                "breakdown.")
 
 
-def _get_data_above_half_max(data):
+def _get_data_above_half_max(data: np.ndarray):
     """returns data that has a value higher than half of the maximal value."""
-    threshold = data.max()/2
+    threshold = data.max(initial=-np.inf)/2
     return data[data > threshold]
 
 
-def _dc_up_threshold_func(data) -> bool:
+def _dc_up_threshold_func(data: np.ndarray) -> bool:
     """checks if any of the signals is below the threshold.
     :param data: a vector of values of the group working_on_dataset (see EventDataFeature.working_on_dataset)"""
     threshold = -0.05  # Threshold defined by RF Cavity Experts
     return bool(np.any(data < threshold))
 
 
-def _pulse_length(data) -> float:
+def _pulse_length(data: np.ndarray) -> float:
     """calculates the pulse duration in micro seconds where the amplitude is higher than the threshold
     (=half of the maximal value).
     :param data: a vector of values of the group working_on_dataset
@@ -75,10 +76,13 @@ def _pulse_length(data) -> float:
     acquisition_window = 2  # in micro seconds
     num_total_values = len(data)
     num_relatively_large_values = len(_get_data_above_half_max(data))
-    return acquisition_window * (num_relatively_large_values / num_total_values)
+    if num_total_values == 0:
+        pulse_length = 0
+    else:
+        pulse_length = acquisition_window * (num_relatively_large_values / num_total_values)
+    return pulse_length
 
-
-def _pulse_amplitude(data) -> float:
+def _pulse_amplitude(data: np.ndarray) -> float:
     """calculates the mean value where the amplitude is higher than the threshold (=half of the maximal value).
     :param data: a vector of values of the group working_on_dataset (see EventDataFeature.working_on_dataset)
     """
@@ -89,7 +93,7 @@ def _apply_func_creator(func: typing.Callable) -> typing.Callable:
     """creates a feature-function that applies func to the input data of the feature-function.
     :param func: the function to apply on the input data of the apply_func
     :return: a function that applies func"""
-    def apply_func(data) -> float:
+    def apply_func(data: np.ndarray) -> float:
         """applies simple function func on input data
         :param data: a vector of values of the group working_on_dataset (see EventDataFeature.working_on_dataset)
         """

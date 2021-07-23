@@ -44,12 +44,14 @@ def data_handling(work_dir: Path):
 
 
 def class_weights_for_onehot(y):
+    """calculate the class weights for y vectors encoded by a one hot encoder (so multidimensional output)"""
     y_class = np.argmax(y, axis=1)
     weights = compute_class_weight('balanced', classes=np.unique(y_class), y=y_class)
     return dict(enumerate(weights))
 
 
 def get_model(train):
+    """returns  a basic already compiled model for machine learning"""
     input_shape = train.x.shape[1:]
     output_len = train.y.shape[1]
 

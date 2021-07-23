@@ -37,7 +37,7 @@ def _log_type_creator(type_of_interest: str) -> typing.Callable:
     """
     log_type_dict = {"is_healthy": 0, "is_bd_in_40ms": 1, "is_bd_in_20ms": 2, "is_bd": 3}
 
-    def is_type(attrs) -> bool:
+    def is_type(attrs: h5py.AttributeManager) -> bool:
         """
         This function translates the 'Log Type' group properties of the event data into a boolean value.
         :param attrs: the h5py.AttributeManager of an hdf.Group object
@@ -45,15 +45,15 @@ def _log_type_creator(type_of_interest: str) -> typing.Callable:
         """
         label = attrs["Log Type"]
         if label in log_type_dict.values():
-            ret = label == log_type_dict[type_of_interest]
+            is_defined_type = label == log_type_dict[type_of_interest]
         else:
             raise ValueError(f"'Log Type' label not valid no translation for {label} in {log_type_dict}!")
-        return ret
+        return is_defined_type
 
     return is_type
 
 
-def _get_timestamp(attrs):
+def _get_timestamp(attrs: h5py.AttributeManager):
     """
     returns the Timestamp from group properties/attribute in numpy datetime format
     :param attrs: the h5py.AttributeManager of an hdf.Group object
