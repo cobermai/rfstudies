@@ -1,4 +1,7 @@
+# model settup according to https://www.tensorflow.org/guide/keras/custom_layers_and_models
 import os
+from abc import ABC
+from pathlib import Path
 import time
 import numpy as np
 import pandas as pd
@@ -8,62 +11,40 @@ from sklearn.metrics import confusion_matrix
 import tensorflow.keras as keras
 
 
-class Classifier:
+class Classifier(keras.Model, ABC):
     """
     Classifier class which acts as wrapper for tensorflow models.
     """
-    def __init__(self, train, valid, build=True):
+    def __init__(self, train_data, valid_data, classifier_name, output_directory, **kwargs):
         """Initialization of input data and hyperparameters"""
-        self.X_train = train.X
-        self.y_train = train.y
-        self.idx_train = train.idx
-        self.X_valid = valid.X
-        self.y_valid = valid.y
-        self.idx_valid = valid.idx
-        self.nb_classes = len(np.unique(np.concatenate((train.y, valid.y), axis=0)))
-        self.classifier_name = "fcn"
-        self.output_directory = "/home/cobermai/PycharmProjects/mlframework/src/output/"
-        if not os.path.isdir(self.output_directory):
-            os.makedirs(self.output_directory[:-1])
-        self.input_shape = train.X.shape[1:]
+        super(Classifier, self).__init__()
+        self.train = train_data
+        self.valid = valid_data
+        self.classifier_name = classifier_name
+        self.nb_classes = len(np.unique(np.concatenate((train_data.y, valid_data.y), axis=0)))
+        self.output_directory = output_directory
+        output_directory.mkdir(parents=True, exist_ok=True)
+        self.data_shape = train_data.X.shape[1:]
         self.train_time = 0
-        self.train_hist = []
-        if build:
-            self.classifier = self.create_classifier()
-        return
 
-    def create_classifier(self):
+    def call(self, inputs, **kwargs):
         """
         Function loads specified tensorflow model from model directory
         :return: specified tensorflow model from model directory
         """
         if self.classifier_name == 'fcn':
-            from model.classifiers import fcn
-            return fcn.Classifier_FCN(self.output_directory, self.input_shape, self.nb_classes, verbose=True)
+            from src.model.classifiers import fcn
 
-    def fit_classifier(self):
-        """
-        Function fits selected tensorflow model with specified input data
-        """
+            return fcn.ClassifierFCN(self.data_shape, self.nb_classes)
+
+    def one_hot(self):
         # transform the labels from integers to one hot vectors
         enc = sklearn.preprocessing.OneHotEncoder(categories='auto')
-        enc.fit(np.concatenate((self.y_train, self.y_valid), axis=0).reshape(-1, 1))
-        y_train_hot = enc.transform(self.y_train.reshape(-1, 1)).toarray()
-        y_valid_hot = enc.transform(self.y_valid.reshape(-1, 1)).toarray()
+        enc.fit(np.concatenate((self.train.y, self.valid.y), axis=0).reshape(-1, 1))
 
-        start_time = time.time()
-        self.train_hist = self.classifier.fit(self.X_train, y_train_hot, self.X_valid, y_valid_hot)
-        self.train_time = time.time() - start_time
-
-    def predict(self, X_test):
-        """
-        Function makes prediction with given test data
-        :param X_test: data to make predictions with
-        """
-        model_path = self.output_directory + 'best_model.hdf5'
-        classifier = keras.models.load_model(model_path)
-        y_pred = classifier.predict(X_test)
-        return y_pred
+        y_train_hot = enc.transform(self.train.y.reshape(-1, 1)).toarray()
+        y_valid_hot = enc.transform(self.valid.y.reshape(-1, 1)).toarray()
+        return y_train_hot, y_valid_hot
 
     def eval_classifications(self, y_test, probabilities):
         """
@@ -98,4 +79,4 @@ class Classifier:
         df_results["class_imbalance_train"] = calc_class_imbalance(self.y_train)
         df_results["class_imbalance_test"] = calc_class_imbalance(y_test)
 
-        df_results.to_csv(self.output_directory + "df_metrics.csv")
+        df_results.to_csv(self.output_directory / "df_metrics.csv")

@@ -1,43 +1,55 @@
+from abc import ABC
+
 import tensorflow.keras as keras
 from tensorflow.keras import layers
 
-
-class Classifier_FCN:
+class ClassifierFCN(keras.Model, ABC):
     """Fully convolutional neural network, initially proposed by https://github.com/hfawaz/dl-4-tsc"""
-    def __init__(self, output_directory, input_shape, nb_classes, verbose=False, build=True):
-        """Initialization of model parameters"""
-        self.output_directory = output_directory
-        self.verbose = verbose
-        if build:
-            self.model = self.build_model(input_shape, nb_classes)
-            if verbose:
-                self.model.summary()
-            self.model.save_weights(self.output_directory + 'model_init.hdf5')
 
-    def build_model(self, input_shape, nb_classes):
+    def __init__(self, input_shape, nb_classes, name="fcn", **kwargs):
+        super(ClassifierFCN, self).__init__(name=name, **kwargs)
+        # Input Layer
+        self.input_layer = keras.layers.Input(input_shape)
+        # Layer of Block 1
+        self.conv1 = layers.Conv1D(filters=128, kernel_size=8, padding='same', activation='relu')
+        self.bn1 = layers.BatchNormalization()
+        # Layer of Block 1
+        self.conv2 = layers.Conv1D(filters=256, kernel_size=5, padding='same', activation='relu')
+        self.bn2 = layers.BatchNormalization()
+        # Layer of Block 1
+        self.conv3 = layers.Conv1D(filters=128, kernel_size=3, padding='same', activation='relu')
+        self.bn3 = layers.BatchNormalization()
+        # Gap Layer
+        self.gap = layers.GlobalAveragePooling1D()
+        # Output
+        self.dense = layers.Dense(nb_classes, activation='softmax')
+
+    def call(self, inputs, training=None, mask=None):
         """
         Function builds model out of 3 convolutional layers with batch normalization and the relu activation function.
         In the end there is a global average pooling layer which feeds the output into a softmax classification layer.
         """
-        input_layer = layers.Input(input_shape)
+        # forward pass: block 1
+        x = self.input_layer(inputs)
+        x = self.conv1(x)
+        x = self.bn1(x)
 
-        conv1 = layers.Conv1D(filters=128, kernel_size=8, padding='same')(input_layer)
-        conv1 = layers.BatchNormalization()(conv1)
-        conv1 = layers.Activation(activation='relu')(conv1)
+        # forward pass: block 2
+        x = self.conv2(x)
+        x = self.bn2(x)
 
-        conv2 = layers.Conv1D(filters=256, kernel_size=5, padding='same')(conv1)
-        conv2 = layers.BatchNormalization()(conv2)
-        conv2 = layers.Activation('relu')(conv2)
+        # forward pass: block 3
+        x = self.conv3(x)
+        x = self.bn3(x)
 
-        conv3 = layers.Conv1D(128, kernel_size=3, padding='same')(conv2)
-        conv3 = layers.BatchNormalization()(conv3)
-        conv3 = layers.Activation('relu')(conv3)
+        # gap and classifier
+        x = self.gap(x)
+        return self.dense(x)
 
-        gap_layer = layers.GlobalAveragePooling1D()(conv3)
 
-        output_layer = layers.Dense(nb_classes, activation='softmax')(gap_layer)
+"""
 
-        model = keras.models.Model(inputs=input_layer, outputs=output_layer)
+
 
         model.compile(loss='categorical_crossentropy', optimizer=keras.optimizers.Adam(), metrics=['accuracy'])
 
@@ -49,22 +61,5 @@ class Classifier_FCN:
 
         self.callbacks = [reduce_lr, model_checkpoint]
 
-        return model
-
-    def fit(self, X_train, y_train, X_valid, y_valid):
-        """
-        Function model with specified input data, which is a three-dimensional tensor (`K`, `N`, `M`) where `K` is the
-        number of events, `N` is the number of input samples, and `M` is the number of input features.
-        :return: hist: history of model during training
-        """
-        batch_size = 16
-        nb_epochs = 2
-        class_weight = {0: 10, 1: 1}
-
-        mini_batch_size = int(min(X_train.shape[0] / 10, batch_size))
-
-        history = self.model.fit(X_train, y_train, batch_size=mini_batch_size, epochs=nb_epochs,
-                              verbose=self.verbose, validation_data=(X_valid, y_valid), callbacks=self.callbacks,
-                              class_weight=class_weight)
-
-        return history
+        #return model
+"""
