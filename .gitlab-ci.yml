@@ -13,7 +13,7 @@ stages:
   - sonar
 
 linter:
-  image: python:${PY_VERSION}
+  image: tensorflow
   stage: linter
   before_script:
     - pip3 install pylint
@@ -23,7 +23,7 @@ linter:
   allow_failure: true
 
 type_checking:
-  image: python:${PY_VERSION}
+  image: tensorflow
   stage: type_checking
   before_script: 
     - pip3 install mypy
