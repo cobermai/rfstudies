@@ -72,11 +72,12 @@ class Classifier(keras.Model, ABC):
 
         def calc_class_imbalance(y):
             return sum(y) / (len(y) - sum(y))
-        df_results["n_train_healthy"] = sum(self.y_train)
-        df_results["n_train_bd"] = (len(self.y_train) - sum(self.y_train))
+
+        df_results["n_train_healthy"] = sum(self.train.y)
+        df_results["n_train_bd"] = (len(self.train.y) - sum(self.train.y))
         df_results["n_test_healthy"] = sum(y_test)
         df_results["n_test_bd"] = (len(y_test) - sum(y_test))
-        df_results["class_imbalance_train"] = calc_class_imbalance(self.y_train)
+        df_results["class_imbalance_train"] = calc_class_imbalance(self.train.y)
         df_results["class_imbalance_test"] = calc_class_imbalance(y_test)
 
         df_results.to_csv(self.output_directory / "df_metrics.csv")
