@@ -2,6 +2,53 @@ from collections import namedtuple
 import numpy as np
 import pandas as pd
 from src.model import classifier
+from src.model.classifiers import fcn
+
+def test__call(tmp_path):
+    '''
+    Test call function of class Classifier
+    '''
+    # ARRANGE
+    data = namedtuple("data", ["X", "y", "idx"])
+    X_train = np.empty(1)
+    y_train = np.empty(1)
+    idx_train = np.empty(1)
+    X_valid = np.empty(1)
+    y_valid = np.empty(1)
+    idx_valid = np.empty(1)
+
+    train = data(X_train, y_train, idx_train)
+    valid = data(X_valid, y_valid, idx_valid)
+
+    clf = classifier.Classifier(train_data=train,
+                     valid_data=valid,
+                     classifier_name="fcn",
+                     output_directory=tmp_path)
+
+    model_expected = fcn.ClassifierFCN(clf.data_shape, clf.nb_classes)
+    print(clf.nb_classes)
+
+    # ACT
+    model_out = clf.call(clf.nb_classes)
+
+    print('expected')
+    print(model_expected.layers[2].get_config())
+    print('called')
+    print(model_out.layers[2].get_config()['name'])
+    print('test')
+    print(model_expected.layers[2].get_config()['name'] in model_out.layers[2].get_config()['name'])
+    layer_model_expected_names = []
+    layer_model_out_names = []
+    sep = '_' # used for removing numbering of layers after layer type, e.g. Conv1D_3 -> Conv1D
+    for layer_model_expected, layer_model_out in zip(model_expected.layers, model_out.layers):
+        layer_model_expected_name = layer_model_expected.get_config()['name'].split(sep, 1)[0]
+        layer_model_expected_names.append(layer_model_expected_name)
+        layer_model_out_name = layer_model_out.get_config()['name'].split(sep, 1)[0]
+        layer_model_out_names.append(layer_model_out_name)
+    print(layer_model_expected_names == layer_model_out_names)
+
+    # ASSERT
+    assert layer_model_expected_names == layer_model_out_names
 
 
 def test__one_hot(tmp_path):
