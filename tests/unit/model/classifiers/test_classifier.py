@@ -4,6 +4,7 @@ import pandas as pd
 from src.model import classifier
 from src.model.classifiers import fcn
 
+
 def test__call(tmp_path):
     '''
     Test call function of class Classifier
@@ -20,32 +21,30 @@ def test__call(tmp_path):
     train = data(X_train, y_train, idx_train)
     valid = data(X_valid, y_valid, idx_valid)
 
-    clf = classifier.Classifier(train_data=train,
-                     valid_data=valid,
-                     classifier_name="fcn",
-                     output_directory=tmp_path)
+    nb_classes = 1
+    data_shape = ()
 
-    model_expected = fcn.ClassifierFCN(clf.data_shape, clf.nb_classes)
-    print(clf.nb_classes)
+    model_expected = fcn.ClassifierFCN(data_shape, nb_classes)
+    layer_model_expected_names = []
+    for layer_model_expected, layer_model_out in model_expected.layers:
+        layer_model_expected_name = layer_model_expected.get_config()['name']
+        layer_model_expected_names.append(layer_model_expected_name)
+
+    keras.backend.clear_session()
+
+    clf = classifier.Classifier(train_data=train,
+                                valid_data=valid,
+                                classifier_name="fcn",
+                                output_directory=tmp_path)
 
     # ACT
-    model_out = clf.call(clf.nb_classes)
-
-    print('expected')
-    print(model_expected.layers[2].get_config())
-    print('called')
-    print(model_out.layers[2].get_config()['name'])
-    print('test')
-    print(model_expected.layers[2].get_config()['name'] in model_out.layers[2].get_config()['name'])
-    layer_model_expected_names = []
+    model_out = clf.call(nb_classes)
     layer_model_out_names = []
-    sep = '_' # used for removing numbering of layers after layer type, e.g. Conv1D_3 -> Conv1D
-    for layer_model_expected, layer_model_out in zip(model_expected.layers, model_out.layers):
-        layer_model_expected_name = layer_model_expected.get_config()['name'].split(sep, 1)[0]
-        layer_model_expected_names.append(layer_model_expected_name)
-        layer_model_out_name = layer_model_out.get_config()['name'].split(sep, 1)[0]
+    for layer_model_out in model_out.layers:
+        layer_model_out_name = layer_model_out.get_config()['name']
         layer_model_out_names.append(layer_model_out_name)
-    print(layer_model_expected_names == layer_model_out_names)
+
+    keras.backend.clear_session()
 
     # ASSERT
     assert layer_model_expected_names == layer_model_out_names
@@ -68,9 +67,9 @@ def test__one_hot(tmp_path):
     valid = data(X_valid, y_valid, idx_valid)
 
     clf = classifier.Classifier(train_data=train,
-                     valid_data=valid,
-                     classifier_name="fcn",
-                     output_directory=tmp_path)
+                                valid_data=valid,
+                                classifier_name="fcn",
+                                output_directory=tmp_path)
 
     y_train_hot_expected = np.array([[0, 1], [1, 0], [0, 1]])
     y_valid_hot_expected = np.array([[1, 0], [0, 1], [1, 0]])
@@ -116,7 +115,7 @@ def test__eval_classifications(tmp_path):
     tn_expected, fp_expected, fn_expected, tp_expected = 1, 1, 0, 1
     bd_rate_expected = tn_expected / (tn_expected + fp_expected)
     roc_auc_score_expected = 1
-    f1_score_expected = 2/3
+    f1_score_expected = 2 / 3
     n_train_healthy_expected = train.y.sum()
     n_train_bd_expected = len(train.y) - train.y.sum()
     n_test_healthy_expected = test.y.sum()
