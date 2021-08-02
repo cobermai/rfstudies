@@ -1,6 +1,7 @@
 from collections import namedtuple
 import numpy as np
 import pandas as pd
+from pandas.testing import assert_frame_equal
 import tensorflow.keras as keras
 from src.model import classifier
 from src.model.classifiers import fcn
@@ -95,54 +96,46 @@ def test__eval_classifications(tmp_path):
     X_valid = np.empty(1)
     y_valid = np.array([False, True, False])
     idx_valid = np.empty(1)
-    X_test = np.empty(1)
-    y_test = np.array([False, False, True])
-    idx_test = np.empty(1)
 
     train = data(X_train, y_train, idx_train)
     valid = data(X_valid, y_valid, idx_valid)
-    test = data(X_test, y_test, idx_test)
 
+    classifier_name = "fcn"
     clf = classifier.Classifier(train_data=train,
                                 valid_data=valid,
-                                classifier_name="fcn",
+                                classifier_name=classifier_name,
                                 output_directory=tmp_path)
 
     probabilities = np.array([[0.1, 0.7], [0.5, 0.2], [0.3, 0.9]])
+    df_results_expected = pd.DataFrame([0])
+    df_results_expected["classifier_name"] = classifier_name
+    df_results_expected["balanced_accuracy"] = 0.75
+    df_results_expected["bd_rate"] = 0.5,
+    df_results_expected["roc_auc_score"] = 1.0,
+    df_results_expected["f1_score"] = 2 / 3,
+    df_results_expected["train_time"] = 2,
+    df_results_expected["cm_tp"] = 1,
+    df_results_expected["cm_tn"] = 1,
+    df_results_expected["cm_fp"] = 1,
+    df_results_expected["cm_fn"] = 0,
+    df_results_expected["n_train_healthy"] = 2,
+    df_results_expected["n_train_bd"] = 1,
+    df_results_expected["n_test_healthy"] = 1,
+    df_results_expected["n_test_bd"] = 2,
+    df_results_expected["class_imbalance_train"] = 2.0,
+    df_results_expected["class_imbalance_test"] = 0.5
 
-    train_time = 2
+    data_path_expected = tmp_path / "df_metrics_expected.csv"
+    df_results_expected.to_csv(data_path_expected)
+    df_results_expected = pd.read_csv(data_path_expected)
 
-    balanced_accuracy_expected = 0.75
-    tn_expected, fp_expected, fn_expected, tp_expected = 1, 1, 0, 1
-    bd_rate_expected = tn_expected / (tn_expected + fp_expected)
-    roc_auc_score_expected = 1
-    f1_score_expected = 2 / 3
-    n_train_healthy_expected = train.y.sum()
-    n_train_bd_expected = len(train.y) - train.y.sum()
-    n_test_healthy_expected = test.y.sum()
-    n_test_bd_expected = len(test.y) - test.y.sum()
-    class_imbalance_train_expected = train.y.sum() / (len(train.y) - sum(train.y))
-    class_imbalance_test_expected = test.y.sum() / (len(test.y) - sum(test.y))
+    y_test = np.array([False, False, True])
 
     # ACT
-    clf.train_time = train_time
+    clf.train_time = 2
     clf.eval_classifications(y_test, probabilities)
     data_path = tmp_path / "df_metrics.csv"
     df_results = pd.read_csv(data_path)
 
     # ASSERT
-    assert (df_results["balanced_accuracy"] == balanced_accuracy_expected).all()
-    assert (df_results["bd_rate"] == bd_rate_expected).all()
-    assert (df_results["roc_auc_score"] == roc_auc_score_expected).all()
-    assert (df_results["f1_score"] == f1_score_expected).all()
-    assert (df_results["train_time"] == train_time).all()
-    assert (df_results["cm_tp"] == tp_expected).all()
-    assert (df_results["cm_tn"] == tn_expected).all()
-    assert (df_results["cm_fp"] == fp_expected).all()
-    assert (df_results["cm_fn"] == fn_expected).all()
-    assert (df_results["n_train_healthy"] == n_train_healthy_expected).all()
-    assert (df_results["n_train_bd"] == n_train_bd_expected).all()
-    assert (df_results["n_test_healthy"] == n_test_healthy_expected).all()
-    assert (df_results["n_test_bd"] == n_test_bd_expected).all()
-    assert (df_results["class_imbalance_train"] == class_imbalance_train_expected).all()
-    assert (df_results["class_imbalance_test"] == class_imbalance_test_expected).all()
+    assert_frame_equal(df_results, df_results_expected)
