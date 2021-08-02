@@ -1,7 +1,4 @@
-# import numpy as np
 import tensorflow.keras as keras
-# from tensorflow.keras import layers
-# from src.model import classifier
 from src.model.classifiers import fcn
 
 

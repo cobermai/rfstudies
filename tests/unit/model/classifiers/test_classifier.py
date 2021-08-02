@@ -1,6 +1,7 @@
 from collections import namedtuple
 import numpy as np
 import pandas as pd
+import tensorflow.keras as keras
 from src.model import classifier
 from src.model.classifiers import fcn
 
@@ -21,12 +22,12 @@ def test__call(tmp_path):
     train = data(X_train, y_train, idx_train)
     valid = data(X_valid, y_valid, idx_valid)
 
-    nb_classes = 1
-    data_shape = ()
+    nb_classes = len(np.unique(np.concatenate((train.y, valid.y), axis=0)))
+    data_shape = train.X.shape[1:]
 
     model_expected = fcn.ClassifierFCN(data_shape, nb_classes)
     layer_model_expected_names = []
-    for layer_model_expected, layer_model_out in model_expected.layers:
+    for layer_model_expected in model_expected.layers:
         layer_model_expected_name = layer_model_expected.get_config()['name']
         layer_model_expected_names.append(layer_model_expected_name)
 
@@ -36,9 +37,9 @@ def test__call(tmp_path):
                                 valid_data=valid,
                                 classifier_name="fcn",
                                 output_directory=tmp_path)
-
+    inputs = 0
     # ACT
-    model_out = clf.call(nb_classes)
+    model_out = clf.call(inputs)
     layer_model_out_names = []
     for layer_model_out in model_out.layers:
         layer_model_out_name = layer_model_out.get_config()['name']
