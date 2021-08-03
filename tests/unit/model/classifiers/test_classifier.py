@@ -125,6 +125,7 @@ def test__eval_classifications(tmp_path):
     df_results_expected["class_imbalance_train"] = 2.0,
     df_results_expected["class_imbalance_test"] = 0.5
 
+    # Write to CSV and read from CSV due to simulate behaviour in eval_classifications
     data_path_expected = tmp_path / "df_metrics_expected.csv"
     df_results_expected.to_csv(data_path_expected)
     df_results_expected = pd.read_csv(data_path_expected)
