@@ -62,12 +62,12 @@ def test__call(tmp_path):
     """
     # ARRANGE
     data = namedtuple("data", ["X", "y", "idx"])
-    X_train = np.empty(1)
-    y_train = np.empty(1)
-    idx_train = np.empty(1)
-    X_valid = np.empty(1)
-    y_valid = np.empty(1)
-    idx_valid = np.empty(1)
+    X_train = np.zeros(1)
+    y_train = np.zeros(1)
+    idx_train = np.zeros(1)
+    X_valid = np.zeros(1)
+    y_valid = np.zeros(1)
+    idx_valid = np.zeros(1)
 
     train = data(X_train, y_train, idx_train)
     valid = data(X_valid, y_valid, idx_valid)
@@ -110,8 +110,8 @@ def test__call(tmp_path):
                            np.array([[0, 1], [1, 0], [0, 1]]),
                            np.array([[1, 0], [0, 1], [1, 0]])
                            ),
-                          (np.empty(1),
-                           np.empty(1),
+                          (np.zeros(1),
+                           np.zeros(1),
                            np.array([[0, 1]]),
                            np.array([[1, 0]])
                            )
@@ -123,8 +123,8 @@ def test__one_hot(tmp_path, y_train, y_valid, y_valid_hot_expected, y_train_hot_
     # ARRANGE
     data = namedtuple("data", ["X", "y", "idx"])
 
-    train = data(np.empty(1), y_train, np.empty(1))
-    valid = data(np.empty(1), y_valid, np.empty(1))
+    train = data(np.zeros(1), y_train, np.zeros(1))
+    valid = data(np.zeros(1), y_valid, np.zeros(1))
 
     clf = classifier.Classifier(train_data=train,
                                 valid_data=valid,
@@ -145,12 +145,12 @@ def test__eval_classifications(tmp_path):
     """
     # ARRANGE
     data = namedtuple("data", ["X", "y", "idx"])
-    X_train = np.empty(1)
+    X_train = np.zeros(1)
     y_train = np.array([True, False, True])
-    idx_train = np.empty(1)
-    X_valid = np.empty(1)
+    idx_train = np.zeros(1)
+    X_valid = np.zeros(1)
     y_valid = np.array([False, True, False])
-    idx_valid = np.empty(1)
+    idx_valid = np.zeros(1)
 
     train = data(X_train, y_train, idx_train)
     valid = data(X_valid, y_valid, idx_valid)
