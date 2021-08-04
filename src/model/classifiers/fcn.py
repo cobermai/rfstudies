@@ -15,7 +15,6 @@ class CNNBlock(layers.Layer):
 
 class FCNBlock(layers.Layer):
     """Fully convolutional neural network, initially proposed by https://github.com/hfawaz/dl-4-tsc"""
-
     def __init__(self):
         super(FCNBlock, self).__init__()
         self.cnn1 = CNNBlock(filters=128, kernel_size=8)

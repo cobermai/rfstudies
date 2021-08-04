@@ -91,24 +91,49 @@ def modeling(train, valid, test):
     function creates model and makes predictions with input data
     :param X: data array of shape (event, sample, feature)
     """
+    output_directory = Path("~/PycharmProjects/mlframework/src/output").expanduser()
+
     clf = Classifier(classifier_name="fcn",
                      num_classes=2,
-                     output_directory=Path("~/PycharmProjects/mlframework/src/output").expanduser())
+                     output_directory=output_directory)
+
+    METRICS = [
+        keras.metrics.TruePositives(name='tp'),
+        keras.metrics.FalsePositives(name='fp'),
+        keras.metrics.TrueNegatives(name='tn'),
+        keras.metrics.FalseNegatives(name='fn'),
+        keras.metrics.BinaryAccuracy(name='accuracy'),
+        keras.metrics.Precision(name='precision'),
+        keras.metrics.Recall(name='recall'),
+        keras.metrics.AUC(name='auc'),
+        keras.metrics.AUC(name='prc', curve='PR'),
+    ]
 
     clf.compile(loss='categorical_crossentropy',
-                optimizer=keras.optimizers.Adam(),
-                metrics=['accuracy'])
+                optimizer='adam',
+                metrics=METRICS)
 
-    clf.fit(train.X,
-            train.y,
+    reduce_lr = keras.callbacks.ReduceLROnPlateau(
+        monitor='loss',
+        factor=0.5,
+        patience=50,
+        min_lr=0.0001)
+
+    model_checkpoint = keras.callbacks.ModelCheckpoint(
+        filepath=output_directory / 'best_model.hdf5',
+        save_weights_only=True,
+        monitor='loss',
+        save_best_only=True)
+
+    clf.fit(x=train.X,
+            y=train.y,
             batch_size=16,
             epochs=1,
             verbose=1,
-            validation_data=(valid.X, valid.y))
+            validation_data=(valid.X, valid.y),
+            callbacks=[reduce_lr, model_checkpoint])
 
-    predictions = clf.predict(test.X)
-    clf.eval_classifications(test.y, predictions)
-
+    clf.evaluate(x=test.X, y=test.y)
 
 if __name__ == '__main__':
     c_path = Path("~/cernbox_projects_local/CLIC_data_transfert/Xbox2_hdf/context.hdf").expanduser()
