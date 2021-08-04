@@ -112,8 +112,8 @@ def test__call(tmp_path):
                            ),
                           (np.zeros(1),
                            np.zeros(1),
-                           np.array([[0, 1]]),
-                           np.array([[1, 0]])
+                           np.array([[1]]),
+                           np.array([[1]])
                            )
                           ])
 def test__one_hot(tmp_path, y_train, y_valid, y_valid_hot_expected, y_train_hot_expected):
