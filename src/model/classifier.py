@@ -1,4 +1,4 @@
-# model settup according to https://www.tensorflow.org/guide/keras/custom_layers_and_models
+# model setup according to https://www.tensorflow.org/guide/keras/custom_layers_and_models
 import os
 from abc import ABC
 from pathlib import Path
