@@ -9,42 +9,32 @@ import sklearn
 from sklearn import metrics
 from sklearn.metrics import confusion_matrix
 import tensorflow.keras as keras
+from src.model.classifiers import fcn
 
 
 class Classifier(keras.Model, ABC):
     """
     Classifier class which acts as wrapper for tensorflow models.
     """
-    def __init__(self, train_data, valid_data, classifier_name, output_directory, **kwargs):
+    def __init__(self, classifier_name, num_classes, output_directory):
         """Initialization of input data and hyperparameters"""
         super(Classifier, self).__init__()
-        self.train = train_data
-        self.valid = valid_data
         self.classifier_name = classifier_name
-        self.nb_classes = len(np.unique(np.concatenate((train_data.y, valid_data.y), axis=0)))
+        self.num_classes = num_classes
         self.output_directory = output_directory
         output_directory.mkdir(parents=True, exist_ok=True)
-        self.data_shape = train_data.X.shape[1:]
-        self.train_time = 0
+        self.output_layer = keras.layers.Dense(num_classes, activation='softmax')
+        if self.classifier_name == 'fcn':
+            self.CoreBlock = fcn.FCNBlock()
 
-    def call(self, inputs, **kwargs):
+    def call(self, input_tensor, training=None, mask=None):
         """
         Function loads specified tensorflow model from model directory
         :return: specified tensorflow model from model directory
         """
-        if self.classifier_name == 'fcn':
-            from src.model.classifiers import fcn
-
-            return fcn.ClassifierFCN(self.data_shape, self.nb_classes)
-
-    def one_hot(self):
-        # transform the labels from integers to one hot vectors
-        enc = sklearn.preprocessing.OneHotEncoder(categories='auto')
-        enc.fit(np.concatenate((self.train.y, self.valid.y), axis=0).reshape(-1, 1))
-
-        y_train_hot = enc.transform(self.train.y.reshape(-1, 1)).toarray()
-        y_valid_hot = enc.transform(self.valid.y.reshape(-1, 1)).toarray()
-        return y_train_hot, y_valid_hot
+        x = self.CoreBlock(input_tensor)
+        x = self.output_layer(x)
+        return x
 
     def eval_classifications(self, y_test, probabilities):
         """

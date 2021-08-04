@@ -5,6 +5,7 @@ from collections import namedtuple
 import h5py
 import numpy as np
 import pandas as pd
+from sklearn.preprocessing import OneHotEncoder
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 from src.model.classifier import Classifier
@@ -43,6 +44,10 @@ def select_data(context_data_file_path: Path) -> typing.Tuple:
     y = df["is_healthy"].to_numpy(dtype=int)
     return X, y
 
+def one_hot(y):
+    # transform the labels from integers to one hot vectors
+    enc = OneHotEncoder(categories='auto')
+    return enc.fit_transform(y.reshape(-1, 1)).toarray()
 
 def scale_data(X):
     """
@@ -86,21 +91,20 @@ def modeling(train, valid, test):
     function creates model and makes predictions with input data
     :param X: data array of shape (event, sample, feature)
     """
-    clf = Classifier(train_data=train,
-                     valid_data=valid,
-                     classifier_name="fcn",
+    clf = Classifier(classifier_name="fcn",
+                     num_classes=2,
                      output_directory=Path("~/PycharmProjects/mlframework/src/output").expanduser())
 
     clf.compile(loss='categorical_crossentropy',
                 optimizer=keras.optimizers.Adam(),
                 metrics=['accuracy'])
 
-    history = clf.fit(train.X,
-                      train.y,
-                      batch_size=16,
-                      epochs=3,
-                      verbose=1,
-                      validation_data=(valid.X, valid.y))
+    clf.fit(train.X,
+            train.y,
+            batch_size=16,
+            epochs=1,
+            verbose=1,
+            validation_data=(valid.X, valid.y))
 
     predictions = clf.predict(test.X)
     clf.eval_classifications(test.y, predictions)
@@ -115,9 +119,9 @@ if __name__ == '__main__':
     X = np.nan_to_num(X)
 
     X_scaled = scale_data(X)
+    y = one_hot(y)
 
-    splits = (0.7, 0.2, 0.1)
-    train, valid, test = train_valid_test_split(X_scaled, y, splits)
+    train, valid, test = train_valid_test_split(X_scaled, y, splits=(0.7, 0.2, 0.1))
 
     modeling(train, valid, test)
 
