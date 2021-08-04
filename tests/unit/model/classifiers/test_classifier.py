@@ -1,5 +1,6 @@
 from collections import namedtuple
 import numpy as np
+import pytest
 import pandas as pd
 from pandas.testing import assert_frame_equal
 import tensorflow.keras as keras
@@ -7,10 +8,58 @@ from src.model import classifier
 from src.model.classifiers import fcn
 
 
+def test__classifier(tmp_path):
+    """
+    Test of Classifier class instantiation
+    """
+    # ARRANGE
+    data = namedtuple("data", ["X", "y", "idx"])
+    X_train = np.array([1, 2, 3])
+    y_train = np.array([2, 1, 3])
+    idx_train = np.array([3, 2, 1])
+    X_valid = np.array([1, 3, 2])
+    y_valid = np.array([2, 3, 1])
+    idx_valid = np.array([3, 1, 2])
+    train = data(X_train, y_train, idx_train)
+    valid = data(X_valid, y_valid, idx_valid)
+
+    nb_classes_expected = 3
+    classifier_name = "fcn"
+
+    # ACT
+    clf = classifier.Classifier(train_data=train,
+                                valid_data=valid,
+                                classifier_name=classifier_name,
+                                output_directory=tmp_path)
+
+    # ASSERT
+    assert clf.train == train
+    assert clf.valid == valid
+    assert clf.classifier_name == classifier_name
+    assert clf.nb_classes == nb_classes_expected
+    assert clf.output_directory == tmp_path
+    assert clf.data_shape == ()
+    assert clf.train_time == 0
+
+
+def test__classifier_errors(tmp_path):
+    # ARRANGE
+    data = namedtuple("data", ["X", "y", "idx"])
+    train = data(None, None, None)
+    valid = data(None, None, None)
+
+    # ACT
+    with pytest.raises(ValueError):
+        classifier.Classifier(train_data=train,
+                              valid_data=valid,
+                              classifier_name="fcn",
+                              output_directory=tmp_path)
+
+
 def test__call(tmp_path):
-    '''
+    """
     Test call function of class Classifier
-    '''
+    """
     # ARRANGE
     data = namedtuple("data", ["X", "y", "idx"])
     X_train = np.empty(1)
@@ -52,29 +101,35 @@ def test__call(tmp_path):
     assert layer_model_expected_names == layer_model_out_names
 
 
-def test__one_hot(tmp_path):
-    '''
+@pytest.mark.parametrize("y_train, \
+                         y_valid,  \
+                         y_train_hot_expected, \
+                         y_valid_hot_expected ",
+                         [(np.array(['good', 'bad', 'good']),
+                           np.array(['bad', 'good', 'bad']),
+                           np.array([[0, 1], [1, 0], [0, 1]]),
+                           np.array([[1, 0], [0, 1], [1, 0]])
+                           ),
+                          (np.empty(1),
+                           np.empty(1),
+                           np.array([[0, 1]]),
+                           np.array([[1, 0]])
+                           )
+                          ])
+def test__one_hot(tmp_path, y_train, y_valid, y_valid_hot_expected, y_train_hot_expected):
+    """
     Test one_hot function of class Classifier
-    '''
+    """
     # ARRANGE
     data = namedtuple("data", ["X", "y", "idx"])
-    X_train = np.empty(1)
-    y_train = np.array(['good', 'bad', 'good'])
-    idx_train = np.empty(1)
-    X_valid = np.empty(1)
-    y_valid = np.array(['bad', 'good', 'bad'])
-    idx_valid = np.empty(1)
 
-    train = data(X_train, y_train, idx_train)
-    valid = data(X_valid, y_valid, idx_valid)
+    train = data(np.empty(1), y_train, np.empty(1))
+    valid = data(np.empty(1), y_valid, np.empty(1))
 
     clf = classifier.Classifier(train_data=train,
                                 valid_data=valid,
                                 classifier_name="fcn",
                                 output_directory=tmp_path)
-
-    y_train_hot_expected = np.array([[0, 1], [1, 0], [0, 1]])
-    y_valid_hot_expected = np.array([[1, 0], [0, 1], [1, 0]])
 
     # ACT
     y_train_hot, y_valid_hot = clf.one_hot()
@@ -85,9 +140,9 @@ def test__one_hot(tmp_path):
 
 
 def test__eval_classifications(tmp_path):
-    '''
+    """
     Test eval_classifications function of class Classifier
-    '''
+    """
     # ARRANGE
     data = namedtuple("data", ["X", "y", "idx"])
     X_train = np.empty(1)
