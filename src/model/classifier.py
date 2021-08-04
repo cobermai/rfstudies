@@ -1,4 +1,6 @@
-# model setup according to https://www.tensorflow.org/guide/keras/custom_layers_and_models
+"""
+model setup according to https://www.tensorflow.org/guide/keras/custom_layers_and_models
+"""
 import os
 from abc import ABC
 from pathlib import Path
@@ -8,8 +10,9 @@ import pandas as pd
 import sklearn
 from sklearn import metrics
 from sklearn.metrics import confusion_matrix
-import tensorflow.keras as keras
+from tensorflow import keras
 from src.model.classifiers import fcn
+from src.model.classifiers import fcn_2dropout
 
 
 class Classifier(keras.Model, ABC):
@@ -25,14 +28,16 @@ class Classifier(keras.Model, ABC):
         output_directory.mkdir(parents=True, exist_ok=True)
         self.output_layer = keras.layers.Dense(num_classes, activation='softmax')
         if self.classifier_name == 'fcn':
-            self.CoreBlock = fcn.FCNBlock()
+            self.core_block = fcn.FCNBlock()
+        if self.classifier_name == 'fcn_2dropout':
+            self.core_block = fcn_2dropout.FCN2DropoutBlock()
 
     def call(self, input_tensor, training=None, mask=None):
         """
         Function loads specified tensorflow model from model directory
         :return: specified tensorflow model from model directory
         """
-        x = self.CoreBlock(input_tensor)
+        x = self.core_block(input_tensor)
         x = self.output_layer(x)
         return x
 
