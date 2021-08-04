@@ -11,6 +11,7 @@ class FCNBlock(layers.Layer):
         self.cnn3 = CNNBlock(filters=128, kernel_size=3)
         self.gap = layers.GlobalAveragePooling1D()
 
+
     def call(self, input_tensor, training=None, mask=None):
         """
         Function builds model out of 3 convolutional layers with batch normalization and the relu activation function.

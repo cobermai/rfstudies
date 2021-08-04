@@ -12,6 +12,7 @@ from src.model.classifier import Classifier
 from src.utils.hdf_tools import hdf_to_df_selection
 import tensorflow.keras as keras
 
+
 def select_data(context_data_file_path: Path) -> typing.Tuple:
     """
     :param context_data_file_path: path to hdf5 context data file
@@ -44,10 +45,12 @@ def select_data(context_data_file_path: Path) -> typing.Tuple:
     y = df["is_healthy"].to_numpy(dtype=int)
     return X, y
 
+
 def one_hot(y):
     # transform the labels from integers to one hot vectors
     enc = OneHotEncoder(categories='auto')
     return enc.fit_transform(y.reshape(-1, 1)).toarray()
+
 
 def scale_data(X):
     """
@@ -85,6 +88,7 @@ def train_valid_test_split(X, y, splits: tuple) -> typing.Tuple:
     test = data(X_test, y_test, idx_test)
 
     return train, valid, test
+
 
 def modeling(train, valid, test):
     """
