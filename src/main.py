@@ -1,7 +1,9 @@
 """example code how to select from context data and prepare data for machine learning. """
 import typing
 from pathlib import Path
+import argparse
 from collections import namedtuple
+import datetime
 import h5py
 import numpy as np
 import pandas as pd
@@ -11,6 +13,23 @@ from sklearn.model_selection import train_test_split
 from src.model.classifier import Classifier
 from src.utils.hdf_tools import hdf_to_df_selection
 import tensorflow.keras as keras
+
+
+def parse_input_arguments():
+    """
+    parse input arguments
+    """
+    parser = argparse.ArgumentParser(description='input parameter')
+    parser.add_argument('--file_path', required=False, type=str,
+                        help='path of main.py file', default=Path().absolute())
+    parser.add_argument('--data_path', required=False, type=str,
+                        help='path of to data',
+                        default=Path("~/cernbox_projects_local/CLIC_data_transfert/Xbox2_hdf/context.hdf").expanduser())
+    parser.add_argument('--output_folder', required=False, type=str,
+                        help="name of output directory", default="output/" + str(datetime.datetime.now()))
+    args = parser.parse_args()
+    return args
+
 
 def select_data(context_data_file_path: Path) -> typing.Tuple:
     """
@@ -44,10 +63,14 @@ def select_data(context_data_file_path: Path) -> typing.Tuple:
     y = df["is_healthy"].to_numpy(dtype=int)
     return X, y
 
-def one_hot(y):
-    # transform the labels from integers to one hot vectors
+
+def one_hot_encode(y):
+    """
+    transform the labels from integers to one hot vectors
+    """
     enc = OneHotEncoder(categories='auto')
     return enc.fit_transform(y.reshape(-1, 1)).toarray()
+
 
 def scale_data(X):
     """
@@ -55,6 +78,9 @@ def scale_data(X):
     :param X: data array of shape (event, sample, feature)
     :return: X_scaled: scaled data array of shape (event, sample, feature)
     """
+    X = X[..., np.newaxis]
+    X = np.nan_to_num(X)
+    
     X_scaled = np.zeros_like(X)
 
     for feature_index in range(len(X[0, 0, :])):  # Iterate through feature
@@ -68,7 +94,7 @@ def train_valid_test_split(X, y, splits: tuple) -> typing.Tuple:
     :param X: input data array of shape (event, sample, feature)
     :param y: output data array of shape (event)
     :param splits: tuple specifying splitting fractions (training, validation, test)
-    :return: train, valid, test: tuple containing split data as named tuples
+    :return: train, valid, test: data of type named tuple
     """
     if splits[0] == 1:
         raise ValueError('Training set fraction cannot be 1')
@@ -86,18 +112,21 @@ def train_valid_test_split(X, y, splits: tuple) -> typing.Tuple:
 
     return train, valid, test
 
-def modeling(train, valid, test):
-    """
-    function creates model and makes predictions with input data
-    :param X: data array of shape (event, sample, feature)
-    """
-    output_directory = Path("~/PycharmProjects/mlframework/src/output").expanduser()
 
+def modeling(train, valid, test, output_path):
+    """
+    function creates and evaluates model
+    :param train: training data of type named tuple
+    :param valid: validation data of type named tuple
+    :param test: test data of type named tuple
+    :param output_path: path to save model and results
+    :return: evaluated model results
+    """
     clf = Classifier(classifier_name="fcn",
-                     num_classes=2,
-                     output_directory=output_directory)
+                     num_classes=len(np.unique(np.concatenate((train.y, valid.y), axis=0))),
+                     output_directory=output_path)
 
-    METRICS = [
+    metrics = [
         keras.metrics.TruePositives(name='tp'),
         keras.metrics.FalsePositives(name='fp'),
         keras.metrics.TrueNegatives(name='tn'),
@@ -111,7 +140,7 @@ def modeling(train, valid, test):
 
     clf.compile(loss='categorical_crossentropy',
                 optimizer='adam',
-                metrics=METRICS)
+                metrics=metrics)
 
     reduce_lr = keras.callbacks.ReduceLROnPlateau(
         monitor='loss',
@@ -120,7 +149,7 @@ def modeling(train, valid, test):
         min_lr=0.0001)
 
     model_checkpoint = keras.callbacks.ModelCheckpoint(
-        filepath=output_directory / 'best_model.hdf5',
+        filepath=output_path / 'best_model.hdf5',
         save_weights_only=True,
         monitor='loss',
         save_best_only=True)
@@ -133,21 +162,18 @@ def modeling(train, valid, test):
             validation_data=(valid.X, valid.y),
             callbacks=[reduce_lr, model_checkpoint])
 
-    clf.evaluate(x=test.X, y=test.y)
+    clf.load_weights(output_path / 'best_model.hdf5')
+
+    results = clf.evaluate(x=test.X, y=test.y, return_dict=True)
+    pd.DataFrame.from_dict(results, orient='index').T.to_csv(output_path / "results.csv")
+
 
 if __name__ == '__main__':
-    c_path = Path("~/cernbox_projects_local/CLIC_data_transfert/Xbox2_hdf/context.hdf").expanduser()
+    args = parse_input_arguments()
 
-    X, y = select_data(context_data_file_path=c_path)
-
-    X = X[..., np.newaxis]
-    X = np.nan_to_num(X)
-
+    X, y = select_data(context_data_file_path=args.data_path)
     X_scaled = scale_data(X)
-    y = one_hot(y)
+    y_hot = one_hot_encode(y)
+    train_data, valid_data, test_data = train_valid_test_split(X=X_scaled, y=y_hot, splits=(0.7, 0.2, 0.1))
 
-    train, valid, test = train_valid_test_split(X_scaled, y, splits=(0.7, 0.2, 0.1))
-
-    modeling(train, valid, test)
-
-
+    modeling(train=train_data, valid=valid_data, test=test_data, output_path=args.file_path / args.output_folder)
