@@ -10,6 +10,7 @@ class FCNBlock(layers.Layer):
         self.cnn2 = CNNBlock(filters=256, kernel_size=5)
         self.cnn3 = CNNBlock(filters=128, kernel_size=3)
         self.gap = layers.GlobalAveragePooling1D()
+        self.out = layers.Dense(num_classes, activation='softmax')
 
 
     def call(self, input_tensor, training=None, mask=None):
@@ -21,4 +22,5 @@ class FCNBlock(layers.Layer):
         x = self.cnn2(x)
         x = self.cnn3(x)
         x = self.gap(x)
+        x = self.out(x)
         return x
