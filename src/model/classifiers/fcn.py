@@ -15,12 +15,13 @@ class CNNBlock(layers.Layer):
 
 class FCNBlock(layers.Layer):
     """Fully convolutional neural network, initially proposed by https://github.com/hfawaz/dl-4-tsc"""
-    def __init__(self):
+    def __init__(self, num_classes):
         super(FCNBlock, self).__init__()
         self.cnn1 = CNNBlock(filters=128, kernel_size=8)
         self.cnn2 = CNNBlock(filters=256, kernel_size=5)
         self.cnn3 = CNNBlock(filters=128, kernel_size=3)
         self.gap = layers.GlobalAveragePooling1D()
+        self.out = layers.Dense(num_classes, activation='softmax')
 
     def call(self, input_tensor, training=None, mask=None):
         """
@@ -31,4 +32,5 @@ class FCNBlock(layers.Layer):
         x = self.cnn2(x)
         x = self.cnn3(x)
         x = self.gap(x)
+        x = self.out(x)
         return x
