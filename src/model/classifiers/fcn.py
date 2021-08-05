@@ -1,10 +1,13 @@
+from abc import ABC
+
 from tensorflow.keras import layers
+import tensorflow.keras as keras
 
 
 class CNNBlock(layers.Layer):
     def __init__(self, filters, kernel_size):
         super(CNNBlock, self).__init__()
-        self.conv = layers.Conv1D(filters=filters, kernel_size=kernel_size, padding='same', activation='relu')
+        self.conv = layers.Conv1D(filters=filters, kernel_size=kernel_size, padding='same', activation='relu') #add relu after bn?
         self.bn = layers.BatchNormalization()
 
     def call(self, input_tensor, training=None, mask=None):
@@ -13,7 +16,7 @@ class CNNBlock(layers.Layer):
         return x
 
 
-class FCNBlock(layers.Layer):
+class FCNBlock(keras.Model, ABC):
     """Fully convolutional neural network, initially proposed by https://github.com/hfawaz/dl-4-tsc"""
     def __init__(self, num_classes):
         super(FCNBlock, self).__init__()
