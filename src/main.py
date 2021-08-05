@@ -24,7 +24,7 @@ def parse_input_arguments():
                         help='path of main.py file', default=Path().absolute())
     parser.add_argument('--data_path', required=False, type=str,
                         help='path of to data',
-                        default=Path("~/cernbox_projects_local/CLIC_data_transfert/Xbox2_hdf/context.hdf").expanduser())
+                        default=Path("/eos/project/m/ml-for-alarm-system/private/CLIC_data_transfert/Xbox2_hdf/context.hdf").expanduser())
     parser.add_argument('--output_folder', required=False, type=str,
                         help="name of output directory", default="output/" + str(datetime.datetime.now()))
     args = parser.parse_args()
@@ -122,7 +122,7 @@ def modeling(train, valid, test, output_path):
     :param output_path: path to save model and results
     :return: evaluated model results
     """
-    clf = Classifier(classifier_name="fcn",
+    clf = Classifier(classifier_name="resnet2",
                      num_classes=len(np.unique(np.concatenate((train.y, valid.y), axis=0))),
                      output_directory=output_path)
 

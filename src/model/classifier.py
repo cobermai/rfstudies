@@ -13,7 +13,7 @@ from sklearn.metrics import confusion_matrix
 from tensorflow import keras
 from src.model.classifiers import fcn
 from src.model.classifiers import fcn_2dropout
-
+from src.model.classifiers import resnet2
 
 class Classifier(keras.Model, ABC):
     """
@@ -31,6 +31,8 @@ class Classifier(keras.Model, ABC):
             self.core_block = fcn.FCNBlock()
         if self.classifier_name == 'fcn_2dropout':
             self.core_block = fcn_2dropout.FCN2DropoutBlock()
+        if self.classifier_name == 'resnet':
+            self.core_block = resnet2.ResnetBlock()
 
     def call(self, input_tensor, training=None, mask=None):
         """
@@ -38,7 +40,7 @@ class Classifier(keras.Model, ABC):
         :return: specified tensorflow model from model directory
         """
         x = self.core_block(input_tensor)
-        x = self.output_layer(x)
+        # x = self.output_layer(x)
         return x
 
     def eval_classifications(self, y_test, probabilities):
