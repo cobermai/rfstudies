@@ -112,7 +112,6 @@ class XBox2ContextDataCreator(ContextDataCreator):
             file.create_dataset(name="is_bd_in_40ms", data=np.append(is_bd[2:], [False, False]))
             file.create_dataset(name="is_healthy", data=file["clic_label/is_healthy"])
 
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="for xbox2 dataset: extract features for ml")
     parser.add_argument("td", type=Path, help="file path of an hdf file where all TrendData is merged into one dataset"

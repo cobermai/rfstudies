@@ -1,0 +1,9 @@
+{
+    "classifier_name": "fcn",
+    "num_classes": 2,
+    "monitor": "loss",
+    "loss": "categorical_crossentropy",
+    "optimizer": "adam",
+    "epochs": 1,
+    "batch_size": 16
+}
