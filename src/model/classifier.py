@@ -3,10 +3,11 @@ model setup according to https://www.tensorflow.org/guide/keras/custom_layers_an
 """
 import os
 from abc import ABC
-import tensorflow.keras as keras
+from tensorflow import keras
 from src.model.classifiers import fcn
 from src.model.classifiers import fcn_2dropout
 from src.model.classifiers import resnet2
+from src.model.classifiers import time_cnn
 
 class Classifier(keras.Model, ABC):
     """
@@ -25,6 +26,8 @@ class Classifier(keras.Model, ABC):
             self.model = fcn_2dropout.FCN2DropoutBlock(num_classes)
         if self.classifier_name == 'resnet':
             self.model = resnet2.ResnetBlock(num_classes)
+        if self.classifier_name == 'time_cnn':
+            self.model = time_cnn.TimeCNNBlock(num_classes)
 
     def call(self, input_tensor, training=None, mask=None):
         """
