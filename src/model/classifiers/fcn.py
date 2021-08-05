@@ -1,8 +1,11 @@
+from abc import ABC
+
+from tensorflow.keras import Model
 from tensorflow.keras import layers
 from src.model.classifiers.layers.cnn import CNNBlock
 
 
-class FCNBlock(layers.Layer):
+class FCNBlock(Model, ABC):
     """Fully Convolutional Neural network, initially proposed by https://github.com/hfawaz/dl-4-tsc"""
     def __init__(self, num_classes):
         super(FCNBlock, self).__init__()

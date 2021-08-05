@@ -1,7 +1,9 @@
+from abc import ABC
+from tensorflow.keras import Model
 from tensorflow.keras import layers
 
 
-class TimeCNNBlock(layers.Layer):
+class TimeCNNBlock(Model, ABC):
     """Convolutional Neural Net Block"""
     def __init__(self, num_classes):
         super(TimeCNNBlock, self).__init__()

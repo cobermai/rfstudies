@@ -1,3 +1,5 @@
+from abc import ABC
+from tensorflow.keras import Model
 from tensorflow.keras import layers
 from src.model.classifiers.layers.cnn import CNNBlock
 from src.model.classifiers.layers.shortcut import ShortcutBlock
@@ -22,8 +24,7 @@ class ResnetSubBlock(layers.Layer):
 
     def call(self, input_tensor, training=None, mask=None):
         """
-        Function builds model out of 3 convolutional layers with batch normalization and the relu activation function.
-        In the end there is a global average pooling layer which feeds the output into a softmax classification layer.
+        Function builds resnet sub block
         """
         x = self.cnn1(input_tensor)
         y = self.cnn2(x)
@@ -35,9 +36,8 @@ class ResnetSubBlock(layers.Layer):
         return out
 
 
-class ResnetBlock(layers.Layer):
-    """Resnet neural network, initially proposed by https://github.com/hfawaz/dl-4-tsc"""
-
+class ResnetBlock(Model, ABC):
+    """Resnet neural network"""
     def __init__(self, num_classes):
         super(ResnetBlock, self).__init__()
         self.resnet1 = ResnetSubBlock(n_feature_maps=64)

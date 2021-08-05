@@ -1,9 +1,11 @@
+from abc import ABC
+from tensorflow.keras import Model
 from tensorflow.keras import layers
 from src.model.classifiers.layers.cnn import CNNBlock
 from src.model.classifiers.layers.cnn_dropout import CNNDropoutBlock
 
 
-class FCN2DropoutBlock(layers.Layer):
+class FCN2DropoutBlock(Model, ABC):
     """
     Fully convolutional neural network, with two dropout layers
     Initially proposed by Felsberger et. al. in "Lecture Notes in Computer Science, Vol. 12279 LNCS (2020)"
