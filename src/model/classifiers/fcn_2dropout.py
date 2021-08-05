@@ -6,16 +6,17 @@ from src.model.classifiers.layers.cnn_dropout import CNNDropoutBlock
 class FCN2DropoutBlock(layers.Layer):
     """
     Fully convolutional neural network, with two dropout layers
-    Initially proposed by Lukas Felsberger et. al. in "Lecture Notes in Computer Science, Vol. 12279 LNCS (2020)"
+    Initially proposed by Felsberger et. al. in "Lecture Notes in Computer Science, Vol. 12279 LNCS (2020)"
     """
 
-    def __init__(self):
+    def __init__(self, num_classes):
         super(FCN2DropoutBlock, self).__init__()
         self.cnn1 = CNNBlock(filters=128, kernel_size=8)
         self.cnn2_dropout = CNNDropoutBlock(filters=256, kernel_size=5)
         self.cnn3 = CNNBlock(filters=128, kernel_size=3)
         self.gap = layers.GlobalAveragePooling1D()
         self.dropout = layers.Dropout(0.5)
+        self.out = layers.Dense(num_classes, activation='softmax')
 
     def call(self, input_tensor, training=None, mask=None):
         """
@@ -28,4 +29,5 @@ class FCN2DropoutBlock(layers.Layer):
         x = self.cnn3(x)
         x = self.gap(x)
         x = self.dropout(x)
+        x = self.out(x)
         return x

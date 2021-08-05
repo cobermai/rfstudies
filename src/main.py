@@ -122,7 +122,7 @@ def modeling(train, valid, test, output_path):
     :param output_path: path to save model and results
     :return: evaluated model results
     """
-    clf = Classifier(classifier_name="resnet2",
+    clf = Classifier(classifier_name="resnet",
                      num_classes=len(np.unique(np.concatenate((train.y, valid.y), axis=0))),
                      output_directory=output_path)
 

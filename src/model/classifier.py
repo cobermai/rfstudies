@@ -20,11 +20,11 @@ class Classifier(keras.Model, ABC):
         self.output_directory = output_directory
         output_directory.mkdir(parents=True, exist_ok=True)
         if self.classifier_name == 'fcn':
-            self.core_block = fcn.FCNBlock(num_classes)
+            self.model = fcn.FCNBlock(num_classes)
         if self.classifier_name == 'fcn_2dropout':
-            self.core_block = fcn_2dropout.FCN2DropoutBlock(num_classes)
+            self.model = fcn_2dropout.FCN2DropoutBlock(num_classes)
         if self.classifier_name == 'resnet':
-            self.core_block = resnet2.ResnetBlock(num_classes)
+            self.model = resnet2.ResnetBlock(num_classes)
 
     def call(self, input_tensor, training=None, mask=None):
         """
