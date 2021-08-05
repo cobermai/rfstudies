@@ -8,11 +8,14 @@ from src.model.classifiers import fcn
 from src.model.classifiers import fcn_2dropout
 from src.model.classifiers import resnet2
 from src.model.classifiers import time_cnn
+from src.model.classifiers import inception
+
 
 class Classifier:
     """
     Classifier class which acts as wrapper for tensorflow models.
     """
+
     def __init__(self,
                  output_directory,
                  classifier_name,
@@ -45,6 +48,8 @@ class Classifier:
             model = resnet2.ResnetBlock(self.num_classes)
         elif self.classifier_name == 'time_cnn':
             model = time_cnn.TimeCNNBlock(self.num_classes)
+        elif self.classifier_name == 'inception':
+            model = inception.InceptionBlock(self.num_classes)
         else:
             raise AssertionError
 
@@ -87,8 +92,3 @@ class Classifier:
             verbose=1,
             validation_data=(valid.X, valid.y),
             callbacks=[reduce_lr, model_checkpoint])
-
-
-
-
-

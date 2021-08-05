@@ -20,7 +20,7 @@ def parse_input_arguments():
                         help='path of main.py file', default=Path().absolute())
     parser.add_argument('--data_path', required=False, type=str,
                         help='path of to data',
-                        default=Path("~/cernbox_projects_local/CLIC_data_transfert/Xbox2_hdf").expanduser())
+                        default=Path("/eos/project/m/ml-for-alarm-system/private/CLIC_data_transfert/Xbox2_hdf/").expanduser())
     parser.add_argument('--dataset_name', required=False, type=str,
                         help='path of to data', default="trend_bd_next_pulse")
     parser.add_argument('--output_folder', required=False, type=str,
@@ -35,7 +35,6 @@ if __name__ == '__main__':
     args = parse_input_arguments()
 
     train, valid, test = dataset_creator.load_dataset(args.data_path, args.dataset_name)
-
 
     hp_file = open(args.file_path / "model/default_hyperparameters.json", 'r')
     hp_dict = json.load(hp_file)
