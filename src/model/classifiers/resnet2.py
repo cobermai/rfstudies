@@ -6,9 +6,15 @@ from src.model.classifiers.layers.shortcut import ShortcutBlock
 
 
 class ResnetSubBlock(layers.Layer):
-    """Block for use in Resnet model"""
+    """
+    Block for use in Resnet model
+    """
 
     def __init__(self, n_feature_maps):
+        """
+        Initializes ResnetSubBlock
+        :param n_feature_maps: number of filters for each CNNBlock
+        """
         super(ResnetSubBlock, self).__init__()
         # CNN Block 1
         self.cnn1 = CNNBlock(filters=n_feature_maps, kernel_size=8)
@@ -25,6 +31,9 @@ class ResnetSubBlock(layers.Layer):
     def call(self, input_tensor, training=None, mask=None):
         """
         Function builds resnet sub block
+        :param input_tensor: input to model
+        :param training: bool for specifying whether model should be training
+        :param mask: mask for specifying whether some values should be skipped
         """
         x = self.cnn1(input_tensor)
         y = self.cnn2(x)
@@ -37,8 +46,16 @@ class ResnetSubBlock(layers.Layer):
 
 
 class ResnetBlock(Model, ABC):
-    """Resnet neural network"""
+    """
+    Resnet neural network, originally proposed by Wang et. al. in Time series classification from scratch with
+    deep neural networks: A strong baseline, in Proceedings of the International Joint Conference
+    on Neural Networks, Vol. 2017-May (2017)
+    """
     def __init__(self, num_classes):
+        """
+        Initializes ResnetBlock
+        :param num_classes: number of classes in input
+        """
         super(ResnetBlock, self).__init__()
         self.resnet1 = ResnetSubBlock(n_feature_maps=64)
         self.resnet2 = ResnetSubBlock(n_feature_maps=128)
@@ -56,6 +73,9 @@ class ResnetBlock(Model, ABC):
         """
         Function builds Resnet model from 2 ResnetSubBlocks and a custom resnet sub block where a conv layer is skipped.
         In the end there is a global average pooling layer which feeds the output into a softmax classification layer.
+        :param input_tensor: input to model
+        :param training: bool for specifying whether model should be training
+        :param mask: mask for specifying whether some values should be skipped
         """
         # Resnet Block 1
         out1 = self.resnet1(input_tensor)

@@ -3,6 +3,7 @@ model setup according to https://www.tensorflow.org/guide/keras/custom_layers_an
 """
 import os
 from abc import ABC
+from pathlib import Path
 from tensorflow import keras
 from src.model.classifiers import fcn
 from src.model.classifiers import fcn_2dropout
@@ -17,16 +18,27 @@ class Classifier:
     """
 
     def __init__(self,
-                 output_directory,
-                 classifier_name,
-                 num_classes,
-                 monitor,
-                 loss,
-                 optimizer,
-                 epochs,
-                 batch_size,
+                 output_directory: Path,
+                 classifier_name: str,
+                 num_classes: int,
+                 monitor: str,
+                 loss: str,
+                 optimizer: str,
+                 epochs: int,
+                 batch_size: int,
                  build=True
                  ):
+        """
+        Initializes the Classifier with specified settings
+        :param output_directory: Directory for model output.
+        :param classifier_name: Name of classifier, e.g. 'fcn'.
+        :param monitor: Name of performance variable to monitor.
+        :param loss: Name of loss function to use in training.
+        :param optimizer: Name of optimizer used in training.
+        :param epochs: Number of epochs.
+        :param batch_size: Number of input data used in each batch.
+        :param build: Bool stating whether the model is to be build.
+        """
         self.output_directory = output_directory
         self.classifier_name = classifier_name
         output_directory.mkdir(parents=True, exist_ok=True)
@@ -40,6 +52,10 @@ class Classifier:
             self.model = self.build_classifier()
 
     def build_classifier(self):
+        """
+        Builds classifier model
+        :return: tensorflow model for classification of time series data
+        """
         if self.classifier_name == 'fcn':
             model = fcn.FCNBlock(self.num_classes)
         elif self.classifier_name == 'fcn_2dropout':
@@ -72,6 +88,11 @@ class Classifier:
         return model
 
     def fit_classifier(self, train, valid):
+        """
+        Trains classifier model on input data
+        :param train: named tuple containing training set
+        :param valid: named tuple containing validation set
+        """
         reduce_lr = keras.callbacks.ReduceLROnPlateau(
             monitor='loss',
             factor=0.5,

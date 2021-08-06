@@ -2,9 +2,7 @@
 import typing
 from pathlib import Path
 import argparse
-from collections import namedtuple
 import datetime
-import numpy as np
 import pandas as pd
 import json
 from src.model.classifier import Classifier
@@ -13,7 +11,8 @@ from src.utils import dataset_creator
 
 def parse_input_arguments():
     """
-    parse input arguments
+    Parses input arguments
+    :return: ArgumentParser object which stores input arguments, e.g. path to input data
     """
     parser = argparse.ArgumentParser(description='input parameter')
     parser.add_argument('--file_path', required=False, type=str,

@@ -1,17 +1,19 @@
 import typing
+from pathlib import Path
 from collections import namedtuple
 import numpy as np
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.model_selection import train_test_split
 from src.utils.handler_tools.xbox2_datasets import trend_bd_next_pulse
 
+
 def train_valid_test_split(X, y, splits: tuple) -> typing.Tuple:
     """
-    splits data into training, testing and validation set using random sampling
+    Splits data into training, testing and validation set using random sampling
     :param X: input data array of shape (event, sample, feature)
     :param y: output data array of shape (event)
     :param splits: tuple specifying splitting fractions (training, validation, test)
-    :return: train, valid, test: data of type named tuple
+    :return: train, valid, test: Tuple with data of type named tuple
     """
     if splits[0] == 1:
         raise ValueError('Training set fraction cannot be 1')
@@ -32,13 +34,21 @@ def train_valid_test_split(X, y, splits: tuple) -> typing.Tuple:
 
 def one_hot_encode(y):
     """
-    transform the labels from integers to one hot vectors
+    Transforms the labels from integers to one hot vectors
+    :param y: array with labels to encode
+    :return: array of one hot encoded labels
     """
     enc = OneHotEncoder(categories='auto')
     return enc.fit_transform(y.reshape(-1, 1)).toarray()
 
 
-def load_dataset(data_path, dataset_name):
+def load_dataset(data_path: Path, dataset_name: str) -> typing.Tuple:
+    """
+    Loads the specified data set, does one hot encoding on labels and splits data into train, valid and test set
+    :param data_path: Path to input data
+    :param dataset_name: Name of the data set
+    :return: Tuple of named tuples containing training, validation and test set
+    """
     if dataset_name == "trend_bd_next_pulse":
         X, y = trend_bd_next_pulse.select_data(context_data_file_path=data_path / "context.hdf")
         X_scaled = trend_bd_next_pulse.scale_data(X)

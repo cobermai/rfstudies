@@ -22,9 +22,12 @@ class FCN2DropoutBlock(Model, ABC):
 
     def call(self, input_tensor, training=None, mask=None):
         """
-        Function builds model out of 3 convolutional layers with batch normalization and the relu activation function.
+        Builds model out of 3 convolutional layers with batch normalization and the relu activation function.
         Second convolutional layer has a dropout of 0.5.
         In the end there is a global average pooling layer which feeds the output into a softmax classification layer.
+        :param input_tensor: input to model
+        :param training: bool for specifying whether model should be training
+        :param mask: mask for specifying whether some values should be skipped
         """
         x = self.cnn1(input_tensor)
         x = self.cnn2_dropout(x)

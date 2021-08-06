@@ -4,8 +4,15 @@ from tensorflow.keras import layers
 
 
 class TimeCNNBlock(Model, ABC):
-    """Convolutional Neural Net Block"""
+    """
+    TimeCNN network, originally proposed by Zhao et. al. in Convolutional neural networks for
+    time series classification, Journal of Systems Engineering and Electronics 28, 162 (2017).
+    """
     def __init__(self, num_classes):
+        """
+        Initializes TimeCNNBlock
+        :param num_classes: number of classes in input
+        """
         super(TimeCNNBlock, self).__init__()
         self.conv1 = layers.Conv1D(filters=6, kernel_size=7, padding='valid', activation='sigmoid')
         self.AvePool = layers.AveragePooling1D(pool_size=3)
@@ -14,6 +21,12 @@ class TimeCNNBlock(Model, ABC):
         self.out = layers.Dense(units=num_classes,activation='sigmoid')
 
     def call(self, input_tensor, training=None, mask=None):
+        """
+        Builds TimeCNN model
+        :param input_tensor: input to model
+        :param training: bool for specifying whether model should be training
+        :param mask: mask for specifying whether some values should be skipped
+        """
         x = self.conv1(input_tensor)
         x = self.AvePool(x)
         x = self.conv2(x)
