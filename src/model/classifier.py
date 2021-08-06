@@ -1,8 +1,6 @@
 """
 model setup according to https://www.tensorflow.org/guide/keras/custom_layers_and_models
 """
-import os
-from abc import ABC
 from pathlib import Path
 from tensorflow import keras
 from src.model.classifiers import fcn
@@ -32,6 +30,7 @@ class Classifier:
         Initializes the Classifier with specified settings
         :param output_directory: Directory for model output.
         :param classifier_name: Name of classifier, e.g. 'fcn'.
+        :param num_classes: number of classes in input
         :param monitor: Name of performance variable to monitor.
         :param loss: Name of loss function to use in training.
         :param optimizer: Name of optimizer used in training.
