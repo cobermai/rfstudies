@@ -1,10 +1,9 @@
 """example code how to select from context data and prepare data for machine learning. """
-import typing
 from pathlib import Path
 import argparse
 import datetime
-import pandas as pd
 import json
+import pandas as pd
 from src.model.classifier import Classifier
 from src.utils import dataset_creator
 
@@ -19,15 +18,15 @@ def parse_input_arguments():
                         help='path of main.py file', default=Path().absolute())
     parser.add_argument('--data_path', required=False, type=str,
                         help='path of to data',
-                        default=Path("/eos/project/m/ml-for-alarm-system/private/CLIC_data_transfert/Xbox2_hdf/").expanduser())
+                        default=Path("/eos/project/m/ml-for-alarm-system/private/CLIC_data_transfer/Xbox2_hdf/")
+                        .expanduser())
     parser.add_argument('--dataset_name', required=False, type=str,
                         help='path of to data', default="trend_bd_next_pulse")
     parser.add_argument('--output_folder', required=False, type=str,
                         help="name of output directory", default="output/" + str(datetime.datetime.now()))
     parser.add_argument('--fit_classifier', required=False, type=bool,
                         help="retrain classifier", default=True)
-    args = parser.parse_args()
-    return args
+    return parser.parse_args()
 
 
 if __name__ == '__main__':
