@@ -19,7 +19,7 @@ class ColumnWiseContextDataWriter(ContextDataWriter):  # pylint: disable=too-few
     applied on all all events.
     """
 
-    def write_clm(self, feature: ColumnWiseFeature) -> None:
+    def write_column(self, feature: ColumnWiseFeature) -> None:
         """writes a column placed in feature.vec into a specific path given by feature.full_hdf_path. If that path does
         not exist, it will be created.
         :param feature: a ColumnWiseFeature with a filled feature.vec

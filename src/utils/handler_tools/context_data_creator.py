@@ -1,6 +1,6 @@
 """This module contains an abstract class structure for creating a context data file.
 The ContextDataCreator class should organize the creation of the context data file."""
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 import logging
 from pathlib import Path
 import abc
@@ -16,4 +16,3 @@ class ContextDataCreator(abc.ABC):
     @abc.abstractmethod
     def manage_features(self) -> None:
         """abstract method to call the feature calculation process."""
-        pass

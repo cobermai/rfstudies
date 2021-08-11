@@ -14,16 +14,16 @@ def get_trend_data_features(length: int, trend_data_file_path: Path) -> typing.G
     with h5py.File(trend_data_file_path, "r") as file:
         for key in file.keys():
             yield TrendDataFeature(name=key,
-                                   func=select(trend_data_file_path, key),
+                                   func=_select(trend_data_file_path, key),
                                    output_dtype=h5py.opaque_dtype("M8[us]") if key == "Timestamp" else float,
                                    length=length,
                                    hdf_path="PrevTrendData",
                                    info=f"Previous Trend Data of {key}")
 
 
-def select(trend_data_file_path: Path, key: str):
+def _select(trend_data_file_path: Path, key: str):
     """creates and returns a function that selects a given selection from the dataset at the predefined key."""
-    def selection(indices_selection):
+    def selection(indices_selection: np.ndarray):
         """returns a selection of one signal of the trend data.
         :param indices_selection: selection of indices to return (array of boolean values)"""
         with h5py.File(trend_data_file_path, "r") as file:
