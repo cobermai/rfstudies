@@ -9,6 +9,7 @@ from src.utils.hdf_tools import hdf_to_df_selection
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 
+
 def select_data(context_data_file_path: Path) -> typing.Tuple[np.ndarray, np.ndarray]:
     """
     returns all breakdown events (no distinction between runs) and 2.5% of the healthy events (chosen randomly).
@@ -41,6 +42,8 @@ def select_data(context_data_file_path: Path) -> typing.Tuple[np.ndarray, np.nda
     clm_for_training = df.columns.difference(pd.Index(["Timestamp", "PrevTrendData__Timestamp", "is_bd", "is_healthy",
                                                        "is_bd_in_20ms", "is_bd_in_40ms"]))
     X = df[clm_for_training].to_numpy(dtype=float)
+    X = X[..., np.newaxis]
+    X = np.nan_to_num(X)
     y = df["is_healthy"].to_numpy(dtype=bool)
     return X, y
 
@@ -51,13 +54,12 @@ def scale_data(X):
     :param X: data array of shape (event, sample, feature)
     :return: X_scaled: scaled data array of shape (event, sample, feature)
     """
-    X = X[..., np.newaxis]
-    X = np.nan_to_num(X)
 
     X_scaled = np.zeros_like(X)
     for feature_index in range(len(X[0, 0, :])):  # Iterate through feature
         X_scaled[:, :, feature_index] = StandardScaler().fit_transform(X[:, :, feature_index].T).T
     return X_scaled
+
 
 def train_valid_test_split(X, y, splits: tuple) -> typing.Tuple:
     """

@@ -1,7 +1,7 @@
 import typing
 from pathlib import Path
 from sklearn.preprocessing import OneHotEncoder
-from src.xbox2_speciffic.datasets import simple_select
+from src.xbox2_specific.datasets import simple_select
 
 
 def one_hot_encode(y):

@@ -1,5 +1,5 @@
 {
-    "classifier_name": "fcn",
+    "classifier_name": "time_cnn",
     "num_classes": 2,
     "monitor": "loss",
     "loss": "categorical_crossentropy",
