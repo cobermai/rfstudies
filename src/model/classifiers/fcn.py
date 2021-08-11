@@ -1,5 +1,4 @@
 from abc import ABC
-
 from tensorflow.keras import Model
 from tensorflow.keras import layers
 from src.model.classifiers.layers.cnn import CNNBlock
