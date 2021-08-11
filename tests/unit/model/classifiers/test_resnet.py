@@ -1,5 +1,5 @@
 import tensorflow.keras as keras
-from src.model.classifiers import resnet2
+from src.model.classifiers import resnet
 
 
 def test__resnet():
@@ -12,7 +12,7 @@ def test__resnet():
                                   'global_average_pooling1d', 'dense']
 
     # ACT
-    model_resnet = resnet2.ResnetBlock(2)
+    model_resnet = resnet.ResnetBlock(2)
 
     layer_model_out_names = []
     for layer_model_out in model_resnet.layers:

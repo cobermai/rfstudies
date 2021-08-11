@@ -5,7 +5,7 @@ from pathlib import Path
 from tensorflow import keras
 from src.model.classifiers import fcn
 from src.model.classifiers import fcn_2dropout
-from src.model.classifiers import resnet2
+from src.model.classifiers import resnet
 from src.model.classifiers import time_cnn
 from src.model.classifiers import inception
 
@@ -61,7 +61,7 @@ class Classifier:
         elif self.classifier_name == 'fcn_2dropout':
             model = fcn_2dropout.FCN2DropoutBlock(self.num_classes)
         elif self.classifier_name == 'resnet':
-            model = resnet2.ResnetBlock(self.num_classes)
+            model = resnet.ResnetBlock(self.num_classes)
         elif self.classifier_name == 'time_cnn':
             model = time_cnn.TimeCNNBlock(self.num_classes)
         elif self.classifier_name == 'inception':
