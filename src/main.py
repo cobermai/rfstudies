@@ -1,10 +1,9 @@
 """example code how to select from context data and prepare data for machine learning. """
-import typing
 from pathlib import Path
 import argparse
 from datetime import datetime
-import pandas as pd
 import json
+import pandas as pd
 from src.model.classifier import Classifier
 from src.utils import dataset_creator
 
@@ -27,8 +26,7 @@ def parse_input_arguments():
                                                                       + datetime.now().strftime("%Y-%m-%dT%H_%M_%S")))
     parser.add_argument('--fit_classifier', required=False, type=bool,
                         help="retrain classifier", default=True)
-    args = parser.parse_args()
-    return args
+    return parser.parse_args()
 
 
 if __name__ == '__main__':

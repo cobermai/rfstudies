@@ -50,10 +50,11 @@ class Classifier:
         if build:
             self.model = self.build_classifier()
 
-    def build_classifier(self):
+    def build_classifier(self, **kwargs):
         """
         Builds classifier model
-        :return: tensorflow model for classification of time series data
+        **kwargs: Keyword arguments for tf.keras.Model.compile method
+        :return: Tensorflow model for classification of time series data
         """
         if self.classifier_name == 'fcn':
             model = fcn.FCNBlock(self.num_classes)
@@ -82,15 +83,17 @@ class Classifier:
 
         model.compile(loss=self.loss,
                       optimizer=self.optimizer,
-                      metrics=metrics)
+                      metrics=metrics,
+                      **kwargs)
 
         return model
 
-    def fit_classifier(self, train, valid):
+    def fit_classifier(self, train, valid, **kwargs):
         """
         Trains classifier model on input data
         :param train: named tuple containing training set
         :param valid: named tuple containing validation set
+        **kwargs: Keyword arguments for tf.keras.Model.fit method
         """
         reduce_lr = keras.callbacks.ReduceLROnPlateau(
             monitor='loss',
@@ -111,4 +114,5 @@ class Classifier:
             epochs=self.epochs,
             verbose=1,
             validation_data=(valid.X, valid.y),
-            callbacks=[reduce_lr, model_checkpoint])
+            callbacks=[reduce_lr, model_checkpoint],
+            **kwargs)
