@@ -67,7 +67,7 @@ def modeling(train_set, valid_set, test_set, work_dir: Path):
     if fit_classifier:
         clf.fit_classifier(train_set, valid_set)
     clf.model.load_weights(output_path / 'best_model.hdf5')
-    results = clf.model.evaluate(x=test.X, y=test.y, return_dict=True)
+    results = clf.model.evaluate(x=test_set.X, y=test_set.y, return_dict=True)
     pd.DataFrame.from_dict(results, orient='index').T.to_csv(output_path / "results.csv")
 
 if __name__ == '__main__':
