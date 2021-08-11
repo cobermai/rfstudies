@@ -3,6 +3,7 @@ apply and write."""
 from dataclasses import dataclass, field
 import typing
 import logging
+import h5py
 import numpy as np
 from src.utils.hdf_tools import hdf_path_combine
 
@@ -39,19 +40,17 @@ class ColumnWiseFeature(CustomFeature):
 
 class EventAttributeFeature(ColumnWiseFeature):
     """represents features read from the event attributes"""
-
-    def calc(self, index: int, attrs):
+    def calculate_single(self, index: int, attrs: h5py.AttributeManager):
         """
         calculates the event attribute feature by applying self.func and writes it to the self.vec at the given index.
         :param index: index of the event and thus location where the calculated feature will be written.
         :param attrs: attribute of the event data """
         self.vec[index] = self.func(attrs)
 
-
 class TrendDataFeature(ColumnWiseFeature):
     """Features for time series from the TrendData.
     The feature.func selects the wanted values from the time series."""
-    def calc_all(self, selection):
+    def calculate_all(self, selection: np.ndarray):
         """
         applies the feature function on the trend data and the pre calculated context_data
         :param selection: selection of interest from the trend data
@@ -61,15 +60,14 @@ class TrendDataFeature(ColumnWiseFeature):
 
 
 @dataclass
-class RowWiseFeature(CustomFeature):
-    """A parent class of all features calculated row by row (=event by event)."""
+class EventDataFeature(ColumnWiseFeature):
+    """Features for time series from the EventData.
+        The feature.func processes the time series."""
     working_on_dataset: str
 
-    def apply(self, data):
-        """applies the feature.func to the given time series and returns the feature value."""
-        return self.func(data[self.working_on_dataset])
-
-
-class EventDataFeature(RowWiseFeature):
-    """Features for time series from the EventData.
-    The feature.func processes the time series."""
+    def calculate_single(self, index: int, data: np.ndarray):
+        """
+        calculates the event attribute feature by applying self.func and writes it to the self.vec at the given index.
+        :param index: index of the event and thus location where the calculated feature will be written.
+        :param data: all data of a single event from the event data"""
+        self.vec[index] = self.func(data[self.working_on_dataset])
