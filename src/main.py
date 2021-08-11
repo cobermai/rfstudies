@@ -2,7 +2,7 @@
 import typing
 from pathlib import Path
 import argparse
-import datetime
+from datetime import datetime
 import pandas as pd
 import json
 from src.model.classifier import Classifier
@@ -23,7 +23,8 @@ def parse_input_arguments():
     parser.add_argument('--dataset_name', required=False, type=str,
                         help='path of to data', default="trend_bd_next_pulse")
     parser.add_argument('--output_folder', required=False, type=str,
-                        help="name of output directory", default="output/" + str(datetime.datetime.now()))
+                        help="name of output directory", default=Path("output/"
+                                                                      + datetime.now().strftime("%Y-%m-%dT%H_%M_%S")))
     parser.add_argument('--fit_classifier', required=False, type=bool,
                         help="retrain classifier", default=True)
     args = parser.parse_args()
