@@ -9,13 +9,14 @@ class InceptionSubBlock(layers.Layer):
     Inception Sub Block for use in inception model
     """
 
-    def __init__(self, input_shape):
+    def __init__(self):
         """
         Initializes InceptionSubBlock
         :param input_shape: shape of input tensor
         """
         super(InceptionSubBlock, self).__init__()
-        self.bottleneck = layers.Conv1D(filters=32, kernel_size=1, input_shape=input_shape,
+        self.input_layer = layers.InputLayer()
+        self.bottleneck = layers.Conv1D(filters=32, kernel_size=1,
                                         padding='same', activation='linear', use_bias=False)
         self.conv1 = layers.Conv1D(filters=32, kernel_size=40,
                                    strides=1, padding='same',
@@ -58,14 +59,15 @@ class InceptionBlock(Model, ABC):
     """
     Inception neural network, initially proposed by https://github.com/hfawaz/InceptionTime
     """
+
     def __init__(self, num_classes):
         """
         Initializes InceptionBlock
         :param num_classes: number of classes in input
         """
         super(InceptionBlock, self).__init__()
-        self.inception1 = InceptionSubBlock(input_shape=(None, 195, 1))
-        self.inception2 = InceptionSubBlock(input_shape=(None, 195, 128))
+        self.inception1 = InceptionSubBlock()
+        self.inception2 = InceptionSubBlock()
         self.shortcut1 = ShortcutBlock(filters=128, kernel_size=1, bias=False)
         self.shortcut2 = ShortcutBlock(filters=128, kernel_size=1, bias=False)
         self.gap = layers.GlobalAveragePooling1D()
@@ -75,11 +77,11 @@ class InceptionBlock(Model, ABC):
 
     def call(self, input_tensor, training=None, mask=None):
         """
-        Function builds Inception model.
-        :param input_tensor: input to model
-        :param training: bool for specifying whether model should be training
-        :param mask: mask for specifying whether some values should be skipped
-        """
+            Function builds Inception model.
+            :param input_tensor: input to model
+            :param training: bool for specifying whether model should be training
+            :param mask: mask for specifying whether some values should be skipped
+            """
         # Inception block 1
         x = self.inception1(input_tensor)
         # Inception block 2
