@@ -34,3 +34,18 @@ def test__parse_input_arguments(transform, features):
     assert args_out.transform_to_hdf5 == bool(transform_to_hdf5_expected)
     assert args_out.calculate_features == bool(calculate_features_expected)
 
+@pytest.mark.skip(reason="no way of currently testing this")
+def test__transformation():
+    assert True
+
+@pytest.mark.skip(reason="no way of currently testing this")
+def test__feature_handling():
+    assert True
+
+@pytest.mark.skip(reason="no way of currently testing this")
+def test__modeling():
+    assert True
+
+
+
+

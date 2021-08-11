@@ -74,16 +74,16 @@ def modeling(train_set, valid_set, test_set, work_dir: Path):
 
 
 if __name__ == '__main__':
-    args = parse_input_arguments(args=sys.argv[1:])
+    args_in = parse_input_arguments(args=sys.argv[1:])
 
-    if args.transform_to_hdf5:
-        transformation(work_dir=args.data_path)
+    if args_in.transform_to_hdf5:
+        transformation(work_dir=args_in.data_path)
 
-    if args.calculate_features:
-        feature_handling(work_dir=args.data_path)
+    if args_in.calculate_features:
+        feature_handling(work_dir=args_in.data_path)
 
-    train, valid, test = dataset_creator.load_dataset(args.data_path, args.dataset_name)
-    modeling(train_set=train, valid_set=valid, test_set=test, work_dir=args.file_path)
+    train, valid, test = dataset_creator.load_dataset(args_in.data_path, args_in.dataset_name)
+    modeling(train_set=train, valid_set=valid, test_set=test, work_dir=args_in.file_path)
 
 
 
