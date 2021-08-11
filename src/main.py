@@ -1,7 +1,7 @@
 """example code how to select from context data and prepare data for machine learning. """
 from pathlib import Path
 import argparse
-from datetime import datetime
+import sys
 import json
 import pandas as pd
 from src.transformation import transform
@@ -11,24 +11,24 @@ from src.utils.handler_tools import dataset_creator
 from src.utils import hdf_tools
 
 
-def parse_input_arguments():
+def parse_input_arguments(args):
     """
     Parses input arguments
     :return: ArgumentParser object which stores input arguments, e.g. path to input data
     """
-    parser = argparse.ArgumentParser(description='input parameter')
+    parser = argparse.ArgumentParser(description='Input parameters')
     parser.add_argument('--file_path', required=False, type=Path,
                         help='path of main.py file', default=Path().absolute())
     parser.add_argument('--data_path', required=False, type=Path,
-                        help='path of to data',
+                        help='path of data',
                         default=Path("/eos/project/m/ml-for-alarm-system/private/CLIC_data_transfert/Xbox2_hdf/").expanduser())
     parser.add_argument('--dataset_name', required=False, type=str,
-                        help='path of to data', default="simple_select")
+                        help='name of data set', default="simple_select")
     parser.add_argument('--transform_to_hdf5', required=False, type=bool,
-                        help="retrainform original dataset to hdf5", default=False)
+                        help="retransform from original files to hdf5 (True/False)p", default=False)
     parser.add_argument('--calculate_features', required=False, type=bool,
-                        help="recalculate features", default=False)
-    return parser.parse_args()
+                        help="recalculate features (True/False)", default=False)
+    return parser.parse_args(args)
 
 
 def transformation(work_dir: Path):
@@ -45,6 +45,7 @@ def transformation(work_dir: Path):
     hdf_tools.convert_iso8601_to_datetime(file_path=combined_trend_data_path)
     hdf_tools.sort_by(file_path=combined_trend_data_path, sort_by_name="Timestamp")
 
+
 def feature_handling(work_dir: Path):
     """DATA HANDLING"""
     gathered_event_data_path = work_dir / "EventDataExtLinks.hdf"
@@ -55,6 +56,7 @@ def feature_handling(work_dir: Path):
                                       td_file_path=combined_trend_data_path,
                                       dest_file_path=context_data_file_path)
     creator.manage_features()
+
 
 def modeling(train_set, valid_set, test_set, work_dir: Path):
     """MODELING"""
@@ -70,8 +72,9 @@ def modeling(train_set, valid_set, test_set, work_dir: Path):
     results = clf.model.evaluate(x=test_set.X, y=test_set.y, return_dict=True)
     pd.DataFrame.from_dict(results, orient='index').T.to_csv(output_path / "results.csv")
 
+
 if __name__ == '__main__':
-    args = parse_input_arguments()
+    args = parse_input_arguments(args=sys.argv[1:])
 
     if args.transform_to_hdf5:
         transformation(work_dir=args.data_path)
