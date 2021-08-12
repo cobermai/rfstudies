@@ -82,6 +82,7 @@ def _pulse_length(data: np.ndarray) -> float:
         pulse_length = acquisition_window * (num_relatively_large_values / num_total_values)
     return pulse_length
 
+
 def _pulse_amplitude(data: np.ndarray) -> float:
     """calculates the mean value where the amplitude is higher than the threshold (=half of the maximal value).
     :param data: a vector of values of the group working_on_dataset (see EventDataFeature.working_on_dataset)
