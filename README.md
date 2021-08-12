@@ -25,7 +25,7 @@ we further recommend the use of:
 - pip, package management
 - virtualenv to ensure package compatability
 
-To install the system requirements on derbian based systems (eg. Ubuntu) using the package manager `apt`, type the following into the command line:
+To install the system requirements on debian based systems (eg. Ubuntu) using the package manager `apt`, type the following into the command line:
 ```bash
 apt update
 sudo xargs apt install <system_requirements/requirements_deb.system
