@@ -47,6 +47,7 @@ class EventAttributeFeature(ColumnWiseFeature):
         :param attrs: attribute of the event data """
         self.vec[index] = self.func(attrs)
 
+
 class TrendDataFeature(ColumnWiseFeature):
     """Features for time series from the TrendData.
     The feature.func selects the wanted values from the time series."""
