@@ -68,7 +68,7 @@ def load_dataset(data_path: Path, dataset_name: str) -> typing.Tuple:
         X_scaled = scale_data(X)
         y_hot = one_hot_encode(y)
         train, valid, test = train_valid_test_split(X=X_scaled, y=y_hot, splits=(0.7, 0.2, 0.1))
-    if dataset_name == "XBOX_event_bd20ms":
+    elif dataset_name == "XBOX_event_bd20ms":
         X, y = XBOX_event_bd20ms.select_data(context_data_file_path=data_path / "context.hdf")
         X_scaled = scale_data(X)
         y_hot = one_hot_encode(y)
