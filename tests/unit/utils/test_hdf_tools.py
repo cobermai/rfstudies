@@ -6,19 +6,6 @@ import pandas as pd
 from src.utils import hdf_tools
 
 
-def test__hdf_path_combine() -> None:
-    """tests hdf_path_combine function"""
-    # ARRANGE
-    arg_list = (("a", "b", "c"),
-                ("/a/b", "/c"),
-                ("/a///b///", "/c"))
-    expected_output = "/a/b/c"
-    # ACT + ASSERT
-    for args in arg_list:
-        output = hdf_tools.hdf_path_combine(*args)
-        assert output == expected_output, f"expected {expected_output}\nbut got {output}"
-
-
 def test_merge(tmp_path):
     """tests merge"""
     # ARRANGE
@@ -146,3 +133,17 @@ def test_sort_by(tmp_path):
     # ASSERT
     with h5py.File(work_file_path, "r") as file:
         assert np.all(np.diff(file["d1"][:]) >= 0)
+
+
+def test__hdf_path_combine() -> None:
+    """tests hdf_path_combine function"""
+    # ARRANGE
+    arg_list = (("a", "b", "c"),
+                ("/a/b", "/c"),
+                ("/a///b///", "/c"))
+    expected_output = "/a/b/c"
+    # ACT + ASSERT
+    for args in arg_list:
+        output = hdf_tools.hdf_path_combine(*args)
+        assert output == expected_output, f"expected {expected_output}\nbut got {output}"
+

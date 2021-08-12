@@ -1,20 +1,17 @@
 """example code how to select from context data and prepare data for machine learning. """
 from pathlib import Path
 import typing
-from collections import namedtuple
 import h5py
 import numpy as np
 import pandas as pd
 from src.utils.hdf_tools import hdf_to_df_selection
-from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import train_test_split
 
 
 def select_data(context_data_file_path: Path) -> typing.Tuple[np.ndarray, np.ndarray]:
     """
     returns all breakdown events (no distinction between runs) and 2.5% of the healthy events (chosen randomly).
     filters out healthy events where the prev trend data is further away than two seconds.
-    :return: X and y prepared or machine learning
+    :return: X and y prepared for machine learning
     """
     with h5py.File(context_data_file_path, "r") as file:
         is_bd_in_two_pulses = file["is_bd_in_40ms"][:]

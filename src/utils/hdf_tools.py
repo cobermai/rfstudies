@@ -19,9 +19,9 @@ logger = logging.getLogger(__name__)
 
 def merge(source_file_path: Path, dest_file_path: Path) -> None:
     """
-    In the first layer of the hdf-directory structure there have to be only groups. In each group is required to have
+    In the first layer of the hdf-directory structure there have to be only groups. In each group it is required to have
     the same hdf-datasets, they are referred to as dataset-type.
-    for each dataset-type: merges (concatenates) all datasets of the same dataset-type from all groups.
+    For each dataset-type: merges (concatenates) all datasets of the same dataset-type from all groups.
     :param source_file_path: file of the un-merged groups with same data set names
     :param dest_file_path: file where the merged datasets will be stored
     """
