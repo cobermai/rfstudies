@@ -33,7 +33,7 @@ def parse_input_arguments(args):
 
 def transformation(work_dir: Path):
     """TRANSFORMATION"""
-    src_dir = Path("~/project_data/CLIC_DATA_Xbox2_T24PSI_2/").expanduser()
+    src_dir = Path("/eos/project/m/ml-for-alarm-system/private/CLIC_data_transfert/CLIC_DATA_Xbox2_T24PSI_2").expanduser()
     transform(tdms_dir=src_dir,
               hdf_dir=work_dir)
 
