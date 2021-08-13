@@ -1,6 +1,5 @@
 from pathlib import Path
 import typing
-from collections import namedtuple
 import h5py
 import numpy as np
 import pandas as pd
@@ -14,18 +13,19 @@ def select_data(context_data_file_path: Path) -> typing.Tuple[np.ndarray, np.nda
     :return: X and y prepared or machine learning
     """
     with h5py.File(context_data_file_path, "r") as file:
+        # load relevant data from context file
         is_bd_in_next_pulse = file["is_bd_in_20ms"][:]
+        event_timestamp = file["Timestamp"][:]
+        trend_timestamp = file["PrevTrendData/Timestamp"][:]
 
-        event_ts = file["Timestamp"][:]
-        trend_ts = file["PrevTrendData/Timestamp"][:]
-        time_diff = event_ts - trend_ts
+        # filter healthy pulses with a time difference to previous trend data more than 2 s
+        # only define healthy pulses with a time difference to the previous trend data of < 2s
+        time_diff = event_timestamp - trend_timestamp
         time_diff_threshold = pd.to_timedelta(2, "s")
         filter_timestamp_diff = time_diff < time_diff_threshold
-
-        # only define healthy pulses with a time difference to the previous trend data of < 2s
         is_healthy = file["clic_label/is_healthy"][:] & filter_timestamp_diff
 
-        # select all breakdown and directly preceding pulses
+        # select events with breakdown in next pulse
         selection = is_bd_in_next_pulse
 
         # select 2.5% of the healthy pulses randomly
@@ -33,12 +33,21 @@ def select_data(context_data_file_path: Path) -> typing.Tuple[np.ndarray, np.nda
 
     df = hdf_to_df_selection(context_data_file_path, selection=selection)
 
-    clm_for_training = df.columns.difference(pd.Index(["Timestamp", "PrevTrendData__Timestamp", "is_bd", "is_healthy",
-                                                       "is_bd_in_20ms", "is_bd_in_40ms"]))
+    clm_for_training = pd.Index(["DC_Down__D1", "DC_Down__D9", "DC_Down__tsfresh__mean", "DC_Down__tsfresh__maximum",
+                                 "DC_Down__tsfresh__median", "DC_Down__tsfresh__minimum",
+                                 "DC_Up__D1", "DC_Up__D9", "DC_Up__tsfresh__mean", "DC_Up__tsfresh__maximum",
+                                 "DC_Up__tsfresh__median", "DC_Up__tsfresh__minimum",
+                                 "PEI_Amplitude__pulse_length", "PEI_Amplitude__pulse_amplitude",
+                                 "PKI_Amplitude__pulse_length", "PKI_Amplitude__pulse_amplitude",
+                                 "PSI_Amplitude__pulse_length", "PSI_Amplitude__pulse_amplitude"])
     X = df[clm_for_training].to_numpy(dtype=float)
     X = X[..., np.newaxis]
     X = np.nan_to_num(X)
     y = df["is_healthy"].to_numpy(dtype=bool)
     return X, y
+
+
+if __name__ == '__main__':
+    X, y = select_data(Path('C:\\Users\\holge\\cernbox\\CLIC_data\\Xbox2_hdf\\context.hdf'))
 
 
