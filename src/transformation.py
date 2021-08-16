@@ -1,5 +1,5 @@
 """
-This module provides tools to transform data to a capable format so that further analyzing can be done easily.
+This module applies conversion and gathering on xbox2 data.
 """
 import argparse
 from pathlib import Path
@@ -27,7 +27,9 @@ def transform(tdms_dir: Path, hdf_dir: Path) -> None:
         .from_tdms(tdms_dir) \
         .to_hdf(hdf_dir / "data").run()
 
-    # combine all Events and TrendData sets into one hdf5 file with external links if they are not faulty
+    # combine all Events and TrendData sets into one hdf5 file with external links if the time series segments
+    # are healthy
+
     def td_func_to_fulfill(file_path: Path, hdf_path: str) -> bool:
         with h5py.File(file_path, "r") as file:
             grp = file[hdf_path]
