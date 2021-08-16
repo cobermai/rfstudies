@@ -16,6 +16,7 @@ REQUIREMENTS: dict = {
         'pyyaml',
         'pandas',
         'coloredlogs',
+        'tsfresh',
         'scikit-learn>=0.24.2',
         'tensorflow>=2.5.0',
     ],
