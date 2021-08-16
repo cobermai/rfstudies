@@ -42,6 +42,3 @@ def select_data(context_data_file_path: Path) -> typing.Tuple[np.ndarray, np.nda
     X = np.nan_to_num(X)
     y = df["is_healthy"].to_numpy(dtype=bool)
     return X, y
-
-
-
