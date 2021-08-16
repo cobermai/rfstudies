@@ -3,7 +3,7 @@ import h5py
 import numpy as np
 import pytest
 from src.utils.handler_tools.context_data_writer import ColumnWiseContextDataWriter
-from src.xbox2_specific.datasets import simple_select
+from src.xbox2_specific.datasets import XBOX2_event_bd20ms
 
 
 @pytest.mark.parametrize("y, \
@@ -22,7 +22,7 @@ def test__one_hot(y, y_one_hot_expected):
     # ARRANGE
 
     # ACT
-    y_one_hot = simple_select.one_hot_encode(y=y)
+    y_one_hot = XBOX2_event_bd20ms.one_hot_encode(y=y)
 
     # ASSERT
     assert (y_one_hot == y_one_hot_expected).all()
@@ -38,7 +38,7 @@ def test__scale_data():
     X_expected = np.array([[[-1, -1, -1], [1, 1, 1]]])
 
     # ACT
-    X_output = simple_select.scale_data(X)
+    X_output = XBOX2_event_bd20ms.scale_data(X)
     print(X_output)
     # ASSERT
     assert (X_output == X_expected).all()
