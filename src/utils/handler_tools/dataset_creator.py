@@ -1,6 +1,7 @@
 import typing
 from pathlib import Path
 from collections import namedtuple
+from typing import Optional
 import numpy as np
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.preprocessing import StandardScaler
@@ -10,7 +11,7 @@ from src.xbox2_specific.datasets import XBOX2_event_bd20ms
 from src.xbox2_specific.datasets import XBOX2_trend_bd20ms
 
 
-def train_valid_test_split(X, y, splits: tuple) -> typing.Tuple:
+def train_valid_test_split(X, y, splits: Optional[tuple] = None) -> typing.Tuple:
     """
     Splits data into training, testing and validation set using random sampling
     :param X: input data array of shape (event, sample, feature)
@@ -18,6 +19,9 @@ def train_valid_test_split(X, y, splits: tuple) -> typing.Tuple:
     :param splits: tuple specifying splitting fractions (training, validation, test)
     :return: train, valid, test: Tuple with data of type named tuple
     """
+    if splits is None:
+        splits = (0.7, 0.2, 0.1)
+
     if splits[0] == 1:
         raise ValueError('Training set fraction cannot be 1')
 
@@ -44,13 +48,13 @@ def load_dataset(data_path: Path, dataset_name: str) -> typing.Tuple:
     """
     if dataset_name == "simple_select":
         X, y = simple_select.select_data(context_data_file_path=data_path / "context.hdf")
-        train, valid, test = train_valid_test_split(X=X, y=y, splits=(0.7, 0.2, 0.1))
+        train, valid, test = train_valid_test_split(X=X, y=y)
     elif dataset_name == "XBOX_event_bd20ms":
         X, y = XBOX2_event_bd20ms.select_data(context_data_file_path=data_path / "context.hdf")
-        train, valid, test = train_valid_test_split(X=X, y=y, splits=(0.7, 0.2, 0.1))
+        train, valid, test = train_valid_test_split(X=X, y=y)
     elif dataset_name == "XBOX_trend_bd20ms":
         X, y = XBOX2_trend_bd20ms.select_data(context_data_file_path=data_path / "context.hdf")
-        train, valid, test = train_valid_test_split(X=X, y=y, splits=(0.7, 0.2, 0.1))
+        train, valid, test = train_valid_test_split(X=X, y=y)
     else:
         raise AssertionError
 
