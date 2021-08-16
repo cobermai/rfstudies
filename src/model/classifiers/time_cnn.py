@@ -14,9 +14,11 @@ class TimeCNNBlock(Model, ABC):
         :param num_classes: number of classes in input
         """
         super(TimeCNNBlock, self).__init__()
-        self.conv1 = layers.Conv1D(filters=6, kernel_size=7, padding='valid', activation='sigmoid')
+        self.conv1_valid = layers.Conv1D(filters=6, kernel_size=7, padding='valid', activation='sigmoid')
+        self.conv1_same = layers.Conv1D(filters=6, kernel_size=7, padding='same', activation='sigmoid')
         self.AvePool = layers.AveragePooling1D(pool_size=3)
-        self.conv2 = layers.Conv1D(filters=12, kernel_size=7, padding='valid', activation='sigmoid')
+        self.conv2_valid = layers.Conv1D(filters=12, kernel_size=7, padding='valid', activation='sigmoid')
+        self.conv2_same = layers.Conv1D(filters=12, kernel_size=7, padding='same', activation='sigmoid')
         self.flatten = layers.Flatten()
         self.out = layers.Dense(units=num_classes,activation='sigmoid')
 
@@ -27,9 +29,15 @@ class TimeCNNBlock(Model, ABC):
         :param training: bool for specifying whether model should be training
         :param mask: mask for specifying whether some values should be skipped
         """
-        x = self.conv1(input_tensor)
+        if input_tensor.shape[1] < 60:
+            x = self.conv1_same(input_tensor)
+        else:
+            x = self.conv1_valid(input_tensor)
         x = self.AvePool(x)
-        x = self.conv2(x)
+        if input_tensor.shape[1] < 60:
+            x = self.conv2_same(x)
+        else:
+            x = self.conv2_valid(x)
         x = self.AvePool(x)
         x = self.flatten(x)
         x = self.out(x)

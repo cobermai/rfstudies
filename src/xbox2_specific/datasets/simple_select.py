@@ -14,20 +14,21 @@ def select_data(context_data_file_path: Path) -> typing.Tuple[np.ndarray, np.nda
     :return: X and y prepared for machine learning
     """
     with h5py.File(context_data_file_path, "r") as file:
+        # load relevant data from context file
         is_bd_in_two_pulses = file["is_bd_in_40ms"][:]
         is_bd_in_next_pulse = file["is_bd_in_20ms"][:]
         is_bd = file["is_bd"][:]
-
         event_ts = file["Timestamp"][:]
         trend_ts = file["PrevTrendData/Timestamp"][:]
+
+        # filter healthy pulses with a time difference to previous trend data more than 2 s
+        # only define healthy pulses with a time difference to the previous trend data of < 2s
         time_diff = event_ts - trend_ts
         time_diff_threshold = pd.to_timedelta(2, "s")
         filter_timestamp_diff = time_diff < time_diff_threshold
-
-        # only define healthy pulses with a time difference to the previous trend data of < 2s
         is_healthy = file["clic_label/is_healthy"][:] & filter_timestamp_diff
 
-        # select all breakdown and directly preceding pulses
+        # select all breakdown events and the two directly preceding pulses
         selection = (is_bd_in_two_pulses | is_bd_in_next_pulse | is_bd)
 
         # select 2.5% of the healthy pulses randomly
@@ -42,3 +43,7 @@ def select_data(context_data_file_path: Path) -> typing.Tuple[np.ndarray, np.nda
     X = np.nan_to_num(X)
     y = df["is_healthy"].to_numpy(dtype=bool)
     return X, y
+
+
+if __name__ == '__main__':
+    X, y = select_data(Path('/eos/project/m/ml-for-alarm-system/private/CLIC_data_transfert/Xbox2_hdf/context.hdf'))
