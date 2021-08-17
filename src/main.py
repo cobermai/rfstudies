@@ -21,7 +21,7 @@ def parse_input_arguments(args):
                         help='path of main.py file', default=Path().absolute())
     parser.add_argument('--data_path', required=False, type=Path,
                         help='path of data',
-                        default=Path("/eos/project/m/ml-for-alarm-system/private/CLIC_data_transfert/Xbox2_hdf/").expanduser())
+                        default=Path("/eos/project/m/ml-for-alarm-system/private/CLIC_data_transfert/Xbox2_hdf/"))
     parser.add_argument('--dataset_name', required=False, type=str,
                         help='name of data set', default="simple_select")
     parser.add_argument('--transform_to_hdf5', required=False, type=bool,
@@ -33,7 +33,7 @@ def parse_input_arguments(args):
 
 def transformation(work_dir: Path):
     """TRANSFORMATION"""
-    src_dir = Path("/eos/project/m/ml-for-alarm-system/private/CLIC_data_transfert/CLIC_DATA_Xbox2_T24PSI_2").expanduser()
+    src_dir = Path("/eos/project/m/ml-for-alarm-system/private/CLIC_data_transfert/CLIC_DATA_Xbox2_T24PSI_2")
     transform(tdms_dir=src_dir,
               hdf_dir=work_dir)
 
