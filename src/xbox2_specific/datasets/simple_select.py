@@ -44,7 +44,7 @@ def read_hdf_dataset(file: h5py.File, key: str):
     return dataset[:]
 
 
-def create_filter(event_timestamps: np.datetime64, trend_timestamps: np.datetime64, time_threshold: float) -> bool:
+def create_time_filter(event_timestamps: np.ndarray, trend_timestamps: np.ndarray, time_threshold: float) -> bool:
     """
     Creates filter from event data and trend data timestamps for filtering healthy pulses
     with time diff more than threshold.
@@ -93,7 +93,8 @@ def create_breakdown_selection_filter(context_data_file_path: Path,
         trend_timestamp = read_hdf_dataset(file, "PrevTrendData/Timestamp")
 
         # only define healthy pulses with a time difference to the previous trend data of less than 2 s
-        filter_timestamp_diff = create_filter(event_timestamps, trend_timestamp, 2)
+        time_threshold = 2
+        filter_timestamp_diff = create_time_filter(event_timestamps, trend_timestamp, time_threshold)
         is_healthy = read_hdf_dataset(file, "clic_label/is_healthy") & filter_timestamp_diff
 
         # select 2.5% of the healthy pulses randomly
