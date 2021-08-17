@@ -8,8 +8,10 @@ import pandas as pd
 from src.transformation import transform
 from src.handler import XBox2ContextDataCreator
 from src.model.classifier import Classifier
-from src.utils.handler_tools import dataset_creator
+from src.utils.handler_tools.dataset_creator import DatasetCreator
+from src.utils.handler_tools.dataset_creator import load_dataset
 from src.utils import hdf_tools
+from src.xbox2_specific.datasets.simple_select import SimpleSelect
 
 
 def parse_input_arguments(args):
@@ -61,9 +63,9 @@ def feature_handling(work_dir: Path):
 
 def modeling(train_set, valid_set, test_set, work_dir: Path):
     """MODELING"""
-    hp_file = open(work_dir / "model/default_hyperparameters.json", 'r')
+    hp_file = open(work_dir / "src/model/default_hyperparameters.json", 'r')
     hp_dict = json.load(hp_file)
-    output_path = work_dir / "output" / datetime.now().strftime("%Y-%m-%dT%H.%M.%S")
+    output_path = work_dir / "src/output" / datetime.now().strftime("%Y-%m-%dT%H.%M.%S")
 
     clf = Classifier(output_path, **hp_dict)
     fit_classifier = True
@@ -76,15 +78,12 @@ def modeling(train_set, valid_set, test_set, work_dir: Path):
 
 if __name__ == '__main__':
     args_in = parse_input_arguments(args=sys.argv[1:])
-
+    print(Path().absolute())
     if args_in.transform_to_hdf5:
         transformation(work_dir=args_in.data_path)
 
     if args_in.calculate_features:
         feature_handling(work_dir=args_in.data_path)
 
-    train, valid, test = dataset_creator.load_dataset(args_in.data_path, args_in.dataset_name)
+    train, valid, test = load_dataset(creator=SimpleSelect(), work_dir=args_in.data_path)
     modeling(train_set=train, valid_set=valid, test_set=test, work_dir=args_in.file_path)
-
-
-
