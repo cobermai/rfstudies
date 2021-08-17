@@ -1,5 +1,7 @@
 """module to test the convert.py"""
 import os
+import sys
+import pytest
 from pathlib import Path
 import h5py
 from src.utils.transf_tools import convert
@@ -7,6 +9,7 @@ from tests.utils.data_creator.file_creator_for_testing import CreatorTestFiles
 from tests.utils.data_creator.tdms_file_creator import CreatorTdmsFile
 
 
+@pytest.mark.skipif(sys.platform.startswith("win"), reason="test currently not supported on windows")
 def test__convert_file(tmp_path):
     """tests the _convert_file function"""
     # ARRANGE

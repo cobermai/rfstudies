@@ -2,12 +2,15 @@
 tests the transformation module
 """
 import os
+import sys
+import pytest
 import h5py
 from src.transformation import transform
 from tests.utils.data_creator.xb2_like_event_data_creator import create_event_data
 from tests.utils.data_creator.xb2_like_trend_data_creator import create_trend_data
 
 
+@pytest.mark.skipif(sys.platform.startswith("win"), reason="test currently not supported on windows")
 def test_transformation(tmp_path_factory) -> None:
     """
     creates tdms files and hdf5 files that we want, applies the transformation and tests its output to the created

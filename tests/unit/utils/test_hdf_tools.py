@@ -1,11 +1,14 @@
 """this module tests the functions from hdf_tools"""
 import os
+import sys
+import pytest
 import h5py
 import numpy as np
 import pandas as pd
 from src.utils import hdf_tools
 
 
+@pytest.mark.skipif(sys.platform.startswith("win"), reason="test currently not supported on windows")
 def test_merge(tmp_path):
     """tests merge"""
     # ARRANGE
@@ -28,6 +31,7 @@ def test_merge(tmp_path):
     assert is_equal
 
 
+@pytest.mark.skipif(sys.platform.startswith("win"), reason="test currently not supported on windows")
 def test_convert_iso8601_to_datetime__with_attrs(tmp_path):
     """tests conversion of iso datetime strings to datetime format. It tests conversion of datasets and attributes."""
     # ARRANGE
@@ -62,6 +66,7 @@ def test_convert_iso8601_to_datetime__with_attrs(tmp_path):
     assert is_equal
 
 
+@pytest.mark.skipif(sys.platform.startswith("win"), reason="test currently not supported on windows")
 def test_convert_iso8601_to_datetime__without_attrs(tmp_path):
     """tests conversion of iso strings to datetime without converting attributes, so only hdf-datsets."""
     work_file_path = tmp_path / "test.h5"
@@ -93,6 +98,7 @@ def test_convert_iso8601_to_datetime__without_attrs(tmp_path):
     assert is_equal
 
 
+@pytest.mark.skipif(sys.platform.startswith("win"), reason="test currently not supported on windows")
 def test_clean_row_by_row(tmp_path):
     """tests clean row by row"""
     # ARRANGE
