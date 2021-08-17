@@ -39,8 +39,8 @@ class Classifier:
         :param build: Bool stating whether the model is to be build.
         """
         self.output_directory = output_directory
-        self.classifier_name = classifier_name
         output_directory.mkdir(parents=True, exist_ok=True)
+        self.classifier_name = classifier_name
         self.num_classes = num_classes
         self.monitor = monitor
         self.loss = loss
