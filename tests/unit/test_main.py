@@ -1,11 +1,9 @@
 """
 tests the main module
 """
-import argparse
 from pathlib import Path
-import numpy as np
 import pytest
-from src import main
+import xbox2_main
 
 
 @pytest.mark.parametrize("transform, features",
@@ -25,7 +23,7 @@ def test__parse_input_arguments(transform, features):
                   '--calculate_features', calculate_features_expected]
 
     # ACT
-    args_out = main.parse_input_arguments(args=input_args)
+    args_out = xbox2_main.parse_input_arguments(args=input_args)
 
     # ASSERT
     assert args_out.file_path == Path(file_path_expected)

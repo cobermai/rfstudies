@@ -3,8 +3,6 @@ from pathlib import Path
 from collections import namedtuple
 from typing import Optional
 import numpy as np
-from sklearn.preprocessing import OneHotEncoder
-from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 from src.xbox2_specific.datasets import simple_select
 from src.xbox2_specific.datasets import XBOX2_event_bd20ms

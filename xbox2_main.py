@@ -2,6 +2,7 @@
 from pathlib import Path
 import argparse
 import sys
+from datetime import datetime
 import json
 import pandas as pd
 from src.transformation import transform
@@ -18,7 +19,7 @@ def parse_input_arguments(args):
     """
     parser = argparse.ArgumentParser(description='Input parameters')
     parser.add_argument('--file_path', required=False, type=Path,
-                        help='path of main.py file', default=Path().absolute())
+                        help='path of xbox2_main.py file', default=Path().absolute())
     parser.add_argument('--data_path', required=False, type=Path,
                         help='path of data',
                         default=Path("/eos/project/m/ml-for-alarm-system/private/CLIC_data_transfert/Xbox2_hdf/"))
@@ -62,9 +63,9 @@ def modeling(train_set, valid_set, test_set, work_dir: Path):
     """MODELING"""
     hp_file = open(work_dir / "model/default_hyperparameters.json", 'r')
     hp_dict = json.load(hp_file)
-    output_path = work_dir / "output"
-    clf = Classifier(output_path, **hp_dict)
+    output_path = work_dir / "output" / datetime.now().strftime("%Y-%m-%dT%H.%M.%S")
 
+    clf = Classifier(output_path, **hp_dict)
     fit_classifier = True
     if fit_classifier:
         clf.fit_classifier(train_set, valid_set)

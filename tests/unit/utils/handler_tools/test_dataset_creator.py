@@ -13,7 +13,7 @@ def test__train_valid_test_split():
     splits_expected = 0.7, 0.1, 0.2
 
     # ACT
-    train, valid, test = dataset_creator.train_valid_test_split(X, y, splits_expected)
+    train, valid, test = dataset_creator.train_valid_test_split(X=X, y=y, splits=splits_expected)
 
     # ASSERT
     assert set(X) == set(train.X).union(valid.X).union(test.X)
@@ -31,7 +31,7 @@ def test__train_valid_test_split_errors():
 
     # ACT
     with pytest.raises(ValueError):
-        dataset_creator.train_valid_test_split(X, y, (1, 0, 0))
+        dataset_creator.train_valid_test_split(X=X, y=y, splits=(1, 0, 0))
 
 
 @pytest.mark.skip(reason="no way of currently testing this")
