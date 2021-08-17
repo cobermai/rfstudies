@@ -5,7 +5,7 @@ error                 = error/htc_run.$(ClusterId).$(ProcId).err
 log                   = log/htc_run.$(ClusterId).log
 request_CPUs          = 2
 request_GPUs          = 1
-+JobFlavour           = "testmatch"
++JobFlavour           = "workday"
 +AccountingGroup      = "group_u_TE.mpe"
 requirements          = regexp("V100", TARGET.CUDADeviceName)
-queue 5
+queue

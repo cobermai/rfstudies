@@ -19,6 +19,6 @@ pip install -r requirements.txt
 echo "start script"
 filepath=/afs/cern.ch/user/c/cobermai/Desktop/afs_work/PycharmProjects/clicmlframework/src
 
-python "${filepath}/XBOX2_main.py" --file_path=$filepath
+python "${filepath}/xbox2_main.py" --file_path=$filepath
 
 
