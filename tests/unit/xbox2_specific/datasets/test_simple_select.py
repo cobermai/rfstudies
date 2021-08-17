@@ -2,6 +2,8 @@ from pathlib import Path
 import h5py
 import numpy as np
 import pytest
+import pandas as pd
+from datetime import datetime
 from src.utils.handler_tools.context_data_writer import ColumnWiseContextDataWriter
 from src.xbox2_specific.datasets import simple_select
 
@@ -44,7 +46,93 @@ def test__scale_data():
     assert (X_output == X_expected).all()
 
 
-@pytest.mark.skip(reason="no way of currently testing this")
+@pytest.mark.parametrize("dataset_expected",
+                         [np.array(range(10)),
+                          (True, False, True)]
+                         )
+def test__read_hdf_dataset(tmpdir, dataset_expected):
+    # ARRANGE
+    path = tmpdir.join("dummy.hdf")
+    context_dummy = h5py.File(path, 'w')
+    test_key = "test"
+    with context_dummy as f:
+        f.create_dataset(test_key, data=dataset_expected)
+    # ACT
+    context_dummy = h5py.File(path, 'r')
+    with context_dummy as f:
+        dataset_out = simple_select.read_hdf_dataset(f, test_key)
+    # ASSERT
+    assert (dataset_expected == dataset_out).all()
+
+
+def test__create_time_filter():
+    # ARRANGE
+    dummy_event_timestamps = np.array([np.datetime64('2021-08-18T17:59:00'),
+                                       np.datetime64('2021-08-18T17:59:04'),
+                                       np.datetime64('2021-08-18T17:59:02'),
+                                       np.datetime64('2021-08-18T17:59:06')])
+    dummy_trend_timestamps = np.array([np.datetime64('2021-08-18T17:59:00'),
+                                       np.datetime64('2021-08-18T17:59:01'),
+                                       np.datetime64('2021-08-18T17:59:02'),
+                                       np.datetime64('2021-08-18T17:59:03')])
+
+    time_threshold = 2
+    time_filter_expected = np.array([True, False, True, False])
+    # ACT
+    time_filter_out = simple_select.create_time_filter(dummy_event_timestamps,
+                                                       dummy_trend_timestamps,
+                                                       time_threshold)
+    # ASSERT
+    assert (time_filter_expected == time_filter_out).all()
+
+
+@pytest.mark.parametrize("index, X_expected",
+                         [(['col1', 'col2'], np.nan_to_num(np.array([[1., 3.], [2., 4.]])[..., np.newaxis])),
+                          (['col2', 'col3'], np.nan_to_num(np.array([[3., 5.], [4., 6.]])[..., np.newaxis]))
+                          ])
+def test__load_X_data(index, X_expected):
+    # ARRANGE
+    d = {'col1': [1, 2], 'col2': [3, 4], 'col3': [5, 6]}
+    df = pd.DataFrame(data=d)
+    # ACT
+    X_out = simple_select.load_X_data(df, pd.Index(index))
+    print(X_out)
+    print(X_expected)
+    # ASSERT
+    assert (X_out == X_expected).all()
+
+
+@pytest.mark.skip(reason="Test not finished")
+def test__create_breakdown_selection_filter(tmpdir):
+    # ARRANGE
+    path = tmpdir.join("dummy.hdf")
+    context_dummy = h5py.File(path, 'w')
+    test_key = "test"
+    dummy_features = np.array([True, True, False, False])
+    dummy_event_timestamps = np.array([np.datetime64('2021-08-18T17:59:00'),
+                                       np.datetime64('2021-08-18T17:59:04'),
+                                       np.datetime64('2021-08-18T17:59:02'),
+                                       np.datetime64('2021-08-18T17:59:06')])
+    dummy_trend_timestamps = np.array([np.datetime64('2021-08-18T17:59:00'),
+                                       np.datetime64('2021-08-18T17:59:01'),
+                                       np.datetime64('2021-08-18T17:59:02'),
+                                       np.datetime64('2021-08-18T17:59:03')])
+    dummy_healthy_labels = np.array([True, True, False, False])
+    with context_dummy as f:
+        f.create_dataset(test_key, data=dummy_features)
+        f["Timestamp"] = dummy_event_timestamps.astype(h5py.opaque_dtype(dummy_event_timestamps.dtype))
+        f["PrevTrendData/Timestamp"] = dummy_trend_timestamps.astype(h5py.opaque_dtype(dummy_trend_timestamps.dtype))
+        f.create_dataset("clic_label/is_healthy", data=dummy_healthy_labels)
+    selection_filter_expected = np.array([True, False, False, False])
+    # ACT
+    selection_filter_out = simple_select.create_breakdown_selection_filter(path, ["test"])
+    # ASSERT
+    print(selection_filter_out)
+    print(selection_filter_expected)
+    assert (selection_filter_expected == selection_filter_out).all()
+
+
+@pytest.mark.skip(reason="Test not finished")
 def test__select_data(tmp_path):
     # ARRANGE
     context = h5py.File('context.hdf', 'w')
@@ -67,6 +155,3 @@ def test__select_data(tmp_path):
     # ASSERT
     assert X == X_expected
     assert y == y_expected
-
-
-
