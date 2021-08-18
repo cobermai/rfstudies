@@ -93,7 +93,7 @@ def test__read_hdf_dataset_error(tmpdir):
 
 def test__select_trend_data_events():
     """
-    Test create_time_filter() function
+    Test select_trend_data_events() function
     """
     # ARRANGE
     selector = simple_select.SimpleSelect()

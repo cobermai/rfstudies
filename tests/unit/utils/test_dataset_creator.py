@@ -1,15 +1,20 @@
+from unittest.mock import patch
+from unittest.mock import MagicMock
 import numpy as np
 import pytest
 import h5py
 from src.utils import dataset_creator
 
-@pytest.mark.skip(reason="no way of currently testing this")
+
 def test__train_valid_test_split():
     """
     Test train_valid_test_split() function
     """
     # ARRANGE
+    p = patch.multiple(dataset_creator.DatasetCreator, __abstractmethods__=set())
+    p.start()
     creator = dataset_creator.DatasetCreator()
+    p.stop()
     X = np.array(range(10, 20))
     y = np.array(range(20, 30))
     splits_expected = 0.7, 0.1, 0.2
@@ -26,10 +31,12 @@ def test__train_valid_test_split():
     assert splits_output == splits_expected
 
 
-@pytest.mark.skip(reason="no way of currently testing this")
 def test__train_valid_test_split_errors():
     # ARRANGE
+    p = patch.multiple(dataset_creator.DatasetCreator, __abstractmethods__=set())
+    p.start()
     creator = dataset_creator.DatasetCreator()
+    p.stop()
     X = np.array(range(10, 20))
     y = np.array(range(20, 30))
 
@@ -94,13 +101,3 @@ def test__load_dataset(tmpdir):
 
     # ASSERT
     assert splits == splits_expected
-
-
-@pytest.mark.skip(reason="no way of currently testing this")
-def test__load_dataset_error(tmp_path):
-    # ARRANGE
-    creator = dataset_creator.DatasetCreator()
-
-    # ACT
-    with pytest.raises(AssertionError):
-        dataset_creator.load_dataset(creator=creator, hdf_dir=tmp_path)

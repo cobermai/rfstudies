@@ -9,8 +9,6 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from src.utils.hdf_tools import hdf_to_df_selection
-from src.xbox2_specific.datasets import XBOX2_event_bd20ms
-from src.xbox2_specific.datasets import XBOX2_trend_bd20ms
 
 
 class DatasetCreator(ABC):
