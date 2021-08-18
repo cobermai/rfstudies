@@ -29,7 +29,7 @@ class HTCondorRunner:
                 file.write(f"cd {htc_dir}\n")
                 file.write("python -m virtualenv myvenv")
                 file.write("pip install -r requirements.txt")
-                file.write(f"python {main_name} --file_path={work_dir} --output_path={output_dir}")
+                file.write(f"python3 {main_name} --file_path={work_dir} --output_path={output_dir}")
             except IOError as e:
                 print(f"I/O error({e.errno}): {e.strerror}")
         os.system(f"chmod +x {master_bash_filename}")
