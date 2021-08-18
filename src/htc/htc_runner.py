@@ -45,8 +45,9 @@ class HTCondorRunner:
                                   f"log = {output_dir / 'htc_log.txt'}\n"
                                   "RequestCpus = 2\n"
                                   "request_GPUs = 1\n"
-                                  "+ AccountingGroup = group_u_TE.mpe\n"
-                                  "requirements = regexp(\"V100\", TARGET.CUDADeviceName)"
+                                  "+JobFlavour = \"testmatch\"\n"
+                                  "+AccountingGroup = \"group_u_TE.mpe\"\n"
+                                  "requirements = regexp(\"V100\", TARGET.CUDADeviceName)\n"
                                   f"queue ")
                 file.write(content_of_sub)
             except IOError as e:
