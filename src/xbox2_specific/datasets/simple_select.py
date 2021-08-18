@@ -12,7 +12,8 @@ class SimpleSelect(DatasetCreator):
     Subclass of DatasetCreator to specify dataset selection. None of the abstract functions from abstract class can
     be overwritten.
     """
-    def select_trend_data_events(self, event_timestamps: np.datetime64,
+    @staticmethod
+    def select_trend_data_events(event_timestamps: np.datetime64,
                                  trend_timestamps: np.datetime64,
                                  time_threshold: float) -> bool:
         """
@@ -40,8 +41,8 @@ class SimpleSelect(DatasetCreator):
             for key in selection_list:
                 features_read.append(self.read_hdf_dataset(file, key))
             selection = features_read[0]
-            for i in range(1, len(features_read)):
-                selection = selection | features_read[i]
+            for event_index in range(1, len(features_read)):
+                selection = selection | features_read[event_index]
 
             event_timestamps = self.read_hdf_dataset(file, "Timestamp")
             trend_timestamp = self.read_hdf_dataset(file, "PrevTrendData/Timestamp")
