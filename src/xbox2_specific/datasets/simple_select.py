@@ -9,10 +9,9 @@ from src.utils.dataset_creator import DatasetCreator
 
 class SimpleSelect(DatasetCreator):
     """
-    Subclass of DatasetCreator to specify dataset selection. None abstract functions from abstract class can
+    Subclass of DatasetCreator to specify dataset selection. None of the abstract functions from abstract class can
     be overwritten.
     """
-
     @staticmethod
     def select_trend_data_events(event_timestamps: np.datetime64,
                                  trend_timestamps: np.datetime64,
