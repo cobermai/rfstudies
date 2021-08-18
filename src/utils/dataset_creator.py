@@ -12,12 +12,14 @@ from src.utils.hdf_tools import hdf_to_df_selection
 from src.xbox2_specific.datasets import XBOX2_event_bd20ms
 from src.xbox2_specific.datasets import XBOX2_trend_bd20ms
 
+
 class DatasetCreator(ABC):
     """
     abstract class which acts as a template to create datasets
     """
 
-    def read_hdf_dataset(self, file: h5py.File, key: str):
+    @staticmethod
+    def read_hdf_dataset(file: h5py.File, key: str):
         """
         Read dataset from hdf file
         :param file: h5py File object with read access
@@ -34,23 +36,21 @@ class DatasetCreator(ABC):
         """
         abstract method to select events for dataset
         """
-        pass
 
     @abstractmethod
     def select_features(self, df: pd.DataFrame) -> np.ndarray:
         """
         abstract method to select features for dataset
         """
-        pass
 
     @abstractmethod
     def select_labels(self, df: pd.DataFrame) -> np.ndarray:
         """
         abstract method to select labels for dataset
         """
-        pass
 
-    def scale_data(self, X: np.ndarray) -> np.ndarray:
+    @staticmethod
+    def scale_data(X: np.ndarray) -> np.ndarray:
         """
         Function scales data for prediction with standard scaler. Note that this function can be overwritten in the
         concrete dataset selection.
@@ -62,7 +62,8 @@ class DatasetCreator(ABC):
             X_scaled[:, :, feature_index] = StandardScaler().fit_transform(X[:, :, feature_index].T).T
         return X_scaled
 
-    def one_hot_encode(self, y: np.ndarray) -> np.ndarray:
+    @staticmethod
+    def one_hot_encode(y: np.ndarray) -> np.ndarray:
         """
         Function transforms the labels from integers to one hot vectors. Note that this function can be overwritten in
         the concrete dataset selection.
@@ -72,7 +73,8 @@ class DatasetCreator(ABC):
         enc = OneHotEncoder(categories='auto')
         return enc.fit_transform(y.reshape(-1, 1)).toarray()
 
-    def train_valid_test_split(self, X: np.ndarray, y: np.ndarray, splits: Optional[tuple] = None) -> typing.Tuple:
+    @staticmethod
+    def train_valid_test_split(X: np.ndarray, y: np.ndarray, splits: Optional[tuple] = None) -> typing.Tuple:
         """
         Function splits data into training, testing and validation set using random sampling. Note that this function
         can be overwritten in the concrete dataset selection.
