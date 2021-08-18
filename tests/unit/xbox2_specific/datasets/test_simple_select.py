@@ -2,6 +2,7 @@ import h5py
 import numpy as np
 import pytest
 import pandas as pd
+from src.utils import dataset_creator
 from src.xbox2_specific.datasets import simple_select
 
 
@@ -19,9 +20,10 @@ def test__one_hot(y, y_one_hot_expected):
     Test one_hot function of dataset_creator
     """
     # ARRANGE
+    selector = simple_select.SimpleSelect()
 
     # ACT
-    y_one_hot = simple_select.one_hot_encode(y=y)
+    y_one_hot = selector.one_hot_encode(y=y)
 
     # ASSERT
     assert (y_one_hot == y_one_hot_expected).all()
@@ -32,11 +34,12 @@ def test__scale_data():
     Test scale_data() function
     """
     # ARRANGE
+    selector = simple_select.SimpleSelect()
     X = np.array([[[0, 0, 0], [1, 1, 1]]])
     X_expected = np.array([[[-1, -1, -1], [1, 1, 1]]])
 
     # ACT
-    X_output = simple_select.scale_data(X)
+    X_output = selector.scale_data(X)
     print(X_output)
 
     # ASSERT
@@ -52,6 +55,7 @@ def test__read_hdf_dataset(tmpdir, dataset_expected):
     Test read_hdf_dataset() function
     """
     # ARRANGE
+    selector = simple_select.SimpleSelect()
     path = tmpdir.join("dummy.hdf")
     context_dummy = h5py.File(path, 'w')
     test_key = "test"
@@ -61,16 +65,18 @@ def test__read_hdf_dataset(tmpdir, dataset_expected):
     # ACT
     context_dummy = h5py.File(path, 'r')
     with context_dummy as f:
-        dataset_out = simple_select.read_hdf_dataset(f, test_key)
+        dataset_out = selector.read_hdf_dataset(f, test_key)
 
     # ASSERT
     assert (dataset_expected == dataset_out).all()
+
 
 def test__read_hdf_dataset_error(tmpdir):
     """
     Test read_hdf_dataset() function errors
     """
     # ARRANGE
+    selector = simple_select.SimpleSelect()
     path = tmpdir.join("dummy.hdf")
     context_dummy = h5py.File(path, 'w')
     test_key = "test"
@@ -82,14 +88,15 @@ def test__read_hdf_dataset_error(tmpdir):
     context_dummy = h5py.File(path, 'r')
     with pytest.raises(ValueError):
         with context_dummy as f:
-            simple_select.read_hdf_dataset(f, test_key)
+            selector.read_hdf_dataset(f, test_key)
 
 
-def test__create_time_filter():
+def test__select_trend_data_events():
     """
     Test create_time_filter() function
     """
     # ARRANGE
+    selector = simple_select.SimpleSelect()
     dummy_event_timestamps = np.array([np.datetime64('2021-08-18T17:59:00'),
                                        np.datetime64('2021-08-18T17:59:04'),
                                        np.datetime64('2021-08-18T17:59:02'),
@@ -103,7 +110,7 @@ def test__create_time_filter():
     time_filter_expected = np.array([True, False, True, False])
 
     # ACT
-    time_filter_out = simple_select.create_time_filter(dummy_event_timestamps,
+    time_filter_out = selector.select_trend_data_events(dummy_event_timestamps,
                                                        dummy_trend_timestamps,
                                                        time_threshold)
 
@@ -111,20 +118,67 @@ def test__create_time_filter():
     assert (time_filter_expected == time_filter_out).all()
 
 
-@pytest.mark.parametrize("index, X_expected",
-                         [(['col1', 'col2'], np.nan_to_num(np.array([[1., 3.], [2., 4.]])[..., np.newaxis])),
-                          (['col2', 'col3'], np.nan_to_num(np.array([[3., 5.], [4., 6.]])[..., np.newaxis]))
+@pytest.mark.parametrize("dummy_features, selection_filter_expected",
+                         [(np.array([True, True, True, True]), np.array([False, True, True, True])),
+                          (np.array([False, False, False, False]), np.array([False, False, False, False]))
                           ])
-def test__load_X_data(index, X_expected):
+def test__select_events(tmpdir, dummy_features, selection_filter_expected):
     """
-    Test load_X_data() function
+    Test create_breakdown_selection_filter() function
     """
     # ARRANGE
-    d = {'col1': [1, 2], 'col2': [3, 4], 'col3': [5, 6]}
-    df = pd.DataFrame(data=d)
+    selector = simple_select.SimpleSelect()
+    path = tmpdir.join("dummy.hdf")
+    context_dummy = h5py.File(path, 'w')
+    dummy_event_timestamps = np.array([np.datetime64('2021-08-18T17:59:00'),
+                                       np.datetime64('2021-08-18T17:59:04'),
+                                       np.datetime64('2021-08-18T17:59:02'),
+                                       np.datetime64('2021-08-18T17:59:06')])
+    dummy_trend_timestamps = np.array([np.datetime64('2021-08-18T17:59:00'),
+                                       np.datetime64('2021-08-18T17:59:01'),
+                                       np.datetime64('2021-08-18T17:59:02'),
+                                       np.datetime64('2021-08-18T17:59:03')])
+    dummy_is_healthy_labels = np.array([True, True, False, False])
+    with context_dummy as f:
+        f.create_dataset("is_bd_in_40ms", data=dummy_features)
+        f.create_dataset("is_bd_in_20ms", data=dummy_features)
+        f.create_dataset("is_bd", data=dummy_features)
+        f["Timestamp"] = dummy_event_timestamps.astype(h5py.opaque_dtype(dummy_event_timestamps.dtype))
+        f["PrevTrendData/Timestamp"] = dummy_trend_timestamps.astype(h5py.opaque_dtype(dummy_trend_timestamps.dtype))
+        f.create_dataset("clic_label/is_healthy", data=dummy_is_healthy_labels)
 
     # ACT
-    X_out = simple_select.load_X_data(df, pd.Index(index))
+    np.random.seed(42)
+    selection_filter_out = selector.select_events(path)
+
+    # ASSERT
+    assert (selection_filter_expected == selection_filter_out).all()
+
+
+@pytest.mark.parametrize("data1, data2",
+                         [([10, 20], [30, 40]),
+                          ([-1., 3.], [20., 1.234])
+                          ])
+def test__select_features(data1, data2):
+    """
+    Test select_features() function
+    """
+    # ARRANGE
+    selector = simple_select.SimpleSelect()
+    d = {'Timestamp': [1, 2],
+         'PrevTrendData__Timestamp': [3, 4],
+         'is_bd': [5, 6],
+         'is_healthy': [7, 8],
+         'is_bd_in_20ms': [9, 10],
+         'is_bd_in_40ms': [11, 12],
+         'col1': data1,
+         'col2': data2}
+    df = pd.DataFrame(data=d)
+    X_expected = df[pd.Index(['col1', 'col2'])].to_numpy(dtype=float)
+    X_expected = np.nan_to_num(X_expected[..., np.newaxis])
+
+    # ACT
+    X_out = selector.select_features(df)
     print(X_out)
     print(X_expected)
 
@@ -132,81 +186,80 @@ def test__load_X_data(index, X_expected):
     assert (X_out == X_expected).all()
 
 
-@pytest.mark.parametrize("dummy_features, selection_filter_expected",
-                         [(np.array([True, True, True, True]), np.array([False, True, True, True])),
-                          (np.array([False, False, False, False]), np.array([False, False, False, False]))
+@pytest.mark.parametrize("data",
+                         [np.ones((10, ), dtype=bool),
+                          np.zeros((10, ), dtype=bool)
                           ])
-def test__create_breakdown_selection_filter(tmpdir, dummy_features, selection_filter_expected):
+def test__select_labels(data):
     """
-    Test create_breakdown_selection_filter() function
+    Test load_X_data() function
     """
     # ARRANGE
-    path = tmpdir.join("dummy.hdf")
-    context_dummy = h5py.File(path, 'w')
-    test_key = "test"
-    dummy_event_timestamps = np.array([np.datetime64('2021-08-18T17:59:00'),
-                                       np.datetime64('2021-08-18T17:59:04'),
-                                       np.datetime64('2021-08-18T17:59:02'),
-                                       np.datetime64('2021-08-18T17:59:06')])
-    dummy_trend_timestamps = np.array([np.datetime64('2021-08-18T17:59:00'),
-                                       np.datetime64('2021-08-18T17:59:01'),
-                                       np.datetime64('2021-08-18T17:59:02'),
-                                       np.datetime64('2021-08-18T17:59:03')])
-    dummy_is_healthy_labels = np.array([True, True, False, False])
-    with context_dummy as f:
-        f.create_dataset(test_key, data=dummy_features)
-        f["Timestamp"] = dummy_event_timestamps.astype(h5py.opaque_dtype(dummy_event_timestamps.dtype))
-        f["PrevTrendData/Timestamp"] = dummy_trend_timestamps.astype(h5py.opaque_dtype(dummy_trend_timestamps.dtype))
-        f.create_dataset("clic_label/is_healthy", data=dummy_is_healthy_labels)
+    selector = simple_select.SimpleSelect()
+    d = {'is_healthy': data}
+    df = pd.DataFrame(data=d)
+    y_expected = df['is_healthy'].to_numpy(dtype=float)
 
     # ACT
-    np.random.seed(42)
-    selection_filter_out = simple_select.create_breakdown_selection_filter(path, ["test"])
+    y_out = selector.select_labels(df)
+
 
     # ASSERT
-    assert (selection_filter_expected == selection_filter_out).all()
+    assert (y_out == y_expected).all()
 
 
-def test__select_data(tmpdir):
+def test__load_dataset(tmpdir):
     """
-    Test select_data() function
+    Test load_dataset() function
     """
     # ARRANGE
-    path = tmpdir.join("dummy.hdf")
+    simple_selector = simple_select.SimpleSelect()
+    path = tmpdir.join("context.hdf")
     context_dummy = h5py.File(path, 'w')
-    dummy_is_bd_in_40ms_labels = np.array([True, True, False, False])
-    dummy_is_bd_in_20ms_labels = np.array([True, True, False, False])
-    dummy_is_bd_labels = np.array([True, True, False, False])
-    dummy_event_timestamps = np.array([np.datetime64('2021-08-18T17:59:00'),
+    dummy_is_bd_in_40ms_labels = np.ones((10,), dtype=bool)
+    dummy_is_bd_in_20ms_labels = np.ones((10,), dtype=bool)
+    dummy_is_bd_labels = np.ones((10,), dtype=bool)
+    dummy_event_timestamps = np.array([np.datetime64('2021-08-18T17:59:09'),
+                                       np.datetime64('2021-08-18T17:59:09'),
+                                       np.datetime64('2021-08-18T17:59:09'),
+                                       np.datetime64('2021-08-18T17:59:09'),
+                                       np.datetime64('2021-08-18T17:59:09'),
+                                       np.datetime64('2021-08-18T17:59:09'),
+                                       np.datetime64('2021-08-18T17:59:09'),
+                                       np.datetime64('2021-08-18T17:59:09'),
+                                       np.datetime64('2021-08-18T17:59:09'),
+                                       np.datetime64('2021-08-18T17:59:09')
+                                       ])
+    dummy_trend_timestamps = np.array([np.datetime64('2021-08-18T17:59:03'),
+                                       np.datetime64('2021-08-18T17:59:02'),
+                                       np.datetime64('2021-08-18T17:59:02'),
+                                       np.datetime64('2021-08-18T17:59:06'),
+                                       np.datetime64('2021-08-18T17:59:00'),
                                        np.datetime64('2021-08-18T17:59:04'),
                                        np.datetime64('2021-08-18T17:59:02'),
-                                       np.datetime64('2021-08-18T17:59:06')])
-    dummy_trend_timestamps = np.array([np.datetime64('2021-08-18T17:59:00'),
-                                       np.datetime64('2021-08-18T17:59:01'),
-                                       np.datetime64('2021-08-18T17:59:02'),
-                                       np.datetime64('2021-08-18T17:59:03')])
-    dummy_is_healthy_labels = np.array([True, True, False, False])
+                                       np.datetime64('2021-08-18T17:59:06'),
+                                       np.datetime64('2021-08-18T17:59:00'),
+                                       np.datetime64('2021-08-18T17:59:04')
+                                       ])
+    dummy_is_healthy_labels = np.ones((10,), dtype=bool)
     with context_dummy as f:
         f.create_dataset("is_bd_in_40ms", data=dummy_is_bd_in_40ms_labels)
         f.create_dataset("is_bd_in_20ms", data=dummy_is_bd_in_20ms_labels)
         f.create_dataset("is_bd", data=dummy_is_bd_labels)
-        f.create_dataset("test_data1", data=4 * np.ones((4,)))
-        f.create_dataset("test_data2", data=np.zeros((4,)))
+        f.create_dataset("test_data1", data=4 * np.ones((10,)))
+        f.create_dataset("test_data2", data=np.zeros((10,)))
         f["Timestamp"] = dummy_event_timestamps.astype(h5py.opaque_dtype(dummy_event_timestamps.dtype))
         f["PrevTrendData/Timestamp"] = dummy_trend_timestamps.astype(h5py.opaque_dtype(dummy_trend_timestamps.dtype))
         f.create_dataset("clic_label/is_healthy", data=dummy_is_healthy_labels)
         f.create_dataset("is_healthy", data=dummy_is_healthy_labels)
 
-    X_expected = np.array([[[-0.39223227],
-                            [1.37281295],
-                            [-0.98058068]]
-                           ])
-    y_expected = np.array([[1.]])
+    splits_expected = (0.7, 0.2, 0.1)
 
     # ACT
     np.random.seed(42)
-    X, y = simple_select.select_data(path)
+    train, valid, test = dataset_creator.load_dataset(creator=simple_selector, hdf_dir=tmpdir)
+    sum_elements = len(train.idx) + len(valid.idx) + len(test.idx)
+    splits = (len(train.idx)/sum_elements, len(valid.idx)/sum_elements, len(test.idx)/sum_elements)
 
     # ASSERT
-    assert np.allclose(X, X_expected)
-    assert np.allclose(y, y_expected)
+    assert splits == splits_expected
