@@ -8,8 +8,7 @@ import pandas as pd
 from src.transformation import transform
 from src.handler import XBox2ContextDataCreator
 from src.model.classifier import Classifier
-from src.utils.handler_tools.dataset_creator import DatasetCreator
-from src.utils.handler_tools.dataset_creator import load_dataset
+from src.utils.dataset_creator import load_dataset
 from src.utils import hdf_tools
 from src.xbox2_specific.datasets.simple_select import SimpleSelect
 
@@ -78,12 +77,12 @@ def modeling(train_set, valid_set, test_set, work_dir: Path):
 
 if __name__ == '__main__':
     args_in = parse_input_arguments(args=sys.argv[1:])
-    print(Path().absolute())
+
     if args_in.transform_to_hdf5:
         transformation(work_dir=args_in.data_path)
 
     if args_in.calculate_features:
         feature_handling(work_dir=args_in.data_path)
 
-    train, valid, test = load_dataset(creator=SimpleSelect(), work_dir=args_in.data_path)
+    train, valid, test = load_dataset(creator=SimpleSelect(), hdf_dir=args_in.data_path)
     modeling(train_set=train, valid_set=valid, test_set=test, work_dir=args_in.file_path)

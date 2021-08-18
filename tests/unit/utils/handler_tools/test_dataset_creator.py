@@ -1,6 +1,6 @@
 import numpy as np
 import pytest
-from src.utils.handler_tools import dataset_creator
+from src.utils import dataset_creator
 
 
 def test__train_valid_test_split():
