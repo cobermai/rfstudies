@@ -62,14 +62,14 @@ def feature_handling(work_dir: Path):
     creator.manage_features()
 
 
-def modeling(train_set, valid_set, test_set, work_dir: Path):
+def modeling(train_set, valid_set, test_set, work_dir: Path, fit_classifier: bool = True):
     """MODELING"""
     hp_file = open(work_dir / "src/model/default_hyperparameters.json", 'r')
     hp_dict = json.load(hp_file)
     output_path = work_dir / "src/output" / datetime.now().strftime("%Y-%m-%dT%H.%M.%S")
 
     clf = Classifier(output_path, **hp_dict)
-    fit_classifier = True
+
     if fit_classifier:
         clf.fit_classifier(train_set, valid_set)
     clf.model.load_weights(output_path / 'best_model.hdf5')
