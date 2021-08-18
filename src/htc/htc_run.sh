@@ -1,24 +1,3 @@
 #!/bin/bash
-echo "ClusterId values is:"
-echo $1
-
-echo "ProcId values is:"
-echo $2
-
-echo "Output values is:"
-echo $3
-
-echo "Sensibility analysis:"
-echo $4
-
-echo "activate environment"
-
-echo "start script"
-filepath=/afs/cern.ch/user/c/cobermai/Desktop/afs_work/PycharmProjects/clicmlframework
-
-python -m virtualenv myvenv
-pip install -r ${filepath}/requirements.txt
-
-python "${filepath}/xbox2_main.py" --file_path=$filepath
-
-
+cd /home/cobermai/PycharmProjects/mlframework/src/htc
+python -m virtualenv myvenvpip install -r requirements.txtpython xbox2_main.py --file_path=/home/cobermai/PycharmProjects/mlframework --output_path=/home/cobermai/PycharmProjects/mlframework/src/output/2021-08-18T16.26.50$_(ProcId)
