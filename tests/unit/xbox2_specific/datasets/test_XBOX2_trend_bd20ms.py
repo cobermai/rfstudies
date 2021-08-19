@@ -29,7 +29,6 @@ def test__one_hot(y, y_one_hot_expected):
     assert (y_one_hot == y_one_hot_expected).all()
 
 
-@pytest.mark.skip(reason='not finished')
 def test__scale_data():
     """
     Test scale_data() function
@@ -198,7 +197,6 @@ def test__select_features(dummy_data):
     assert (X_out == X_expected).all()
 
 
-@pytest.mark.skip(reason='not finished')
 @pytest.mark.parametrize("data",
                          [np.ones((10, ), dtype=bool),
                           np.zeros((10, ), dtype=bool)
@@ -221,7 +219,6 @@ def test__select_labels(data):
     assert (y_out == y_expected).all()
 
 
-@pytest.mark.skip(reason='not finished')
 def test__load_dataset(tmpdir):
     """
     Test load_dataset() function
@@ -260,13 +257,18 @@ def test__load_dataset(tmpdir):
         f.create_dataset("is_bd_in_40ms", data=dummy_is_bd_in_40ms_labels)
         f.create_dataset("is_bd_in_20ms", data=dummy_is_bd_in_20ms_labels)
         f.create_dataset("is_bd", data=dummy_is_bd_labels)
-        selection_list = ["DC_Down__D1", "DC_Down__D9", "DC_Down__tsfresh__mean", "DC_Down__tsfresh__maximum",
-                          "DC_Down__tsfresh__median", "DC_Down__tsfresh__minimum",
-                          "DC_Up__D1", "DC_Up__D9", "DC_Up__tsfresh__mean", "DC_Up__tsfresh__maximum",
-                          "DC_Up__tsfresh__median", "DC_Up__tsfresh__minimum",
-                          "PEI_Amplitude__pulse_length", "PEI_Amplitude__pulse_amplitude",
-                          "PKI_Amplitude__pulse_length", "PKI_Amplitude__pulse_amplitude",
-                          "PSI_Amplitude__pulse_length", "PSI_Amplitude__pulse_amplitude"]
+        selection_list = ["PrevTrendData__Loadside_win", "PrevTrendData__Tubeside_win",
+                          "PrevTrendData__Collector", "PrevTrendData__Gun", "PrevTrendData__IP_before_PC",
+                          "PrevTrendData__PC_IP", "PrevTrendData__WG_IP", "PrevTrendData__IP_Load",
+                          "PrevTrendData__IP_before_structure", "PrevTrendData__US_Beam_Axis_IP",
+                          "PrevTrendData__Klystron_Flange_Temp", "PrevTrendData__Load_Temp",
+                          "PrevTrendData__PC_Left_Cavity_Temp", "PrevTrendData__PC_Right_Cavity_Temp",
+                          "PrevTrendData__Bunker_WG_Temp", "PrevTrendData__Structure_Input_Temp",
+                          "PrevTrendData__Chiller_1", "PrevTrendData__Chiller_2", "PrevTrendData__Chiller_3",
+                          "PrevTrendData__PKI_FT_avg", "PrevTrendData__PSI_FT_avg", "PrevTrendData__PSR_FT_avg",
+                          "PrevTrendData__PSI_max", "PrevTrendData__PSR_max", "PrevTrendData__PEI_max",
+                          "PrevTrendData__DC_Down_min", "PrevTrendData__DC_Up_min",
+                          "PrevTrendData__PSI_Pulse_Width"]
         for name in selection_list:
             f.create_dataset(name, data=np.ones((10,)))
         f["Timestamp"] = dummy_event_timestamps.astype(h5py.opaque_dtype(dummy_event_timestamps.dtype))
