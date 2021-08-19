@@ -17,7 +17,7 @@ class HTCondorRunner:
         """
         work_dir = Path.cwd().parent.parent
         htc_dir = work_dir / "src/htc"
-        output_dir = work_dir / "src/output" / (datetime.now().strftime("%Y-%m-%dT%H.%M.%S") + "_$(ClusterId)/")
+        output_dir = work_dir / "src/output" / (datetime.now().strftime("%Y%m%dT") + "_$1_$2")
         output_dir.mkdir(parents=True, exist_ok=True)
         main_name = "xbox2_main.py"
 
