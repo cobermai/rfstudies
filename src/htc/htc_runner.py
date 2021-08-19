@@ -29,6 +29,7 @@ class HTCondorRunner:
                 file.write(f"cd {work_dir}\n")
                 file.write(f"pwd\n")
                 file.write("python -m virtualenv myvenv\n")
+                file.write("pip install --upgrade pip\n")
                 file.write("pip install -r requirements.txt\n")
                 file.write(f"python3 {main_name} --file_path={work_dir} --output_path={output_dir}")
             except IOError as e:
