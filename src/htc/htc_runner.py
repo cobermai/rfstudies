@@ -27,6 +27,7 @@ class HTCondorRunner:
             try:
                 file.write("#!/bin/bash\n")
                 file.write(f"cd {work_dir}\n")
+                file.write(f"pip3 install --upgrade pip3\n")
                 file.write(f"pip3 install --user virtualenv\n")
                 file.write("virtualenv venv\n")
                 file.write("source ./venv/bin/activate\n")
