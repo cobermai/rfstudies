@@ -1,4 +1,4 @@
-"""Selecting from context data and prepare dataset XBOX2_event_bd20ms for machine learning. """
+"""Selecting from context data and prepare dataset XBOX2_trend_bd20ms for machine learning. """
 from pathlib import Path
 import typing
 import h5py

@@ -1,10 +1,10 @@
 """this module tests the functions from hdf_tools"""
 import os
 import sys
-import pytest
 import h5py
 import numpy as np
 import pandas as pd
+import pytest
 from src.utils import hdf_tools
 
 

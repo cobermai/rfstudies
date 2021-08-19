@@ -1,13 +1,13 @@
 """example code how to select from context data and prepare data for machine learning. """
-from pathlib import Path
 import argparse
-import sys
 from datetime import datetime
 import json
+from pathlib import Path
+import sys
 import pandas as pd
-from src.transformation import transform
 from src.handler import XBox2ContextDataCreator
 from src.model.classifier import Classifier
+from src.transformation import transform
 from src.utils.dataset_creator import load_dataset
 from src.utils import hdf_tools
 from src.xbox2_specific.datasets.simple_select import SimpleSelect

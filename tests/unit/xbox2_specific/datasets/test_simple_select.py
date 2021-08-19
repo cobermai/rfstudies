@@ -1,7 +1,7 @@
 import h5py
 import numpy as np
-import pytest
 import pandas as pd
+import pytest
 from src.utils import dataset_creator
 from src.xbox2_specific.datasets import simple_select
 
