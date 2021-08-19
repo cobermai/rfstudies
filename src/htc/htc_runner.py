@@ -17,7 +17,7 @@ class HTCondorRunner:
         """
         work_dir = Path.cwd().parent.parent
         htc_dir = work_dir / "src/htc"
-        output_dir = work_dir / "src/output" / (datetime.now().strftime("%Y%m%dT") + "_$1_$2")
+        output_dir = work_dir / "src/output" / datetime.now().strftime("%Y-%m-%dT%H.%M.%S")
         output_dir.mkdir(parents=True, exist_ok=True)
         main_name = "xbox2_main.py"
 
@@ -26,7 +26,8 @@ class HTCondorRunner:
         with open(master_bash_filename, 'w') as file:
             try:
                 file.write("#!/bin/bash\n")
-                file.write(f"cd {htc_dir}\n")
+                file.write(f"cd {work_dir}\n")
+                file.write(f"pwd\n")
                 file.write("python -m virtualenv myvenv\n")
                 file.write("pip install -r requirements.txt\n")
                 file.write(f"python3 {main_name} --file_path={work_dir} --output_path={output_dir}")
