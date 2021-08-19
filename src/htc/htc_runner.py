@@ -17,7 +17,7 @@ class HTCondorRunner:
         """
         work_dir = Path.cwd().parent.parent
         htc_dir = work_dir / "src/htc"
-        output_dir = work_dir / "src/output" / (datetime.now().strftime("%Y-%m-%dT%H.%M.%S") + "$_(ProcId)/")
+        output_dir = work_dir / "src/output" / (datetime.now().strftime("%Y-%m-%dT%H.%M.%S") + "_$(ClusterId)/")
         output_dir.mkdir(parents=True, exist_ok=True)
         main_name = "xbox2_main.py"
 
@@ -27,8 +27,8 @@ class HTCondorRunner:
             try:
                 file.write("#!/bin/bash\n")
                 file.write(f"cd {htc_dir}\n")
-                file.write("python -m virtualenv myvenv")
-                file.write("pip install -r requirements.txt")
+                file.write("python -m virtualenv myvenv\n")
+                file.write("pip install -r requirements.txt\n")
                 file.write(f"python3 {main_name} --file_path={work_dir} --output_path={output_dir}")
             except IOError as e:
                 print(f"I/O error({e.errno}): {e.strerror}")
@@ -54,7 +54,7 @@ class HTCondorRunner:
                 logging.info(f"I/O error({e.errno}): {e.strerror}")
 
         # submitting a unique request to HTCondor
-        command = f"cd {htc_dir} ; condor_submit  {master_sub_filename}"
+        command = f"cd {htc_dir} ; condor_submit  {master_sub_filename}; condor_q"
         logging.debug(f"Executing HTCondor command {command}")
         os.system(command)
 
