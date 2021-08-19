@@ -1,8 +1,7 @@
 from unittest.mock import patch
-from unittest.mock import MagicMock
+import h5py
 import numpy as np
 import pytest
-import h5py
 from src.utils import dataset_creator
 
 
@@ -45,13 +44,17 @@ def test__train_valid_test_split_errors():
         creator.train_valid_test_split(X=X, y=y, splits=(1, 0, 0))
 
 
-@pytest.mark.skip(reason="no way of currently testing this")
-def test__load_dataset(tmpdir):
+@pytest.mark.skip(reason='not finished')
+def test__load_dataset(tmpdir, mock_select_events):
     """
     Test load_dataset() function
     """
     # ARRANGE
+    p = patch.multiple(dataset_creator.DatasetCreator, __abstractmethods__=set())
+    p.start()
     creator = dataset_creator.DatasetCreator()
+    p.stop()
+    mock_select_events.return_value = np.array([True, False, True, False])
     path = tmpdir.join("context.hdf")
     context_dummy = h5py.File(path, 'w')
     dummy_is_bd_in_40ms_labels = np.ones((10,), dtype=bool)
@@ -95,7 +98,8 @@ def test__load_dataset(tmpdir):
 
     # ACT
     np.random.seed(42)
-    train, valid, test = dataset_creator.load_dataset(creator=creator, hdf_dir=path)
+
+    train, valid, test = dataset_creator.load_dataset(creator=creator, hdf_dir=tmpdir)
     sum_elements = len(train.idx) + len(valid.idx) + len(test.idx)
     splits = (len(train.idx)/sum_elements, len(valid.idx)/sum_elements, len(test.idx)/sum_elements)
 
