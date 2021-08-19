@@ -1,9 +1,11 @@
 executable = /home/cobermai/PycharmProjects/mlframework/src/htc/htc_run.sh
 arguments = $(ClusterId) $(ProcId)
-output = /home/cobermai/PycharmProjects/mlframework/src/output/2021-08-18T16.26.50$_(ProcId)/htc_out.txt
-error = /home/cobermai/PycharmProjects/mlframework/src/output/2021-08-18T16.26.50$_(ProcId)/htc_err.txt
-log = /home/cobermai/PycharmProjects/mlframework/src/output/2021-08-18T16.26.50$_(ProcId)/htc_log.txt
+output = /home/cobermai/PycharmProjects/mlframework/src/output/2021-08-18T16.34.01$_(ProcId)/htc_out.txt
+error = /home/cobermai/PycharmProjects/mlframework/src/output/2021-08-18T16.34.01$_(ProcId)/htc_err.txt
+log = /home/cobermai/PycharmProjects/mlframework/src/output/2021-08-18T16.34.01$_(ProcId)/htc_log.txt
 RequestCpus = 2
 request_GPUs = 1
-+ AccountingGroup = group_u_TE.mpe
-requirements = regexp("V100", TARGET.CUDADeviceName)queue 
++JobFlavour = "testmatch"
++ AccountingGroup = "group_u_TE.mpe"
+requirements = regexp("V100", TARGET.CUDADeviceName)
+queue 
