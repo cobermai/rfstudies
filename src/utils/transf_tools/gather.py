@@ -5,13 +5,15 @@ Currently implemented:
 * Gather hdf groups of arbitrary layer scattered on many hdf files with external links (hdf external links).
   This gathers groups without copying its contents.
 """
-from typing import Callable
+from collections.abc import Iterable
+from functools import partial
 import logging
 from pathlib import Path
-from functools import partial
-from collections.abc import Iterable
+from typing import Callable
 import h5py
 from src.utils.hdf_tools import hdf_path_combine
+
+
 log = logging.getLogger(__name__)
 
 

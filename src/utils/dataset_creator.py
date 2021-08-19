@@ -1,9 +1,9 @@
 from abc import ABC, abstractmethod
-import typing
-import h5py
-from pathlib import Path
 from collections import namedtuple
+from pathlib import Path
+import typing
 from typing import Optional
+import h5py
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split

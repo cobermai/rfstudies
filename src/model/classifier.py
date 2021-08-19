@@ -5,9 +5,9 @@ from pathlib import Path
 from tensorflow import keras
 from src.model.classifiers import fcn
 from src.model.classifiers import fcn_2dropout
+from src.model.classifiers import inception
 from src.model.classifiers import resnet
 from src.model.classifiers import time_cnn
-from src.model.classifiers import inception
 
 
 class Classifier:

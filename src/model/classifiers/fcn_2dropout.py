@@ -1,6 +1,6 @@
 from abc import ABC
-from tensorflow.keras import Model
 from tensorflow.keras import layers
+from tensorflow.keras import Model
 from src.model.classifiers.layers.cnn import CNNBlock
 from src.model.classifiers.layers.cnn_dropout import CNNDropoutBlock
 

@@ -1,8 +1,8 @@
 """writes to the context data file row by row or column by column. If the destination dataset does not exist, it is
 created."""
+from dataclasses import dataclass
 from pathlib import Path
 import typing
-from dataclasses import dataclass
 import h5py
 from src.utils.handler_tools.feature_class import ColumnWiseFeature
 

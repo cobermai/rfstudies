@@ -1,22 +1,24 @@
 """In this module all feature calculation for xbox2 dataset is done."""
-import logging
-from pathlib import Path
-from dataclasses import dataclass, field
-import itertools
-import typing
+
 import argparse
+from dataclasses import dataclass, field
+import logging
+import itertools
+from pathlib import Path
+import typing
 import coloredlogs
-import numpy as np
 import h5py
-from tqdm import tqdm
+import numpy as np
 import tsfresh
-from src.utils.hdf_tools import hdf_path_combine, sort_by
+from tqdm import tqdm
 from src.utils.handler_tools.context_data_creator import ContextDataCreator
+from src.utils.handler_tools.context_data_writer import ColumnWiseContextDataWriter, RowWiseContextDataWriter
+from src.utils.hdf_tools import hdf_path_combine, sort_by
 from src.xbox2_specific.feature_definition.attribute import get_event_attribute_features
 from src.xbox2_specific.feature_definition.event import get_event_data_features
 from src.xbox2_specific.feature_definition.trend import get_trend_data_features
 from src.xbox2_specific.feature_definition.tsfresh import get_tsfresh
-from src.utils.handler_tools.context_data_writer import ColumnWiseContextDataWriter, RowWiseContextDataWriter
+
 
 logger = logging.getLogger(__name__)
 
