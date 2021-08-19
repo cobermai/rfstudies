@@ -10,7 +10,7 @@ from tests.utils.data_creator.xb2_like_event_data_creator import create_event_da
 from tests.utils.data_creator.xb2_like_trend_data_creator import create_trend_data
 
 
-@pytest.mark.skipif(sys.platform.startswith("win"), reason="test currently not supported on windows")
+@pytest.mark.skipif(os.system("h5diff -h"), reason="h5diff not found")
 def test_transformation(tmp_path_factory) -> None:
     """
     creates tdms files and hdf5 files that we want, applies the transformation and tests its output to the created
