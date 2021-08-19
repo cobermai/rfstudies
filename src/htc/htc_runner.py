@@ -22,17 +22,20 @@ class HTCondorRunner:
         output_dir.mkdir(parents=True, exist_ok=True)
         main_name = "xbox2_main.py"
 
+        # install requirements
+        env_command = f"cd {work_dir} ;" \
+                      "pip3 install --user virtualenv ;" \
+                      "source ./venv/bin/activate ;" \
+                      "pip3 install --user -r requirements.txt ;"
+        os.system(env_command)
+
         # creating the master bash file
         master_bash_filename = htc_dir / "htc_run.sh"
         with open(master_bash_filename, 'w') as file:
             try:
                 file.write("#!/bin/bash\n")
                 file.write(f"cd {work_dir}\n")
-                file.write(f"pip3 install --upgrade pip3\n")
-                file.write(f"pip3 install --user virtualenv\n")
-                file.write("virtualenv venv\n")
                 file.write("source ./venv/bin/activate\n")
-                file.write("pip3 install --user -r requirements.txt\n")
                 file.write(f"python3 {main_name} --file_path={work_dir} --output_path={output_dir}")
             except IOError as e:
                 print(f"I/O error({e.errno}): {e.strerror}")
