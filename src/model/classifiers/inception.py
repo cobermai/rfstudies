@@ -12,7 +12,6 @@ class InceptionSubBlock(layers.Layer):
     def __init__(self):
         """
         Initializes InceptionSubBlock
-        :param input_shape: shape of input tensor
         """
         super(InceptionSubBlock, self).__init__()
         self.input_layer = layers.InputLayer()
@@ -77,11 +76,11 @@ class InceptionBlock(Model, ABC):
 
     def call(self, input_tensor, training=None, mask=None):
         """
-            Function builds Inception model.
-            :param input_tensor: input to model
-            :param training: bool for specifying whether model should be training
-            :param mask: mask for specifying whether some values should be skipped
-            """
+        Function builds Inception model.
+        :param input_tensor: input to model
+        :param training: bool for specifying whether model should be training
+        :param mask: mask for specifying whether some values should be skipped
+        """
         # Inception block 1
         x = self.inception1(input_tensor)
         # Inception block 2
