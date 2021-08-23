@@ -13,6 +13,8 @@ from src.utils import hdf_tools
 from src.xbox2_specific.datasets.simple_select import SimpleSelect
 from src.xbox2_specific.datasets.XBOX2_event_bd20ms import XBOX2EventBD20msSelect
 from src.xbox2_specific.datasets.XBOX2_trend_bd20ms import XBOX2TrendBD20msSelect
+from src.model.explainer import explain_samples
+from src.model.sample_explainers.shap import Shap_Explainer
 
 
 def parse_input_arguments(args):
@@ -92,3 +94,5 @@ if __name__ == '__main__':
     train, valid, test = load_dataset(creator=SimpleSelect(), hdf_dir=args_in.data_path)
     modeling(train_set=train, valid_set=valid, test_set=test,
              param_dir=args_in.file_path / "src/model" / args_in.param_name, output_dir=args_in.output_path)
+
+

@@ -7,6 +7,13 @@ from pathlib import Path
 class HTCondorRunner:
     """
     class used to run simulations on a cluster interfaced by HTCondor
+    executable = runmore.sh
+    input = input/mydata.$(ProcId)
+    arguments = $(ClusterID) $(ProcId)
+    output = output/hello.$(ClusterId).$(ProcId).out
+    error = error/hello.$(ClusterId).$(ProcId).err
+    log = log/hello.$(ClusterId).log
+    queue 150
     """
 
     @staticmethod
@@ -26,7 +33,7 @@ class HTCondorRunner:
         env_command = f"cd {work_dir} ;" \
                       "pip3 install --user virtualenv ;" \
                       "source ./venv/bin/activate ;" \
-                      "pip3 install --user -r requirements.txt ;"
+                      "pip3 install -r requirements.txt ;"
         os.system(env_command)
 
         # creating the master bash file
