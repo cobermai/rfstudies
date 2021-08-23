@@ -2,6 +2,7 @@
 model setup according to https://www.tensorflow.org/guide/keras/custom_layers_and_models
 """
 from pathlib import Path
+import numpy as np
 from tensorflow import keras
 from src.model.classifiers import fcn
 from src.model.classifiers import fcn_2dropout
@@ -16,6 +17,7 @@ class Classifier:
     """
 
     def __init__(self,
+                 input_shape: np.ndarray,
                  output_directory: Path,
                  classifier_name: str,
                  num_classes: int,
@@ -49,6 +51,7 @@ class Classifier:
         self.batch_size = batch_size
         if build:
             self.model = self.build_classifier()
+            self.model.build(input_shape=input_shape)
 
     def build_classifier(self, **kwargs):
         """
@@ -102,7 +105,7 @@ class Classifier:
             min_lr=0.0001)
 
         model_checkpoint = keras.callbacks.ModelCheckpoint(
-            filepath=self.output_directory / 'best_model.hdf5',
+            filepath=self.output_directory / 'best_model.h5',
             save_weights_only=True,
             monitor=self.monitor,
             save_best_only=True)

@@ -18,7 +18,7 @@ class FCNBlock(Model, ABC):
         self.gap = layers.GlobalAveragePooling1D()
         self.out = layers.Dense(num_classes, activation='softmax')
 
-    def call(self, input_tensor, training=None, mask=None):
+    def call(self, input_tensor, training=False, mask=None):
         """
         Function builds FCN model out of 3 convolutional layers with batch normalization and the relu
         activation function. In the end there is a global average pooling layer which feeds the output into a
