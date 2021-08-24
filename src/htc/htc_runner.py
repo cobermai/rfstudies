@@ -30,7 +30,7 @@ class HTCondorRunner:
         main_name = "xbox2_main.py"
 
         # install requirements
-        install_requirements = False
+        install_requirements = True
         if install_requirements:
             env_command = f"cd {work_dir} ;" \
                           "pip3 install --upgrade pip;" \
