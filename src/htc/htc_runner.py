@@ -35,6 +35,7 @@ class HTCondorRunner:
             env_command = f"cd {work_dir} ;" \
                           "pip3 install --upgrade pip;" \
                           "pip3 install --user virtualenv ;" \
+                          "virtualenv venv ;" \
                           "source ./venv/bin/activate ;" \
                           "pip3 install -r requirements.txt ;"
             os.system(env_command)
