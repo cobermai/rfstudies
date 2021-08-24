@@ -43,6 +43,16 @@ def test__train_valid_test_split_errors():
     # ACT
     with pytest.raises(ValueError):
         creator.train_valid_test_split(X=X, y=y, splits=(1, 0, 0))
+    with pytest.raises(ValueError):
+        creator.train_valid_test_split(X=X, y=y, splits=(0, 1, 0))
+    with pytest.raises(ValueError):
+        creator.train_valid_test_split(X=X, y=y, splits=(0, 0, 1))
+    with pytest.raises(ValueError):
+        creator.train_valid_test_split(X=X, y=y, splits=(-1, 0, 0))
+    with pytest.raises(ValueError):
+        creator.train_valid_test_split(X=X, y=y, splits=(2, 0, 0))
+    with pytest.raises(ValueError):
+        creator.train_valid_test_split(X=X, y=y, splits=(0.5, 0.5, 0.5))
 
 
 @patch.multiple(dataset_creator.DatasetCreator, __abstractmethods__=set(),

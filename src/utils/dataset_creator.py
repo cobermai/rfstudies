@@ -72,7 +72,8 @@ class DatasetCreator(ABC):
         return enc.fit_transform(y.reshape(-1, 1)).toarray()
 
     @staticmethod
-    def train_valid_test_split(X: np.ndarray, y: np.ndarray, splits: Optional[tuple] = None) -> typing.Tuple:
+    def train_valid_test_split(X: np.ndarray, y: np.ndarray,
+                               splits: Optional[tuple] = None) -> tuple:
         """
         Function splits data into training, testing and validation set using random sampling. Note that this function
         can be overwritten in the concrete dataset selection.
@@ -83,9 +84,14 @@ class DatasetCreator(ABC):
         """
         if splits is None:
             splits = (0.7, 0.2, 0.1)
-
-        if splits[0] == 1:
-            raise ValueError('Training set fraction cannot be 1')
+        if (splits[0] >= 1) or (splits[0] < 0):
+            raise ValueError('Training fraction cannot be >= 1 or negative')
+        if (splits[1] >= 1) or (splits[1] < 0):
+            raise ValueError('Validation fraction cannot be >= 1 or negative')
+        if (splits[2] >= 1) or (splits[2] < 0):
+            raise ValueError('Test fraction cannot be >= 1 or negative')
+        if not np.allclose(splits[0] + splits[1] + splits[2], 1):
+            raise ValueError('Splits must sum to 1')
 
         idx = np.arange(len(X))
         X_train, X_tmp, y_train, y_tmp, idx_train, idx_tmp = \
@@ -110,6 +116,7 @@ def load_dataset(creator: DatasetCreator, hdf_dir: Path) -> typing.Tuple:
     event_selection = creator.select_events(context_data_file_path=hdf_dir / "context.hdf")
     df_selected = hdf_to_df_selection(hdf_dir / "context.hdf", selection=event_selection)
 
+    # Maybe keep as dataframe until after split
     X = creator.select_features(df=df_selected)
     y = creator.select_labels(df=df_selected)
 
