@@ -35,7 +35,7 @@ class HTCondorRunner:
             env_command = f"cd {work_dir} ;" \
                           "pip3 install --upgrade pip;" \
                           "pip3 install --user virtualenv ;" \
-                          "virtualenv venv ;" \
+                          "virtualenv -p /usr/bin/python3 venv ;" \
                           "source ./venv/bin/activate ;" \
                           "pip3 install -r requirements.txt ;"
             os.system(env_command)
@@ -46,6 +46,7 @@ class HTCondorRunner:
             try:
                 file.write("#!/bin/bash\n")
                 file.write(f"cd {work_dir}\n")
+                file.write("virtualenv -p /usr/bin/python3 venv \n")
                 file.write(f"source {work_dir}/venv/bin/activate\n")
                 file.write("ls ./venv/bin/\n")
                 file.write("python3 -V\n")
