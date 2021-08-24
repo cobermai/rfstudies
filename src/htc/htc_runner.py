@@ -45,7 +45,9 @@ class HTCondorRunner:
             try:
                 file.write("#!/bin/bash\n")
                 file.write(f"cd {work_dir}\n")
+                file.write("pip3 install --upgrade pip\n")
                 file.write("source ./venv/bin/activate\n")
+                file.write("pip3 install --upgrade pip\n")
                 file.write("python3 -V\n")
                 file.write("pip3 list\n")
                 file.write(f"python3 {main_name} --file_path={work_dir} --output_path={output_dir}")
