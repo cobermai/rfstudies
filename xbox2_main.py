@@ -68,16 +68,15 @@ def feature_handling(work_dir: Path):
     creator.manage_features()
 
 
-def modeling(train_set, valid_set, test_set, param_dir: Path, output_dir: Path, fit_classifier: bool = True):
+def modeling(train_set, valid_set, test_set, param_dir: Path, output_dir: Path, fit_classifier: bool = False):
     """MODELING"""
     hp_file = open(param_dir, 'r')
     hp_dict = json.load(hp_file)
 
-    clf = Classifier(input_shape=train_set.X.shape[1:], output_directory=output_dir, **hp_dict)
-
+    clf = Classifier(input_shape=train_set.X.shape, output_directory=output_dir, **hp_dict)
     if fit_classifier:
         clf.fit_classifier(train_set, valid_set)
-    clf.model.load_weights(output_dir / "best_model.h5")
+    clf.model.load_weights(output_dir.parent / "best_model.h5")
 
     results = clf.model.evaluate(x=test_set.X, y=test_set.y, return_dict=True)
     pd.DataFrame.from_dict(results, orient='index').T.to_csv(output_dir / "results.csv")

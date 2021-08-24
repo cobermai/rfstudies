@@ -4,6 +4,7 @@ model setup according to https://www.tensorflow.org/guide/keras/custom_layers_an
 from pathlib import Path
 import numpy as np
 from tensorflow import keras
+from tensorflow.keras import Input, Model
 from src.model.classifiers import fcn
 from src.model.classifiers import fcn_2dropout
 from src.model.classifiers import inception
@@ -52,8 +53,7 @@ class Classifier:
         self.batch_size = batch_size
         if build:
             self.model = self.build_classifier()
-            self.model.build()
-            self.model.summary()
+            self.model.build(input_shape)
 
     def build_classifier(self, **kwargs):
         """
@@ -62,7 +62,7 @@ class Classifier:
         :return: Tensorflow model for classification of time series data
         """
         if self.classifier_name == 'fcn':
-            model = fcn.FCNBlock(self.input_shape, self.num_classes)
+            model = fcn.FCNBlock(self.num_classes)
         elif self.classifier_name == 'fcn_2dropout':
             model = fcn_2dropout.FCN2DropoutBlock(self.num_classes)
         elif self.classifier_name == 'resnet':
@@ -85,6 +85,9 @@ class Classifier:
             keras.metrics.AUC(name='auc'),
             keras.metrics.AUC(name='prc', curve='PR'),
         ]
+
+        x = Input(shape=self.input_shape[1:])
+        keras.models.Model(inputs=[x], outputs=model.call(x))
 
         model.compile(loss=self.loss,
                       optimizer=self.optimizer,

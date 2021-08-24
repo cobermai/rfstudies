@@ -34,6 +34,8 @@ class Explainer(ABC):
         """
 
 
+
+
 def explain_samples(explainer: Explainer,
                     classifier: Classifier,
                     X_train: np.ndarray,
@@ -43,7 +45,11 @@ def explain_samples(explainer: Explainer,
     :param hdf_dir: input directory with hdf files
     :return: train, valid, test: tuple with data of type named tuple
     """
+
+
+
+
     explainer.build_explainer(classifier=classifier, X_train=X_train)
-    # sample_importance = explainer.get_sample_importance(X_sample)
-    feature_importance = explainer.get_feature_importance(X_sample)
+    sample_importance = explainer.get_sample_importance(X_sample[1:])
+    # feature_importance = explainer.get_feature_importance(X_sample)
     print("asd")
