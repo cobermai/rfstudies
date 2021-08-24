@@ -30,7 +30,7 @@ class HTCondorRunner:
         main_name = "xbox2_main.py"
 
         # install requirements
-        install_requirements = True
+        install_requirements = False
         if install_requirements:
             env_command = f"cd {work_dir} ;" \
                           "pip3 install --upgrade pip;" \
@@ -44,10 +44,10 @@ class HTCondorRunner:
         with open(master_bash_filename, 'w') as file:
             try:
                 file.write("#!/bin/bash\n")
-                file.write(f"cd {work_dir}\n")
-                file.write("source ./venv/bin/activate\n")
-                file.write("ls ./venv/bin/\n")
-                file.write("pwd\n")
+                #file.write(f"cd {work_dir}\n")
+                file.write(f"source .{work_dir}/venv/bin/activate\n")
+                #file.write("ls ./venv/bin/\n")
+                #file.write("pwd\n")
                 file.write("python3 -V\n")
                 file.write("pip3 list\n")
                 file.write(f"python3 {main_name} --file_path={work_dir} --output_path={output_dir}")
