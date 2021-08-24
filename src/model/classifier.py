@@ -40,6 +40,7 @@ class Classifier:
         :param batch_size: Number of input data used in each batch.
         :param build: Bool stating whether the model is to be build.
         """
+        self.input_shape = input_shape
         self.output_directory = output_directory
         output_directory.mkdir(parents=True, exist_ok=True)
         self.classifier_name = classifier_name
@@ -51,7 +52,8 @@ class Classifier:
         self.batch_size = batch_size
         if build:
             self.model = self.build_classifier()
-            self.model.build(input_shape=input_shape)
+            self.model.build()
+            self.model.summary()
 
     def build_classifier(self, **kwargs):
         """
@@ -60,7 +62,7 @@ class Classifier:
         :return: Tensorflow model for classification of time series data
         """
         if self.classifier_name == 'fcn':
-            model = fcn.FCNBlock(self.num_classes)
+            model = fcn.FCNBlock(self.input_shape, self.num_classes)
         elif self.classifier_name == 'fcn_2dropout':
             model = fcn_2dropout.FCN2DropoutBlock(self.num_classes)
         elif self.classifier_name == 'resnet':

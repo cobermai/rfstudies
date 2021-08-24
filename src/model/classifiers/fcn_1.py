@@ -12,7 +12,9 @@ class FCNBlock(Model, ABC):
         """
         super(FCNBlock, self).__init__(**kwargs)
         self.input_layer = layers.Input(input_shape)
-        self.cnn1 = layers.Dense(100, activation='relu')
+        self.cnn1 = CNNBlock(filters=128, kernel_size=8)
+        self.cnn2 = CNNBlock(filters=256, kernel_size=5)
+        self.cnn3 = CNNBlock(filters=128, kernel_size=3)
         self.gap = layers.GlobalAveragePooling1D()
         self.dense = layers.Dense(num_classes, activation='softmax')
         self.out = self.call(self.input_layer)
@@ -38,6 +40,8 @@ class FCNBlock(Model, ABC):
         :param mask: mask for specifying whether some values should be skipped
         """
         x = self.cnn1(input_tensor)
+        x = self.cnn2(x)
+        x = self.cnn3(x)
         x = self.gap(x)
         x = self.dense(x)
         return x
