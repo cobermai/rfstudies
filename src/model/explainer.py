@@ -34,8 +34,6 @@ class Explainer(ABC):
         """
 
 
-
-
 def explain_samples(explainer: Explainer,
                     classifier: Classifier,
                     X_train: np.ndarray,
