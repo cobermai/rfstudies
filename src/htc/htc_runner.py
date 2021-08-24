@@ -44,12 +44,11 @@ class HTCondorRunner:
         with open(master_bash_filename, 'w') as file:
             try:
                 file.write("#!/bin/bash\n")
-                #file.write(f"cd {work_dir}\n")
-                file.write(f"source .{work_dir}/venv/bin/activate\n")
+                file.write(f"cd {work_dir}\n")
+                file.write(f"source {work_dir}/venv/bin/activate\n")
                 file.write("ls ./venv/bin/\n")
                 file.write("python3 -V\n")
-                file.write(f"cd {work_dir}/venv/bin\n")
-                file.write("pwd\n")
+                file.write("which python3\n")
                 file.write(f"python3 {work_dir / main_name} --file_path={work_dir} --output_path={output_dir}")
             except IOError as e:
                 print(f"I/O error({e.errno}): {e.strerror}")
