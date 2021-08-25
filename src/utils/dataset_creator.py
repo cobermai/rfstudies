@@ -16,6 +16,14 @@ class DatasetCreator(ABC):
     abstract class which acts as a template to create datasets
     """
 
+    def __init__(self):
+        self.df = pd.DataFrame()
+        self.event_selection = None
+        self.X = None
+        self.y = None
+        self.X_scaled = None
+        self.y_hot = None
+
     @staticmethod
     def read_hdf_dataset(file: h5py.File, key: str):
         """
@@ -50,8 +58,8 @@ class DatasetCreator(ABC):
     @staticmethod
     def scale_data(X: np.ndarray) -> np.ndarray:
         """
-        Function scales data for prediction with standard scaler. Note that this function can be overwritten in the
-        concrete dataset selection.
+        Function scales data for with sklearn standard scaler.
+        Note that this function can be overwritten in the concrete dataset selection class.
         :param X: data array of shape (event, sample, feature)
         :return: X_scaled: scaled data array of shape (event, sample, feature)
         """
@@ -63,8 +71,8 @@ class DatasetCreator(ABC):
     @staticmethod
     def one_hot_encode(y: np.ndarray) -> np.ndarray:
         """
-        Function transforms the labels from integers to one hot vectors. Note that this function can be overwritten in
-        the concrete dataset selection.
+        Function transforms the labels from integers to one hot vectors.
+        Note that this function can be overwritten in the concrete dataset selection class.
         :param y: array with labels to encode
         :return: array of one hot encoded labels
         """
@@ -113,16 +121,16 @@ def load_dataset(creator: DatasetCreator, hdf_dir: Path) -> typing.Tuple:
     :param hdf_dir: input directory with hdf files
     :return: train, valid, test: tuple with data of type named tuple
     """
-    event_selection = creator.select_events(context_data_file_path=hdf_dir / "context.hdf")
-    df_selected = hdf_to_df_selection(hdf_dir / "context.hdf", selection=event_selection)
+    creator.event_selection = creator.select_events(context_data_file_path=hdf_dir / "context.hdf")
+    creator.df = hdf_to_df_selection(hdf_dir / "context.hdf", selection=creator.event_selection)
 
-    # Maybe keep as dataframe until after split
-    X = creator.select_features(df=df_selected)
-    y = creator.select_labels(df=df_selected)
+    creator.X = creator.select_features(df=creator.df)
 
-    X_scaled = creator.scale_data(X)
-    y_hot = creator.one_hot_encode(y)
+    creator.y = creator.select_labels(df=creator.df)
 
-    train, valid, test = creator.train_valid_test_split(X=X_scaled, y=y_hot)
+    creator.X_scaled = creator.scale_data(creator.X)
+    creator.y_hot = creator.one_hot_encode(creator.y)
+
+    train, valid, test = creator.train_valid_test_split(X=creator.X_scaled, y=creator.y_hot)
 
     return train, valid, test

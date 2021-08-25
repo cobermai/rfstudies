@@ -1,11 +1,14 @@
 """Selecting from context data and prepare dataset XBOX2_event_bd20ms for machine learning. """
+from collections import namedtuple
 from pathlib import Path
 import typing
+from typing import Optional
 import h5py
 import numpy as np
 import pandas as pd
 from pandas import Timestamp
 from src.utils.dataset_creator import DatasetCreator
+from src.utils.hdf_tools import hdf_to_df_selection
 
 
 class XBOX2EventBD20msSelect(DatasetCreator):
@@ -13,6 +16,12 @@ class XBOX2EventBD20msSelect(DatasetCreator):
     Subclass of DatasetCreator to specify dataset selection. None of the abstract functions from abstract class can
     be overwritten.
     """
+    def __init__(self, runs_list: typing.List):
+        """
+        :param runs_list: list of runs to be included in dataset
+        """
+        super().__init__()
+        self.runs = runs_list
 
     @staticmethod
     def select_trend_data_events(event_timestamps: np.datetime64,
@@ -55,13 +64,14 @@ class XBOX2EventBD20msSelect(DatasetCreator):
 
             # select 2.5% of the healthy pulses randomly
             selection[is_healthy] = np.random.choice(a=[True, False], size=(sum(is_healthy),), p=[0.025, 0.975])
-            return selection
+
+        return selection
 
     def select_features(self, df: pd.DataFrame) -> np.ndarray:
         """
         returns features of selected events for modeling
         :param df: dataframe with selected events
-        :return X: label of selected events
+        :return X: features of selected events
         """
         selection_list = ["DC_Down__D1", "DC_Down__D9", "DC_Down__tsfresh__mean", "DC_Down__tsfresh__maximum",
                           "DC_Down__tsfresh__median", "DC_Down__tsfresh__minimum",
@@ -72,7 +82,8 @@ class XBOX2EventBD20msSelect(DatasetCreator):
                           "PSI_Amplitude__pulse_length", "PSI_Amplitude__pulse_amplitude"]
         feature_names = pd.Index(selection_list)
 
-        X = df[feature_names].to_numpy(dtype=float)
+        X_df = df[feature_names]
+        X = X_df.to_numpy(dtype=float)
         X = X[..., np.newaxis]
         X = np.nan_to_num(X)
 
@@ -84,11 +95,20 @@ class XBOX2EventBD20msSelect(DatasetCreator):
         :param df: dataframe with selected events
         :return y: label of selected events
         """
-        y = df["is_healthy"].to_numpy(dtype=bool)
+        y_df = df["is_healthy"]
+        y = y_df.to_numpy(dtype=float)
+        y = y[..., np.newaxis]
+        y = np.nan_to_num(y)
         return y
 
     @staticmethod
     def select_run(df: pd.DataFrame, run_no: int):
+        """
+        Function which generates data selection filter based on run number
+        :param df: pandas dataframe with xbox2 data
+        :param run_no: xbox2 run number. Negative run_no is commissioning.
+        :return selection: boolean selection filter for selecting data from specific runs
+        """
         if run_no == 0 or run_no < -9 or run_no > 9:
             raise ValueError("Run number does not exist")
 
@@ -115,21 +135,66 @@ class XBOX2EventBD20msSelect(DatasetCreator):
         ])
 
         # Select specified run number
+        run_index = []
+        timestamp = df["Timestamp"]
         for run in timestamp_list_run:
             if run[2] == run_no:
                 run_start = run[0]
                 run_end = run[1]
+                run_index = df.index[(timestamp >= run_start) & (timestamp <= run_end)]
+                break
 
-        selection = (df['Timestamp'] >= run_start) & (df['Timestamp'] <= run_end)
-        return selection
+        return run_index
+
+    def train_valid_test_split(self, X: np.ndarray, y: np.ndarray,
+                               splits: Optional[tuple] = None) -> tuple:
+        """
+        Function splits data into training, testing and validation set using random sampling. Note that this function
+        can be overwritten in the concrete dataset selection.
+        :param X: input data array of shape (event, sample, feature)
+        :param y: output data array of shape (event)
+        :param splits: tuple specifying splitting fractions (training, validation, test)
+        :return: train, valid, test: Tuple with data of type named tuple
+        """
+        if splits is None:
+            splits = ([1, 2, 3, 4, 5, 6, 7], 8, 9)
+            runs_train = self.select_run(self.df, 1)
+            for run in splits[0]:
+                runs_train = runs_train.append(self.select_run(self.df, run))
+            runs_valid = self.select_run(self.df, splits[1])
+            runs_test = self.select_run(self.df, splits[2])
+
+        idx = np.arange(len(X))
+        X_train, y_train, idx_train = X[runs_train], y[runs_train], idx[runs_train]
+        X_valid, y_valid, idx_valid = X[runs_valid], y[runs_valid], idx[runs_valid]
+        X_test, y_test, idx_test = X[runs_test], y[runs_test], idx[runs_test]
+
+        data = namedtuple("data", ["X", "y", "idx"])
+        train = data(X_train, y_train, idx_train)
+        valid = data(X_valid, y_valid, idx_valid)
+        test = data(X_test, y_test, idx_test)
+
+        return train, valid, test
 
 
 if __name__ == '__main__':
-    selector = XBOX2EventBD20msSelect()
-    with h5py.File(Path('C:\\Users\\holge\\cernbox\\CLIC_data\\Xbox2_hdf\\context.hdf'), "r") as file:
-        timestamps_raw = selector.read_hdf_dataset(file, "Timestamp")
-    df = pd.DataFrame({'Timestamp': timestamps_raw})
+    selector = XBOX2EventBD20msSelect(runs_list=list(range(10)))
+    hdf_dir = Path('C:\\Users\\holge\\cernbox\\CLIC_data\\Xbox2_hdf')
+    selector.event_selection = selector.select_events(context_data_file_path=hdf_dir / "context.hdf")
+    selector.df = hdf_to_df_selection(hdf_dir / "context.hdf", selection=selector.event_selection)
 
-    run_selection = selector.select_run(df, 9)
+    run_selection = selector.select_run(selector.df, 1)
+    for i in range(2, 10):
+        run_selection = run_selection.append(selector.select_run(selector.df, i))
 
-    print(run_selection.sum())
+    selector.X = selector.select_features(df=selector.df)
+    selector.y = selector.select_labels(df=selector.df)
+
+    print("Elements in event selection:")
+    print(sum(selector.event_selection))
+    print("Elements in events also in run selection")
+    print(len(run_selection))
+    print("Breakdowns in event selection")
+    print(len(selector.y) - sum(selector.y))
+    print("Breakdowns in events also in run selection")
+    print(len(selector.y[run_selection]) - sum(selector.y[run_selection]))

@@ -89,6 +89,7 @@ if __name__ == '__main__':
     if args_in.calculate_features:
         feature_handling(work_dir=args_in.data_path)
 
-    train, valid, test = load_dataset(creator=SimpleSelect(), hdf_dir=args_in.data_path)
+    train, valid, test = load_dataset(creator=SimpleSelect(),
+                                      hdf_dir=args_in.data_path)
     modeling(train_set=train, valid_set=valid, test_set=test,
              param_dir=args_in.file_path / "src/model" / args_in.param_name, output_dir=args_in.output_path)
