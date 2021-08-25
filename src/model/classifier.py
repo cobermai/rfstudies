@@ -87,7 +87,7 @@ class Classifier:
         ]
 
         x = Input(shape=self.input_shape[1:])
-        keras.models.Model(inputs=[x], outputs=model.call(x))
+        model = keras.models.Model(inputs=[x], outputs=model.call(x))
 
         model.compile(loss=self.loss,
                       optimizer=self.optimizer,

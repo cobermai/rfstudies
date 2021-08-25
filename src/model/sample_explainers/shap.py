@@ -16,7 +16,8 @@ class Shap_Explainer(Explainer):
         abstract method to select events for dataset
         """
         background = X_train[np.random.choice(X_train.shape[0], 100, replace=False)]
-        self.shap_explainer = shap.GradientExplainer(classifier.model, background)  # DeepExplainer vs. GradientExplainer
+        shap.explainers._deep.deep_tf.op_handlers["AddV2"] = shap.explainers._deep.deep_tf.passthrough
+        self.shap_explainer = shap.DeepExplainer(classifier.model, background)  # DeepExplainer vs. GradientExplainer
 
     def get_sample_importance(self, X_sample: np.ndarray) -> np.ndarray:
         """

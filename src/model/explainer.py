@@ -48,6 +48,6 @@ def explain_samples(explainer: Explainer,
 
 
     explainer.build_explainer(classifier=classifier, X_train=X_train)
-    sample_importance = explainer.get_sample_importance(X_sample[1:])
+    sample_importance = explainer.get_sample_importance(X_sample[:1, :, :])
     # feature_importance = explainer.get_feature_importance(X_sample)
     print("asd")
