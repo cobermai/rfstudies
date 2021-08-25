@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
-from pathlib import Path
 import numpy as np
-from src.model.classifier import Classifier
+from tensorflow.keras import Model
 
 
 
@@ -16,7 +15,7 @@ class Explainer(ABC):
     """
 
     @abstractmethod
-    def build_explainer(self, classifier: Classifier, X_train: np.ndarray) -> np.ndarray:
+    def build_explainer(self, model: Model, X_train: np.ndarray) -> np.ndarray:
         """
         abstract method to select events for dataset
         """
@@ -35,7 +34,7 @@ class Explainer(ABC):
 
 
 def explain_samples(explainer: Explainer,
-                    classifier: Classifier,
+                    model: Model,
                     X_train: np.ndarray,
                     X_sample: np.ndarray) -> np.ndarray:
     """
@@ -44,10 +43,7 @@ def explain_samples(explainer: Explainer,
     :return: train, valid, test: tuple with data of type named tuple
     """
 
-
-
-
-    explainer.build_explainer(classifier=classifier, X_train=X_train)
+    explainer.build_explainer(model=model, X_train=X_train)
     sample_importance = explainer.get_sample_importance(X_sample[:1, :, :])
     # feature_importance = explainer.get_feature_importance(X_sample)
     print("asd")

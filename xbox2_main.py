@@ -5,14 +5,13 @@ import json
 from pathlib import Path
 import sys
 import pandas as pd
+from tensorflow.keras.models import load_model
 from src.handler import XBox2ContextDataCreator
 from src.model.classifier import Classifier
 from src.transformation import transform
 from src.utils.dataset_creator import load_dataset
 from src.utils import hdf_tools
 from src.xbox2_specific.datasets.simple_select import SimpleSelect
-#from src.xbox2_specific.datasets.XBOX2_event_bd20ms import XBOX2EventBD20msSelect
-#from src.xbox2_specific.datasets.XBOX2_trend_bd20ms import XBOX2TrendBD20msSelect
 from src.model.explainer import explain_samples
 from src.model.sample_explainers.shap import Shap_Explainer
 
@@ -68,7 +67,7 @@ def feature_handling(work_dir: Path):
     creator.manage_features()
 
 
-def modeling(train_set, valid_set, test_set, param_dir: Path, output_dir: Path, fit_classifier: bool = False):
+def modeling(train_set, valid_set, test_set, param_dir: Path, output_dir: Path, fit_classifier: bool = True):
     """MODELING"""
     hp_file = open(param_dir, 'r')
     hp_dict = json.load(hp_file)
@@ -76,12 +75,12 @@ def modeling(train_set, valid_set, test_set, param_dir: Path, output_dir: Path, 
     clf = Classifier(input_shape=train_set.X.shape, output_directory=output_dir, **hp_dict)
     if fit_classifier:
         clf.fit_classifier(train_set, valid_set)
-    clf.model.load_weights(output_dir.parent / "best_model.h5")
+    clf.model = load_model(output_dir / "best_model.tf")
 
     results = clf.model.evaluate(x=test_set.X, y=test_set.y, return_dict=True)
     pd.DataFrame.from_dict(results, orient='index').T.to_csv(output_dir / "results.csv")
     clf.model.predict(test_set.X)
-    explain_samples(explainer=Shap_Explainer(), classifier=clf, X_train=train_set.X, X_sample=test_set.X)
+    explain_samples(explainer=Shap_Explainer(), model=clf.model, X_train=train_set.X, X_sample=test_set.X)
 
 if __name__ == '__main__':
     args_in = parse_input_arguments(args=sys.argv[1:])

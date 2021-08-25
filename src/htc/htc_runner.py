@@ -71,7 +71,13 @@ class HTCondorRunner:
             try:
                 file.write("#!/bin/bash\n")
                 file.write(f"cd {work_dir}\n")
+
+                file.write(f"virtualenv venv\n")
+
                 file.write(f"source {work_dir}/venv/bin/activate\n")
+
+                file.write(f"pip3 install -r requirements.txt\n")
+
                 file.write("which python3\n")
                 file.write("echo $PYTHONPATH\n")
                 file.write(f"python3 {work_dir / main_name} --file_path={work_dir} --output_path={output_dir}")
