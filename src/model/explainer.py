@@ -3,47 +3,34 @@ import numpy as np
 from tensorflow.keras import Model
 
 
-
-class Explainer(ABC):
+class ExplainerCreator(ABC):
     """
-    abstract class which acts as a template to create datasets
-
-    def __init__(self, build=True):
-        if build:
-            self.model = self.build_explainer()
-        super().__init__()
+    abstract class which acts as a template to create explainers
     """
-
     @abstractmethod
-    def build_explainer(self, model: Model, X_train: np.ndarray) -> np.ndarray:
+    def build_explainer(self, model: Model, X_reference: np.ndarray) -> np.ndarray:
         """
-        abstract method to select events for dataset
-        """
-
-    @abstractmethod
-    def get_feature_importance(self, X_sample: np.ndarray) -> np.ndarray:
-        """
-        abstract method to select events for dataset
+        abstract method to build explainer
         """
 
     @abstractmethod
-    def get_sample_importance(self, X_sample: np.ndarray) -> np.ndarray:
+    def get_sample_importance(self, X_to_explain: np.ndarray) -> list:
         """
-        abstract method to select events for dataset
+        abstract method to use explainer to get important samples
         """
 
 
-def explain_samples(explainer: Explainer,
+def explain_samples(explainer: ExplainerCreator,
                     model: Model,
-                    X_train: np.ndarray,
-                    X_sample: np.ndarray) -> np.ndarray:
+                    X_reference: np.ndarray,
+                    X_to_explain: np.ndarray) -> np.ndarray:
     """
-    :param creator: any concrete subclass of DatasetCreator to specify dataset selection
-    :param hdf_dir: input directory with hdf files
-    :return: train, valid, test: tuple with data of type named tuple
+    :param explainer: any concrete subclass of Explainer to explain prediction
+    :param model: tensorflow model of type functional API
+    :param X_reference: data, used as reference for explanation
+    :param X_to_explain: data which should be explained
+    :return: sample_importance: list of arrays with importance for each label
     """
-
-    explainer.build_explainer(model=model, X_train=X_train)
-    sample_importance = explainer.get_sample_importance(X_sample[:1, :, :])
-    # feature_importance = explainer.get_feature_importance(X_sample)
-    print("asd")
+    explainer.build_explainer(model=model, X_reference=X_reference)
+    sample_importance = explainer.get_sample_importance(X_to_explain)
+    return sample_importance

@@ -12,7 +12,7 @@ from src.utils.dataset_creator import load_dataset
 from src.utils import hdf_tools
 from src.xbox2_specific.datasets.simple_select import SimpleSelect
 from src.model.explainer import explain_samples
-from src.model.sample_explainers.shap import Shap_Explainer
+from src.model.sample_explainers.deep_shap import ShapDeepExplainer
 
 
 def parse_input_arguments(args):
@@ -80,9 +80,6 @@ def modeling(train_set, valid_set, test_set, param_dir: Path, output_dir: Path, 
     pd.DataFrame.from_dict(results, orient='index').T.to_csv(output_dir / "results.csv")
     return clf
 
-def explanation(explainer, model, train_set, test_set):
-    """EXPLANATION"""
-    return explain_samples(explainer, model=model, X_train=train_set.X, X_sample=test_set.X)
 
 if __name__ == '__main__':
     args_in = parse_input_arguments(args=sys.argv[1:])
@@ -97,5 +94,6 @@ if __name__ == '__main__':
     clf = modeling(train_set=train, valid_set=valid, test_set=test,
                    param_dir=args_in.file_path / "src/model" / args_in.param_name, output_dir=args_in.output_path)
 
-    explanation = explanation(explainer=Shap_Explainer(), model=clf.model, train_set=train, test_set=test)
-    print("asd")
+    explanation = explain_samples(explainer=ShapDeepExplainer(), model=clf.model,
+                                  X_reference=train.X, X_to_explain=test.X[:1, :, :])
+    print("Process finished")

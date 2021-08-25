@@ -4,7 +4,7 @@ model setup according to https://www.tensorflow.org/guide/keras/custom_layers_an
 from pathlib import Path
 import numpy as np
 from tensorflow import keras
-from tensorflow.keras import Input, Model
+from tensorflow.keras import Input
 from src.model.classifiers import fcn
 from src.model.classifiers import fcn_2dropout
 from src.model.classifiers import inception
@@ -86,7 +86,7 @@ class Classifier:
             keras.metrics.AUC(name='prc', curve='PR'),
         ]
 
-        #  converting the tf subclass model into a functional model. This enables to use shap
+        #  converting the tf subclass model into a functional model. This enables to use the Explainer
         x = Input(shape=self.input_shape[1:])
         model = keras.models.Model(inputs=[x], outputs=model.call(x))
 
