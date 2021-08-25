@@ -60,7 +60,7 @@ class HTCondorRunner:
         install_requirements = False
         if install_requirements:  # pip3 install --upgrade pip
             env_command = f"cd {work_dir} ;" \
-                          "virtualenv venv ;" \ 
+                          "virtualenv venv ;" \
                           "source ./venv/bin/activate ;" \
                           "pip3 install -r requirements.txt ;"
             os.system(env_command)
