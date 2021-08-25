@@ -33,9 +33,9 @@ class HTCondorRunner:
        # install_requirements = True
        # if install_requirements:
        #     env_command = f"cd {work_dir} ;" \
-       #                   "pip3 install --upgrade pip;" \
-       #                   "pip3 install --user virtualenv ;" \
-       #                   "virtualenv -p /usr/bin/python3 venv ;" \
+       #                   #"pip3 install --upgrade pip;" \
+       #                   #"pip3 install --user virtualenv ;" \
+       #                   "virtualenv venv ;" \
        #                   "source ./venv/bin/activate ;" \
        #                   "pip3 install -r requirements.txt ;"
        #     os.system(env_command)
@@ -48,8 +48,7 @@ class HTCondorRunner:
        #         file.write(f"cd {work_dir}\n")
        #         file.write("virtualenv -p /usr/bin/python3 venv \n")
        #         file.write(f"source {work_dir}/venv/bin/activate\n")
-       #         file.write("ls ./venv/bin/\n")
-       #         file.write("python3 -V\n")
+       #         file.write("ls ./venv/bin/\n")    file.write("python3 -V\n")
        #         file.write("which python3\n")
        #         file.write("echo $PYTHONPATH\n")
        #         file.write(f"python3 {work_dir / main_name} --file_path={work_dir} --output_path={output_dir}")
@@ -58,11 +57,10 @@ class HTCondorRunner:
        # os.system(f"chmod +x {master_bash_filename}")
 
         # install requirements
-        install_requirements = True
-        if install_requirements:
+        install_requirements = False
+        if install_requirements:  # pip3 install --upgrade pip
             env_command = f"cd {work_dir} ;" \
-                          "pip3 install --upgrade pip;" \
-                          "pip3 install --user virtualenv ;" \
+                          "virtualenv venv ;" \ 
                           "source ./venv/bin/activate ;" \
                           "pip3 install -r requirements.txt ;"
             os.system(env_command)
@@ -74,9 +72,8 @@ class HTCondorRunner:
                 file.write("#!/bin/bash\n")
                 file.write(f"cd {work_dir}\n")
                 file.write(f"source {work_dir}/venv/bin/activate\n")
-                file.write("ls ./venv/bin/\n")
-                file.write("python3 -V\n")
                 file.write("which python3\n")
+                file.write("echo $PYTHONPATH\n")
                 file.write(f"python3 {work_dir / main_name} --file_path={work_dir} --output_path={output_dir}")
             except IOError as e:
                 print(f"I/O error({e.errno}): {e.strerror}")
