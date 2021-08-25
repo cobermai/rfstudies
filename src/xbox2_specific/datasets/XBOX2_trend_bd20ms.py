@@ -109,7 +109,7 @@ class XBOX2TrendBD20msSelect(DatasetCreator):
         Function which generates data selection filter based on run number
         :param df: pandas dataframe with xbox2 data
         :param run_no: xbox2 run number. Negative run_no is commissioning.
-        :return selection: boolean selection filter for selecting data from specific runs
+        :return run_index: list of dataframe indices for elements also found in specified run number
         """
         if run_no == 0 or run_no < -9 or run_no > 9:
             raise ValueError("Run number does not exist")
