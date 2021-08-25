@@ -5,7 +5,6 @@ import json
 from pathlib import Path
 import sys
 import pandas as pd
-from tensorflow.keras.models import load_model
 from src.handler import XBox2ContextDataCreator
 from src.model.classifier import Classifier
 from src.transformation import transform
@@ -75,12 +74,15 @@ def modeling(train_set, valid_set, test_set, param_dir: Path, output_dir: Path, 
     clf = Classifier(input_shape=train_set.X.shape, output_directory=output_dir, **hp_dict)
     if fit_classifier:
         clf.fit_classifier(train_set, valid_set)
-    clf.model = load_model(output_dir / "best_model.tf")
+    clf.model.load_weights(output_dir / "best_model.h5")
 
     results = clf.model.evaluate(x=test_set.X, y=test_set.y, return_dict=True)
     pd.DataFrame.from_dict(results, orient='index').T.to_csv(output_dir / "results.csv")
-    clf.model.predict(test_set.X)
-    explain_samples(explainer=Shap_Explainer(), model=clf.model, X_train=train_set.X, X_sample=test_set.X)
+    return clf
+
+def explanation(explainer, model, train_set, test_set):
+    """EXPLANATION"""
+    return explain_samples(explainer, model=model, X_train=train_set.X, X_sample=test_set.X)
 
 if __name__ == '__main__':
     args_in = parse_input_arguments(args=sys.argv[1:])
@@ -92,7 +94,8 @@ if __name__ == '__main__':
         feature_handling(work_dir=args_in.data_path)
 
     train, valid, test = load_dataset(creator=SimpleSelect(), hdf_dir=args_in.data_path)
-    modeling(train_set=train, valid_set=valid, test_set=test,
-             param_dir=args_in.file_path / "src/model" / args_in.param_name, output_dir=args_in.output_path)
+    clf = modeling(train_set=train, valid_set=valid, test_set=test,
+                   param_dir=args_in.file_path / "src/model" / args_in.param_name, output_dir=args_in.output_path)
 
-
+    explanation = explanation(explainer=Shap_Explainer(), model=clf.model, train_set=train, test_set=test)
+    print("asd")

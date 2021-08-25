@@ -86,7 +86,7 @@ class Classifier:
             keras.metrics.AUC(name='prc', curve='PR'),
         ]
 
-        #  converting the tf subclass model into a functional model. This enables to save the model, and to use shap
+        #  converting the tf subclass model into a functional model. This enables to use shap
         x = Input(shape=self.input_shape[1:])
         model = keras.models.Model(inputs=[x], outputs=model.call(x))
 
@@ -111,8 +111,8 @@ class Classifier:
             min_lr=0.0001)
 
         model_checkpoint = keras.callbacks.ModelCheckpoint(
-            filepath=self.output_directory / 'best_model.tf',
-            #save_weights_only=True,
+            filepath=self.output_directory / 'best_model.h5',
+            save_weights_only=True,
             monitor=self.monitor,
             save_best_only=True)
 
