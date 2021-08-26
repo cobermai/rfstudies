@@ -14,7 +14,7 @@ class FCN2DropoutBlock(Model, ABC):
     def __init__(self, num_classes):
         super(FCN2DropoutBlock, self).__init__()
         self.cnn1 = CNNBlock(filters=128, kernel_size=8)
-        self.cnn2_dropout = CNNDropoutBlock(filters=256, kernel_size=5)
+        self.cnn2_dropout = CNNDropoutBlock(filters=256, kernel_size=5, dropout_rate=0.5)
         self.cnn3 = CNNBlock(filters=128, kernel_size=3)
         self.gap = layers.GlobalAveragePooling1D()
         self.dropout = layers.Dropout(0.5)
