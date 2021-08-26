@@ -27,6 +27,7 @@ class Classifier:
                  optimizer: str,
                  epochs: int,
                  batch_size: int,
+                 learning_rate: int,
                  reduce_lr_factor: int,
                  reduce_lr_patience: int,
                  min_lr: int,
@@ -54,6 +55,7 @@ class Classifier:
         self.optimizer = optimizer
         self.epochs = epochs
         self.batch_size = batch_size
+        self.learning_rate = learning_rate
         self.reduce_lr_factor = reduce_lr_factor
         self.reduce_lr_patience = reduce_lr_patience
         self.min_lr = min_lr
@@ -96,8 +98,10 @@ class Classifier:
         x = Input(shape=self.input_shape[1:])
         model = keras.models.Model(inputs=[x], outputs=model.call(x))
 
+        optimizer = keras.optimizers.get(self.optimizer)
+        optimizer.learning_rate = self.learning_rate
         model.compile(loss=self.loss,
-                      optimizer=self.optimizer,
+                      optimizer=optimizer,
                       metrics=metrics,
                       **kwargs)
 
