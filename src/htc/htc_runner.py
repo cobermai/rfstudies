@@ -22,21 +22,24 @@ class HTCondorRunner:
         output_dir.mkdir(parents=True, exist_ok=True)
         main_name = "xbox2_main.py"
 
-        # install requirements
-        env_command = f"cd {work_dir} ;" \
-                      "pip3 install --user virtualenv ;" \
-                      "source ./venv/bin/activate ;" \
-                      "pip3 install --user -r requirements.txt ;"
-        os.system(env_command)
-
         # creating the master bash file
+        venv_exists = False
+        if "venv" in os.listdir():
+            venv_exists = True
+
         master_bash_filename = htc_dir / "htc_run.sh"
         with open(master_bash_filename, 'w') as file:
             try:
                 file.write("#!/bin/bash\n")
                 file.write(f"cd {work_dir}\n")
-                file.write("source ./venv/bin/activate\n")
-                file.write(f"python3 {main_name} --file_path={work_dir} --output_path={output_dir}")
+                if venv_exists:
+                    file.write(f"echo \"Virtual environment already exists, delete folder if change necessary\"")
+                    file.write(f"source {work_dir}/venv/bin/activate\n")
+                else:
+                    file.write(f"virtualenv venv\n")
+                    file.write(f"source {work_dir}/venv/bin/activate\n")
+                    file.write(f"pip3 install -r requirements.txt\n")
+                file.write(f"python3 {work_dir / main_name} --file_path={work_dir} --output_path={output_dir}")
             except IOError as e:
                 print(f"I/O error({e.errno}): {e.strerror}")
         os.system(f"chmod +x {master_bash_filename}")
@@ -65,6 +68,9 @@ class HTCondorRunner:
         logging.debug(f"Executing HTCondor command {command}")
         os.system(command)
 
+    def sensitivity(self):
+        self.run()
+
 
 if __name__ == '__main__':
-    HTCondorRunner.run()
+    HTCondorRunner().sensitivity()

@@ -11,9 +11,6 @@ from src.transformation import transform
 from src.utils.dataset_creator import load_dataset
 from src.utils import hdf_tools
 from src.xbox2_specific.datasets.simple_select import SimpleSelect
-from src.xbox2_specific.datasets.XBOX2_event_bd20ms import XBOX2EventBD20msSelect
-from src.xbox2_specific.datasets.XBOX2_trend_bd20ms import XBOX2TrendBD20msSelect
-
 
 def parse_input_arguments(args):
     """
@@ -71,13 +68,14 @@ def modeling(train_set, valid_set, test_set, param_dir: Path, output_dir: Path, 
     hp_file = open(param_dir, 'r')
     hp_dict = json.load(hp_file)
 
-    clf = Classifier(output_dir, **hp_dict)
-
+    clf = Classifier(input_shape=train_set.X.shape, output_directory=output_dir, **hp_dict)
     if fit_classifier:
         clf.fit_classifier(train_set, valid_set)
-    clf.model.load_weights(output_dir / 'best_model.hdf5')
+    clf.model.load_weights(output_dir / "best_model.h5")
+
     results = clf.model.evaluate(x=test_set.X, y=test_set.y, return_dict=True)
     pd.DataFrame.from_dict(results, orient='index').T.to_csv(output_dir / "results.csv")
+    return clf
 
 
 if __name__ == '__main__':
@@ -90,5 +88,5 @@ if __name__ == '__main__':
         feature_handling(work_dir=args_in.data_path)
 
     train, valid, test = load_dataset(creator=SimpleSelect(), hdf_dir=args_in.data_path)
-    modeling(train_set=train, valid_set=valid, test_set=test,
-             param_dir=args_in.file_path / "src/model" / args_in.param_name, output_dir=args_in.output_path)
+    clf = modeling(train_set=train, valid_set=valid, test_set=test,
+                   param_dir=args_in.file_path / "src/model" / args_in.param_name, output_dir=args_in.output_path)

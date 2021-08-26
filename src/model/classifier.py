@@ -2,7 +2,9 @@
 model setup according to https://www.tensorflow.org/guide/keras/custom_layers_and_models
 """
 from pathlib import Path
+import numpy as np
 from tensorflow import keras
+from tensorflow.keras import Input
 from src.model.classifiers import fcn
 from src.model.classifiers import fcn_2dropout
 from src.model.classifiers import inception
@@ -16,6 +18,7 @@ class Classifier:
     """
 
     def __init__(self,
+                 input_shape: np.ndarray,
                  output_directory: Path,
                  classifier_name: str,
                  num_classes: int,
@@ -38,6 +41,7 @@ class Classifier:
         :param batch_size: Number of input data used in each batch.
         :param build: Bool stating whether the model is to be build.
         """
+        self.input_shape = input_shape
         self.output_directory = output_directory
         output_directory.mkdir(parents=True, exist_ok=True)
         self.classifier_name = classifier_name
@@ -49,6 +53,7 @@ class Classifier:
         self.batch_size = batch_size
         if build:
             self.model = self.build_classifier()
+            self.model.build(input_shape)
 
     def build_classifier(self, **kwargs):
         """
@@ -81,6 +86,10 @@ class Classifier:
             keras.metrics.AUC(name='prc', curve='PR'),
         ]
 
+        #  converting the tf subclass model into a functional model. This enables to use the Explainer
+        x = Input(shape=self.input_shape[1:])
+        model = keras.models.Model(inputs=[x], outputs=model.call(x))
+
         model.compile(loss=self.loss,
                       optimizer=self.optimizer,
                       metrics=metrics,
@@ -102,7 +111,7 @@ class Classifier:
             min_lr=0.0001)
 
         model_checkpoint = keras.callbacks.ModelCheckpoint(
-            filepath=self.output_directory / 'best_model.hdf5',
+            filepath=self.output_directory / 'best_model.h5',
             save_weights_only=True,
             monitor=self.monitor,
             save_best_only=True)
