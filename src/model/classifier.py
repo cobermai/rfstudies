@@ -27,6 +27,9 @@ class Classifier:
                  optimizer: str,
                  epochs: int,
                  batch_size: int,
+                 reduce_lr_factor: int,
+                 reduce_lr_patience: int,
+                 min_lr: int,
                  build=True
                  ):
         """
@@ -51,6 +54,9 @@ class Classifier:
         self.optimizer = optimizer
         self.epochs = epochs
         self.batch_size = batch_size
+        self.reduce_lr_factor = reduce_lr_factor
+        self.reduce_lr_patience = reduce_lr_patience
+        self.min_lr = min_lr
         if build:
             self.model = self.build_classifier()
             self.model.build(input_shape)
@@ -105,10 +111,10 @@ class Classifier:
         **kwargs: Keyword arguments for tf.keras.Model.fit method
         """
         reduce_lr = keras.callbacks.ReduceLROnPlateau(
-            monitor='loss',
-            factor=0.5,
-            patience=50,
-            min_lr=0.0001)
+            monitor=self.monitor,
+            factor=self.reduce_lr_factor,
+            patience=self.reduce_lr_patience,
+            min_lr=self.min_lr)
 
         model_checkpoint = keras.callbacks.ModelCheckpoint(
             filepath=self.output_directory / 'best_model.h5',
