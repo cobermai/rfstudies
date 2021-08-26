@@ -9,7 +9,7 @@ from tests.utils.data_creator.file_creator_for_testing import CreatorTestFiles
 from tests.utils.data_creator.tdms_file_creator import CreatorTdmsFile
 
 
-@pytest.mark.skipif(sys.platform.startswith("win"), reason="test currently not supported on windows")
+@pytest.mark.skipif(os.system("h5diff -h"), reason="h5diff not found")
 def test__convert_file(tmp_path):
     """tests the _convert_file function"""
     # ARRANGE

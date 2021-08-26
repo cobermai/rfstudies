@@ -1,3 +1,4 @@
+from unittest.mock import MagicMock
 from unittest.mock import patch
 import h5py
 import numpy as np
@@ -42,19 +43,28 @@ def test__train_valid_test_split_errors():
     # ACT
     with pytest.raises(ValueError):
         creator.train_valid_test_split(X=X, y=y, splits=(1, 0, 0))
+    with pytest.raises(ValueError):
+        creator.train_valid_test_split(X=X, y=y, splits=(0, 1, 0))
+    with pytest.raises(ValueError):
+        creator.train_valid_test_split(X=X, y=y, splits=(0, 0, 1))
+    with pytest.raises(ValueError):
+        creator.train_valid_test_split(X=X, y=y, splits=(-1, 0, 0))
+    with pytest.raises(ValueError):
+        creator.train_valid_test_split(X=X, y=y, splits=(2, 0, 0))
+    with pytest.raises(ValueError):
+        creator.train_valid_test_split(X=X, y=y, splits=(0.5, 0.5, 0.5))
 
 
-@pytest.mark.skip(reason='not finished')
-def test__load_dataset(tmpdir, mock_select_events):
+@patch.multiple(dataset_creator.DatasetCreator, __abstractmethods__=set(),
+                select_events=MagicMock(return_value=np.ones((10,), dtype=bool)),
+                select_features=MagicMock(return_value=np.ones((10, 10, 10), dtype=bool)),
+                select_labels=MagicMock(return_value=np.ones((10,), dtype=bool)))
+def test__load_dataset(tmpdir):
     """
     Test load_dataset() function
     """
     # ARRANGE
-    p = patch.multiple(dataset_creator.DatasetCreator, __abstractmethods__=set())
-    p.start()
     creator = dataset_creator.DatasetCreator()
-    p.stop()
-    mock_select_events.return_value = np.array([True, False, True, False])
     path = tmpdir.join("context.hdf")
     context_dummy = h5py.File(path, 'w')
     dummy_is_bd_in_40ms_labels = np.ones((10,), dtype=bool)
@@ -90,7 +100,8 @@ def test__load_dataset(tmpdir, mock_select_events):
         f.create_dataset("test_data1", data=4 * np.ones((10,)))
         f.create_dataset("test_data2", data=np.zeros((10,)))
         f["Timestamp"] = dummy_event_timestamps.astype(h5py.opaque_dtype(dummy_event_timestamps.dtype))
-        f["PrevTrendData/Timestamp"] = dummy_trend_timestamps.astype(h5py.opaque_dtype(dummy_trend_timestamps.dtype))
+        f["PrevTrendData/Timestamp"] = dummy_trend_timestamps.astype(
+            h5py.opaque_dtype(dummy_trend_timestamps.dtype))
         f.create_dataset("clic_label/is_healthy", data=dummy_is_healthy_labels)
         f.create_dataset("is_healthy", data=dummy_is_healthy_labels)
 
@@ -101,7 +112,7 @@ def test__load_dataset(tmpdir, mock_select_events):
 
     train, valid, test = dataset_creator.load_dataset(creator=creator, hdf_dir=tmpdir)
     sum_elements = len(train.idx) + len(valid.idx) + len(test.idx)
-    splits = (len(train.idx)/sum_elements, len(valid.idx)/sum_elements, len(test.idx)/sum_elements)
+    splits = (len(train.idx) / sum_elements, len(valid.idx) / sum_elements, len(test.idx) / sum_elements)
 
     # ASSERT
     assert splits == splits_expected

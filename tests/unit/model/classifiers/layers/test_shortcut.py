@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 import tensorflow as tf
 from src.model.classifiers.layers import shortcut
 
@@ -14,3 +15,11 @@ def test__shortcut():
     y = layer_shortcut(x)
     # ASSERT
     assert not np.isnan(y).all()
+
+
+def test__shortcut_errors():
+    with pytest.raises(ValueError):
+        shortcut.ShortcutBlock(0, 0)
+
+    with pytest.raises(ValueError):
+        shortcut.ShortcutBlock(-1, -1)

@@ -11,6 +11,8 @@ from src.transformation import transform
 from src.utils.dataset_creator import load_dataset
 from src.utils import hdf_tools
 from src.xbox2_specific.datasets.simple_select import SimpleSelect
+from src.xbox2_specific.datasets.XBOX2_event_bd20ms import XBOX2EventBD20msSelect
+from src.xbox2_specific.datasets.XBOX2_trend_bd20ms import XBOX2TrendBD20msSelect
 
 def parse_input_arguments(args):
     """

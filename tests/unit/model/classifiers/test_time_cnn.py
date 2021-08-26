@@ -18,7 +18,7 @@ def test__time_cnn():
         layer_model_out_names.append(layer_model_out_name)
 
     keras.backend.clear_session()
-    print(layer_model_out_names)
+
     # ASSERT
     assert layer_model_expected_names == layer_model_out_names
 

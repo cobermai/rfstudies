@@ -18,7 +18,6 @@ def test__inception():
         layer_model_out_name = layer_model_out.name
         layer_model_out_names.append(layer_model_out_name)
 
-    print(layer_model_out_names)
     keras.backend.clear_session()
 
     # ASSERT
