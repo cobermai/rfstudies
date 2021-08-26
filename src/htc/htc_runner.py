@@ -7,13 +7,6 @@ from pathlib import Path
 class HTCondorRunner:
     """
     class used to run simulations on a cluster interfaced by HTCondor
-    executable = runmore.sh
-    input = input/mydata.$(ProcId)
-    arguments = $(ClusterID) $(ProcId)
-    output = output/hello.$(ClusterId).$(ProcId).out
-    error = error/hello.$(ClusterId).$(ProcId).err
-    log = log/hello.$(ClusterId).log
-    queue 150
     """
 
     @staticmethod
@@ -75,6 +68,8 @@ class HTCondorRunner:
         logging.debug(f"Executing HTCondor command {command}")
         os.system(command)
 
+    def sensitivity(self):
+        self.run()
 
 if __name__ == '__main__':
-    HTCondorRunner.run()
+    HTCondorRunner().sensitivity()
