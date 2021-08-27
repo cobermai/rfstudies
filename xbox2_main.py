@@ -24,7 +24,9 @@ def parse_input_arguments(args):
                         help='path of xbox2_main.py file', default=Path().absolute())
     parser.add_argument('--data_path', required=False, type=Path,
                         help='path of data',
-                        default=Path("/eos/project/m/ml-for-alarm-system/private/CLIC_data_transfert/Xbox2_hdf/"))
+                        default=Path(
+                            "/eos/project/m/ml-for-alarm-system/private/CLIC_data_transfert/Xbox2_hdf/context.hdf")
+                        )
     parser.add_argument('--output_path', required=False, type=Path, help='path of data',
                         default=Path().absolute() / "src/output" / datetime.now().strftime("%Y-%m-%dT%H.%M.%S"))
     parser.add_argument('--dataset_name', required=False, type=str,
@@ -89,6 +91,7 @@ if __name__ == '__main__':
     if args_in.calculate_features:
         feature_handling(work_dir=args_in.data_path)
 
-    train, valid, test = load_dataset(creator=SimpleSelect(), hdf_dir=args_in.data_path)
-    clf = modeling(train_set=train, valid_set=valid, test_set=test,
-                   param_dir=args_in.file_path / "src/model" / args_in.param_name, output_dir=args_in.output_path)
+    train, valid, test = load_dataset(creator=SimpleSelect(),
+                                      data_path=args_in.data_path)
+    modeling(train_set=train, valid_set=valid, test_set=test,
+             param_dir=args_in.file_path / "src/model" / args_in.param_name, output_dir=args_in.output_path)
