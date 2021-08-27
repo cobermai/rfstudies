@@ -2,8 +2,8 @@
 This module applies conversion and gathering on xbox2 data.
 """
 import argparse
-import logging
 from pathlib import Path
+import logging
 import coloredlogs
 import h5py
 import numpy as np

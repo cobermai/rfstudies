@@ -6,12 +6,12 @@ clean: The clean_by_row cleans "corrupt" values row by row after all datasets ha
 sort: sort_by sorts all datasets with respect to one of them
 conversion to df: convert_to_df converts an hdf file into a pandas dataframe for quick manipulation
 """
-import logging
 from pathlib import Path
+import logging
 import re
 import typing
-import h5py
 import numpy as np
+import h5py
 import pandas as pd
 
 logger = logging.getLogger(__name__)
