@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 from pandas import Timestamp
 from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import train_test_split
 from src.utils.dataset_creator import DatasetCreator
 from src.utils.hdf_tools import hdf_to_df_selection
 
@@ -17,13 +18,6 @@ class XBOX2TrendBD20msSelect(DatasetCreator):
     Subclass of DatasetCreator to specify dataset selection. None of the abstract functions from abstract class can
     be overwritten.
     """
-
-    def __init__(self, runs_list: typing.List):
-        """
-        :param runs_list: list of runs to be included in dataset
-        """
-        super().__init__()
-        self.runs = runs_list
 
     @staticmethod
     def select_trend_data_events(event_timestamps: np.datetime64,
@@ -41,11 +35,11 @@ class XBOX2TrendBD20msSelect(DatasetCreator):
         filter_timestamp_diff = time_diff < time_diff_threshold
         return filter_timestamp_diff
 
-    def select_events(self, context_data_file_path: Path) -> typing.List[bool]:
+    def select_events(self, context_data_file_path: Path) -> pd.DataFrame:
         """
         selection of events in data
         :param context_data_file_path: path to context data file
-        :return selection: boolean filter for selecting breakdown events
+        :return df: pandas dataframe with data from selected events
         """
         selection_list = ["is_bd_in_20ms"]
         with h5py.File(context_data_file_path, "r") as file:
@@ -66,9 +60,12 @@ class XBOX2TrendBD20msSelect(DatasetCreator):
 
             # select 2.5% of the healthy pulses randomly
             selection[is_healthy] = np.random.choice(a=[True, False], size=(sum(is_healthy),), p=[0.025, 0.975])
-            return selection
 
-    def select_features(self, df: pd.DataFrame) -> np.ndarray:
+        df = hdf_to_df_selection(context_data_file_path, selection=selection)
+        return df
+
+    @staticmethod
+    def select_features(df: pd.DataFrame) -> np.ndarray:
         """
         returns features of selected events for modeling
         :param df: dataframe with selected events
@@ -94,7 +91,8 @@ class XBOX2TrendBD20msSelect(DatasetCreator):
 
         return X
 
-    def select_labels(self, df: pd.DataFrame) -> np.ndarray:
+    @staticmethod
+    def select_labels(df: pd.DataFrame) -> np.ndarray:
         """
         returns labels of selected events for supervised machine learning
         :param df: dataframe with selected events
@@ -148,24 +146,33 @@ class XBOX2TrendBD20msSelect(DatasetCreator):
 
         return run_index
 
-    def scale_data(self, X: np.ndarray) -> np.ndarray:
+    @staticmethod
+    def scale_data(X: np.ndarray, manual_scale: Optional[list] = None) -> np.ndarray:
         """
         Function scales data for with sklearn standard scaler.
         For trend data the data is scaled for each run.
         E.g., run 1 data is scaled by the mean and std of run 1 data etc.
         :param X: data array of shape (event, sample, feature)
+        :param manual_scale: array of shape X with numbers specifying which numbers are scaled together
         :return: X_scaled: scaled data array of shape (event, sample, feature)
         """
-        X_scaled = np.zeros_like(X)
-        for run in self.runs:
-            run_index = self.select_run(self.df, run)
+        if manual_scale is None:
+            X_scaled = np.zeros_like(X)
             for feature_index in range(len(X[0, 0, :])):  # Iterate through feature
-                X_scaled[run_index, :, feature_index] = StandardScaler().fit_transform(
-                    X[run_index, :, feature_index].T).T
-        return X_scaled
+                X_scaled[:, :, feature_index] = StandardScaler().fit_transform(X[:, :, feature_index].T).T
+            return X_scaled
+        else:
+            X_scaled = np.zeros_like(X)
+            for number in np.unique(manual_scale):
+                manual_index = manual_scale == number  # select indexes
+                for feature_index in range(len(X[0, 0, :])):  # Iterate through feature
+                    X_scaled[manual_index, :, feature_index] = StandardScaler().fit_transform(
+                        X[manual_index, :, feature_index].T).T
+            return X_scaled
 
-    def train_valid_test_split(self, X: np.ndarray, y: np.ndarray,
-                               splits: Optional[tuple] = None) -> tuple:
+    @staticmethod
+    def train_valid_test_split(X: np.ndarray, y: np.ndarray,
+                               splits: Optional[tuple] = None, manual_split: Optional[bool] = None) -> tuple:
         """
         Function splits data into training, testing and validation set using random sampling. Note that this function
         can be overwritten in the concrete dataset selection.
@@ -174,18 +181,32 @@ class XBOX2TrendBD20msSelect(DatasetCreator):
         :param splits: tuple specifying splitting fractions (training, validation, test)
         :return: train, valid, test: Tuple with data of type named tuple
         """
-        if splits is None:
-            splits = ([1, 2, 3, 4, 5, 6, 7], 8, 9)
-            runs_train = self.select_run(self.df, 1)
-            for run in splits[0]:
-                runs_train = runs_train.append(self.select_run(self.df, run))
-            runs_valid = self.select_run(self.df, splits[1])
-            runs_test = self.select_run(self.df, splits[2])
+        if manual_split is None:
+            if splits is None:
+                splits = (0.7, 0.2, 0.1)
+            if (splits[0] >= 1) or (splits[0] < 0):
+                raise ValueError('Training fraction cannot be >= 1 or negative')
+            if (splits[1] >= 1) or (splits[1] < 0):
+                raise ValueError('Validation fraction cannot be >= 1 or negative')
+            if (splits[2] >= 1) or (splits[2] < 0):
+                raise ValueError('Test fraction cannot be >= 1 or negative')
+            if not np.allclose(splits[0] + splits[1] + splits[2], 1):
+                raise ValueError('Splits must sum to 1')
 
-        idx = np.arange(len(X))
-        X_train, y_train, idx_train = X[runs_train], y[runs_train], idx[runs_train]
-        X_valid, y_valid, idx_valid = X[runs_valid], y[runs_valid], idx[runs_valid]
-        X_test, y_test, idx_test = X[runs_test], y[runs_test], idx[runs_test]
+            idx = np.arange(len(X))
+            X_train, X_tmp, y_train, y_tmp, idx_train, idx_tmp = \
+                train_test_split(X, y, idx, train_size=splits[0])
+            X_valid, X_test, y_valid, y_test, idx_valid, idx_test = \
+                train_test_split(X_tmp, y_tmp, idx_tmp, train_size=splits[1] / (1 - (splits[0])))
+        else:
+            index_train = manual_split == 0
+            index_valid = manual_split == 1
+            index_test = manual_split == 2
+
+            idx = np.arange(len(X))
+            X_train, y_train, idx_train = X[index_train], y[index_train], idx[index_train]
+            X_valid, y_valid, idx_valid = X[index_valid], y[index_valid], idx[index_valid]
+            X_test, y_test, idx_test = X[index_test], y[index_test], idx[index_test]
 
         data = namedtuple("data", ["X", "y", "idx"])
         train = data(X_train, y_train, idx_train)
@@ -194,26 +215,23 @@ class XBOX2TrendBD20msSelect(DatasetCreator):
 
         return train, valid, test
 
+
 if __name__ == '__main__':
-    selector = XBOX2TrendBD20msSelect(runs_list=list(range(10)))
-    hdf_dir = Path('C:\\Users\\holge\\cernbox\\CLIC_data\\Xbox2_hdf')
-    selector.event_selection = selector.select_events(context_data_file_path=hdf_dir / "context.hdf")
-    selector.df = hdf_to_df_selection(hdf_dir / "context.hdf", selection=selector.event_selection)
+    selector = XBOX2TrendBD20msSelect()
+    data_path = Path('C:\\Users\\holge\\cernbox\\CLIC_data\\Xbox2_hdf\\context.hdf')
+    df = selector.select_events(context_data_file_path=data_path)
 
-    run_selection = selector.select_run(selector.df, 1)
+    run_selection = selector.select_run(df, 1)
     for i in range(2, 10):
-        run_selection = run_selection.append(selector.select_run(selector.df, i))
+        run_selection = run_selection.append(selector.select_run(df, i))
 
-    selector.X = selector.select_features(df=selector.df)
-    selector.y = selector.select_labels(df=selector.df)
+    X = selector.select_features(df=df)
+    y = selector.select_labels(df=df)
 
-    print("Elements in event selection:")
-    print(sum(selector.event_selection))
+
     print("Elements in runs")
     print(sum(run_selection))
-    print("Elements from events in runs")
-    print(sum(selector.event_selection))
     print("Breakdowns in event selection")
-    print(len(selector.y) - sum(selector.y))
+    print(len(y) - sum(y))
     print("Breakdowns in from events in run selection")
-    print(len(selector.y[run_selection]) - sum(selector.y[run_selection]))
+    print(len(y[run_selection]) - sum(y[run_selection]))
