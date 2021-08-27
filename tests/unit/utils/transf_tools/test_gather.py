@@ -1,9 +1,9 @@
 """
 tests for gather module
 """
-from typing import Callable
-from pathlib import Path
 from functools import partial
+from pathlib import Path
+from typing import Callable
 import h5py
 import pytest
 from src.utils.transf_tools import gather
@@ -24,7 +24,7 @@ def _sanity_func(file_path: Path, hdf_path: str) -> bool:
 
 
 def test__get_ext_link_rec(tmp_path) -> None:
-    """tests _get_ext_link_rek function"""
+    """tests _get_ext_link_rec function"""
     # ARRANGE
     hdf_file_path = tmp_path / "test_file.hdf"
     with h5py.File(hdf_file_path, "w") as file:
