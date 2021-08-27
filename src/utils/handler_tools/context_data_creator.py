@@ -1,10 +1,9 @@
 """This module contains an abstract class structure for creating a context data file.
 The ContextDataCreator class should organize the creation of the context data file."""
-import abc
 from dataclasses import dataclass
 import logging
 from pathlib import Path
-
+import abc
 
 logger = logging.getLogger(__name__)
 

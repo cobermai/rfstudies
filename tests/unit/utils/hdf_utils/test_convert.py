@@ -1,15 +1,12 @@
 """module to test the convert.py"""
 import os
-import sys
 from pathlib import Path
 import h5py
-import pytest
 from src.utils.transf_tools import convert
 from tests.utils.data_creator.file_creator_for_testing import CreatorTestFiles
 from tests.utils.data_creator.tdms_file_creator import CreatorTdmsFile
 
 
-@pytest.mark.skipif(os.system("h5diff -h"), reason="h5diff not found")
 def test__convert_file(tmp_path):
     """tests the _convert_file function"""
     # ARRANGE
