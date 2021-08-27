@@ -148,3 +148,10 @@ Thumbs.db
 
 # profiling data
 .prof
+
+# model output
+/src/output
+
+# htc folders
+/src/htc/htc_run.sh
+/src/htc/htc_submit.sub

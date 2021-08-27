@@ -1,7 +1,7 @@
 """This module contains the definition and gathering of EvenAttributeFeatures for the XBox2 data set."""
 import typing
-import numpy as np
 import h5py
+import numpy as np
 from src.utils.handler_tools.feature_class import EventAttributeFeature
 
 

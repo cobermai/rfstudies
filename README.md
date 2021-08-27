@@ -22,15 +22,15 @@ The system requirements of the mlframework are:
 - [hdf5 tools](https://support.hdfgroup.org/HDF5/doc/RM/Tools/)
 
 we further recommend the use of:
-- pip, package management
-- virtualenv to ensure package compatability
+- [pip](https://pip.pypa.io/en/stable/installation/), package management
+- [virtualenv](https://virtualenv.pypa.io/en/latest/) to ensure package compatability
 
-To install the system requirements on debian based systems (eg. Ubuntu) using the package manager `apt`, type the following into the command line:
+To install the system requirements on debian based systems (e.g. Ubuntu) using the package manager `apt`, type the following into the command line:
 ```bash
 apt update
 sudo xargs apt install <system_requirements/requirements_deb.system
 ```
-for rpm based systems (eg. CentOS 7) using the system package manager `yum`, type the following into the command line:
+for rpm based systems (e.g. CentOS 7) using the system package manager `yum`, type the following into the command line:
 ```bash
 yum update
 sudo xargs yum install <system_requirements/requirements_rpm.system
@@ -59,7 +59,7 @@ or install the requirements manually:
 pip install -r requirements.txt
 ```
 
-
+Repository structure
 ```angular2html ( cleanpy .; tree -A -I "__init__.py|venv|__pycache__|log_files")
 .
 ├── log_config.yml              < logging configurations
@@ -70,16 +70,40 @@ pip install -r requirements.txt
 ├── setup.py                    < Setup file for using the project with "pip install mlframework"
 ├── sonar-project.properties    < properties for sonar code analyzation tool
 ├── src                         <<< source directory
-│   ├── transformation.py       < tranforms data in special formats into a handy format (ex.: .tdms -> .hdf)
-│   └── utils                   < utilities
-│       ├── hdf_tools.py        < tools to handle hdf files
-│       ├── handler_tools       < combines data without copying it
-│       └── transf_tools        < utilities used in the transformation
-│           ├── convert.py      < converting tool
-│           └── gather.py       < gather data scattered on multiple files
-└── tests                       <<< tests for main code in the source directory
-    ├── integration             < tests from start to beginning (also called end to end test), NOT IMPLEMENTED YET
-    ├── unit                    < tests every function/class (also called atomic test)
-    └── utils                   < utilyties for the testing suite (ex. creating test files)
-
+│   ├── htc                     < htc files for running code on HTConder
+│   │   ├── error               < error folder
+│   │   ├── htc_run.sh          < shell script for running on htc
+│   │   ├── htc_runner.py       < Python script for running on gtc   
+│   │   ├── htc_sensitivity.sh  < shell script for running sensitivity analysis on htc
+│   │   └── htc_submit.sub      < script for submitting htc job
+│   ├── model                   < model specification
+│   │   ├── classifier.py       < creates Tensorflow model
+│   │   └── classifiers         < library of Tensorflow models
+│   │       ├── layers          < custom Tensorflow layers
+│   │       │   ├── cnn.py          < CNN layer
+│   │       │   ├── cnn_dropout.py  < CNN Dropout layer
+│   │       │   └── shortcut        < shortcut layer
+│   │       ├── fcn.py          < FCN model
+│   │       ├── fcn_2dropout.py < FCN with dropout model
+│   │       ├── inception.py    < Inception model
+│   │       ├── resnet.py       < Resnet model
+│   │       └── time_cnn.py     < TimeCNN model
+│   ├── utils                   < utilities
+│   │   ├── hdf_tools.py        < tools to handle hdf files
+│   │   ├── handler_tools       < combines data without copying it
+│   │   ├── transf_tools        < utilities used in the transformation
+│   │   │   ├── convert.py      < converting tool
+│   │   │   ├── gather.py       < gather data scattered on multiple files
+│   │   ├── dataset_creator.py  < creates dataset
+│   │   └── hdf_tool.py         < tools for hdf files
+│   ├── xbox2_specific          < files specific to the xbox2 experiment
+│   │   ├── datasets            < dataset specification files for xbox2
+│   │   └── feature_definition  < feature definitions for xbox2
+│   ├── handler.py              < handles creation of context file from data
+│   └── transformation.py       < tranforms data in special formats into a handy format (ex.: .tdms -> .hdf)
+├── tests                       <<< tests for main code in the source directory
+│   ├── integration             < tests from start to beginning (also called end to end test), NOT IMPLEMENTED YET
+│   ├── unit                    < tests every function/class (also called atomic test)
+│   └── utils                   < utilyties for the testing suite (ex. creating test files)
+└── xbox2_main.py                   < the main runfile for using xbox2 data
 ```

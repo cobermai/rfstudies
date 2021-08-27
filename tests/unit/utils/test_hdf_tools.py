@@ -1,24 +1,14 @@
 """this module tests the functions from hdf_tools"""
 import os
+import sys
 import h5py
 import numpy as np
 import pandas as pd
+import pytest
 from src.utils import hdf_tools
 
 
-def test__hdf_path_combine() -> None:
-    """tests hdf_path_combine function"""
-    # ARRANGE
-    arg_list = (("a", "b", "c"),
-                ("/a/b", "/c"),
-                ("/a///b///", "/c"))
-    expected_output = "/a/b/c"
-    # ACT + ASSERT
-    for args in arg_list:
-        output = hdf_tools.hdf_path_combine(*args)
-        assert output == expected_output, f"expected {expected_output}\nbut got {output}"
-
-
+@pytest.mark.skipif(os.system("h5diff -h"), reason="h5diff not found")
 def test_merge(tmp_path):
     """tests merge"""
     # ARRANGE
@@ -41,6 +31,7 @@ def test_merge(tmp_path):
     assert is_equal
 
 
+@pytest.mark.skipif(os.system("h5diff -h"), reason="h5diff not found")
 def test_convert_iso8601_to_datetime__with_attrs(tmp_path):
     """tests conversion of iso datetime strings to datetime format. It tests conversion of datasets and attributes."""
     # ARRANGE
@@ -75,6 +66,7 @@ def test_convert_iso8601_to_datetime__with_attrs(tmp_path):
     assert is_equal
 
 
+@pytest.mark.skipif(os.system("h5diff -h"), reason="h5diff not found")
 def test_convert_iso8601_to_datetime__without_attrs(tmp_path):
     """tests conversion of iso strings to datetime without converting attributes, so only hdf-datsets."""
     work_file_path = tmp_path / "test.h5"
@@ -106,6 +98,7 @@ def test_convert_iso8601_to_datetime__without_attrs(tmp_path):
     assert is_equal
 
 
+@pytest.mark.skipif(os.system("h5diff -h"), reason="h5diff not found")
 def test_clean_row_by_row(tmp_path):
     """tests clean row by row"""
     # ARRANGE
@@ -146,3 +139,17 @@ def test_sort_by(tmp_path):
     # ASSERT
     with h5py.File(work_file_path, "r") as file:
         assert np.all(np.diff(file["d1"][:]) >= 0)
+
+
+def test__hdf_path_combine() -> None:
+    """tests hdf_path_combine function"""
+    # ARRANGE
+    arg_list = (("a", "b", "c"),
+                ("/a/b", "/c"),
+                ("/a///b///", "/c"))
+    expected_output = "/a/b/c"
+    # ACT + ASSERT
+    for args in arg_list:
+        output = hdf_tools.hdf_path_combine(*args)
+        assert output == expected_output, f"expected {expected_output}\nbut got {output}"
+
