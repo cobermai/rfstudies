@@ -110,7 +110,7 @@ def test__load_dataset(tmpdir):
     # ACT
     np.random.seed(42)
 
-    train, valid, test = dataset_creator.load_dataset(creator=creator, hdf_dir=tmpdir)
+    train, valid, test = dataset_creator.load_dataset(creator=creator, data_path=tmpdir/"context.hdf")
     sum_elements = len(train.idx) + len(valid.idx) + len(test.idx)
     splits = (len(train.idx) / sum_elements, len(valid.idx) / sum_elements, len(test.idx) / sum_elements)
 

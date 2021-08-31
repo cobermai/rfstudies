@@ -18,7 +18,7 @@ class Classifier:
     """
 
     def __init__(self,
-                 input_shape: np.ndarray,
+                 input_shape: tuple,
                  output_directory: Path,
                  classifier_name: str,
                  num_classes: int,
@@ -27,10 +27,10 @@ class Classifier:
                  optimizer: str,
                  epochs: int,
                  batch_size: int,
-                 learning_rate: int,
-                 reduce_lr_factor: int,
+                 learning_rate: float,
+                 reduce_lr_factor: float,
                  reduce_lr_patience: int,
-                 min_lr: int,
+                 min_lr: float,
                  build=True
                  ):
         """

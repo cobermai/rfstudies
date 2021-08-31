@@ -9,7 +9,7 @@ def test__cnn_dropout():
     Function that tests the structure CNNLayer
     """
     # ARRANGE
-    layer_cnn_dropout = cnn_dropout.CNNDropoutBlock(2, 2)
+    layer_cnn_dropout = cnn_dropout.CNNDropoutBlock(2, 2, dropout_rate=0.5)
     x = tf.ones((3, 3, 3))
     # ACT
     y = layer_cnn_dropout(x)
@@ -19,7 +19,7 @@ def test__cnn_dropout():
 
 def test__shortcut_errors():
     with pytest.raises(ValueError):
-        cnn_dropout.CNNDropoutBlock(0, 0)
+        cnn_dropout.CNNDropoutBlock(0, 0, dropout_rate=0.5)
 
     with pytest.raises(ValueError):
-        cnn_dropout.CNNDropoutBlock(-1, -1)
+        cnn_dropout.CNNDropoutBlock(-1, -1, dropout_rate=0.5)

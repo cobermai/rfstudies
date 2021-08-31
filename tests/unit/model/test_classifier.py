@@ -20,6 +20,11 @@ def test__classifier(tmp_path, build, model_expected):
     optimizer_expected = 'adam'
     epochs_expected = 2
     batch_size_expected = 16
+    learning_rate = 1e-3
+    reduce_lr_factor = 0.5
+    reduce_lr_patience = 50
+    min_lr = 0.0001
+    input_shape = (16, 8, 4)
 
     # ACT
     clf = classifier.Classifier(classifier_name=classifier_name_expected,
@@ -30,7 +35,12 @@ def test__classifier(tmp_path, build, model_expected):
                                 optimizer=optimizer_expected,
                                 epochs=epochs_expected,
                                 batch_size=batch_size_expected,
-                                build=build
+                                build=build,
+                                learning_rate=learning_rate,
+                                reduce_lr_factor=reduce_lr_factor,
+                                reduce_lr_patience=reduce_lr_patience,
+                                min_lr=min_lr,
+                                input_shape=input_shape
                                 )
 
     # ASSERT
@@ -55,6 +65,11 @@ def test__build_classifier(tmp_path):
     epochs_expected = 2
     batch_size_expected = 16
     build = False
+    learning_rate = 1e-3
+    reduce_lr_factor = 0.5
+    reduce_lr_patience = 50
+    min_lr = 0.0001
+    input_shape = (16, 8, 4)
     clf = classifier.Classifier(classifier_name=classifier_name_expected,
                                 num_classes=num_classes_expected,
                                 output_directory=tmp_path,
@@ -63,9 +78,13 @@ def test__build_classifier(tmp_path):
                                 optimizer=optimizer_expected,
                                 epochs=epochs_expected,
                                 batch_size=batch_size_expected,
-                                build=build)
-
-
+                                build=build,
+                                learning_rate=learning_rate,
+                                reduce_lr_factor=reduce_lr_factor,
+                                reduce_lr_patience=reduce_lr_patience,
+                                min_lr=min_lr,
+                                input_shape=input_shape
+                                )
 
     # ACT
     model_out = clf.build_classifier()
@@ -85,6 +104,11 @@ def test__build_classifier_errors(tmp_path):
     epochs_expected = 2
     batch_size_expected = 16
     build = False
+    learning_rate = 1e-3
+    reduce_lr_factor = 0.5
+    reduce_lr_patience = 50
+    min_lr = 0.0001
+    input_shape = (16, 8, 4)
     clf = classifier.Classifier(classifier_name=classifier_name_expected,
                                 num_classes=num_classes_expected,
                                 output_directory=tmp_path,
@@ -93,7 +117,13 @@ def test__build_classifier_errors(tmp_path):
                                 optimizer=optimizer_expected,
                                 epochs=epochs_expected,
                                 batch_size=batch_size_expected,
-                                build=build)
+                                build=build,
+                                learning_rate=learning_rate,
+                                reduce_lr_factor=reduce_lr_factor,
+                                reduce_lr_patience=reduce_lr_patience,
+                                min_lr=min_lr,
+                                input_shape=input_shape
+                                )
 
     # ACT
     with pytest.raises(AssertionError):
