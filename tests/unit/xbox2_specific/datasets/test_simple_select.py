@@ -119,13 +119,6 @@ def test__select_trend_data_events():
     assert (time_filter_expected == time_filter_out).all()
 
 
-# @pytest.mark.parametrize("dummy_features, \
-#                           selection_expected",
-#                          [(np.array([True, True, True, True, True, True]),
-#                            np.array([False, True, True, True, True, False])),
-#                           ([False, False, False, False, False, False],
-#                            [False, False, False, False, False, True])
-#                           ])
 def test__select_events(tmpdir):
     """
     Test create_select_events() function
