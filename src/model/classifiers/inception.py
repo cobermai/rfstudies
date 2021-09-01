@@ -14,7 +14,6 @@ class InceptionSubBlock(layers.Layer):
         Initializes InceptionSubBlock
         """
         super(InceptionSubBlock, self).__init__()
-        self.input_layer = layers.InputLayer()
         self.bottleneck = layers.Conv1D(filters=32, kernel_size=1,
                                         padding='same', activation='linear', use_bias=False)
         self.conv1 = layers.Conv1D(filters=32, kernel_size=40,
