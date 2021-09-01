@@ -20,7 +20,7 @@ class TimeCNNBlock(Model, ABC):
         self.conv2_valid = layers.Conv1D(filters=12, kernel_size=7, padding='valid', activation='sigmoid')
         self.conv2_same = layers.Conv1D(filters=12, kernel_size=7, padding='same', activation='sigmoid')
         self.flatten = layers.Flatten()
-        self.out = layers.Dense(units=num_classes,activation='sigmoid')
+        self.out = layers.Dense(units=num_classes, activation='sigmoid')
 
     def call(self, input_tensor, training=None, mask=None):
         """
