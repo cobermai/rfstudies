@@ -7,7 +7,8 @@ def test__time_cnn():
     Function that tests the structure TimeCNNBlock
     """
     # ARRANGE
-    layer_model_expected_names = ['conv1d', 'conv1d_1', 'average_pooling1d', 'conv1d_2', 'conv1d_3', 'flatten', 'dense']
+    layer_model_expected_names = ['conv1d', 'conv1d_1', 'average_pooling1d', 'conv1d_2',
+                                  'conv1d_3','average_pooling1d_1', 'flatten', 'dense']
 
     # ACT
     model_time_cnn = time_cnn.TimeCNNBlock(2)
