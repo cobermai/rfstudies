@@ -1,9 +1,7 @@
 """Selecting from context data and prepare dataset XBOX2_trend_bd20ms for machine learning. """
 from collections import namedtuple
 from pathlib import Path
-import typing
 from typing import Optional
-import h5py
 import numpy as np
 import pandas as pd
 from pandas import Timestamp
@@ -11,6 +9,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 from src.utils.dataset_creator import DatasetCreator
 from src.utils.hdf_tools import hdf_to_df_selection
+from src.xbox2_specific.utils import dataset_utils
 
 
 class XBOX2TrendBD20msSelect(DatasetCreator):
@@ -19,22 +18,6 @@ class XBOX2TrendBD20msSelect(DatasetCreator):
     be overwritten.
     """
 
-    @staticmethod
-    def select_trend_data_events(event_timestamps: np.datetime64,
-                                 trend_timestamps: np.datetime64,
-                                 time_threshold: float) -> bool:
-        """
-        Selects trend data timestamps for filtering healthy pulses with time diff more than threshold.
-        :param event_timestamps: array of event data timestamps
-        :param trend_timestamps: array of trend data timestamps
-        :param time_threshold: threshold in seconds
-        :return: filter for boolean indexing
-        """
-        time_diff = event_timestamps - trend_timestamps
-        time_diff_threshold = pd.to_timedelta(time_threshold, "s")
-        filter_timestamp_diff = time_diff < time_diff_threshold
-        return filter_timestamp_diff
-
     def select_events(self, context_data_file_path: Path) -> pd.DataFrame:
         """
         selection of events in data
@@ -42,24 +25,7 @@ class XBOX2TrendBD20msSelect(DatasetCreator):
         :return df: pandas dataframe with data from selected events
         """
         selection_list = ["is_bd_in_20ms"]
-        with h5py.File(context_data_file_path, "r") as file:
-            # load relevant data from context file
-            features_read = []
-            for key in selection_list:
-                features_read.append(self.read_hdf_dataset(file, key))
-            selection = features_read[0]
-            for event_index in range(1, len(features_read)):
-                selection = selection | features_read[event_index]
-
-            event_timestamps = self.read_hdf_dataset(file, "Timestamp")
-            trend_timestamp = self.read_hdf_dataset(file, "PrevTrendData/Timestamp")
-
-            # only define healthy pulses with a time difference to the previous trend data of less than 2 s
-            filter_timestamp_diff = self.select_trend_data_events(event_timestamps, trend_timestamp, 2)
-            is_healthy = self.read_hdf_dataset(file, "clic_label/is_healthy") & filter_timestamp_diff
-
-            # select 2.5% of the healthy pulses randomly
-            selection[is_healthy] = np.random.choice(a=[True, False], size=(sum(is_healthy),), p=[0.025, 0.975])
+        selection = dataset_utils.select_events_from_list(context_data_file_path, selection_list)
 
         df = hdf_to_df_selection(context_data_file_path, selection=selection)
         return df
@@ -83,11 +49,7 @@ class XBOX2TrendBD20msSelect(DatasetCreator):
                           "PrevTrendData__PSI_max", "PrevTrendData__PSR_max", "PrevTrendData__PEI_max",
                           "PrevTrendData__DC_Down_min", "PrevTrendData__DC_Up_min",
                           "PrevTrendData__PSI_Pulse_Width"]
-        feature_names = pd.Index(selection_list)
-
-        X = df[feature_names].to_numpy(dtype=float)
-        X = X[..., np.newaxis]
-        X = np.nan_to_num(X)
+        X = dataset_utils.select_features_from_list(df, selection_list)
 
         return X
 
@@ -179,6 +141,7 @@ class XBOX2TrendBD20msSelect(DatasetCreator):
         :param X: input data array of shape (event, sample, feature)
         :param y: output data array of shape (event)
         :param splits: tuple specifying splitting fractions (training, validation, test)
+        :param manual_split: array specifying manual split. 0 represents training set, 1 validation, and 2 testing
         :return: train, valid, test: Tuple with data of type named tuple
         """
         if manual_split is None:

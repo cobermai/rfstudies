@@ -3,12 +3,12 @@ from collections import namedtuple
 from pathlib import Path
 import typing
 from typing import Optional
-import h5py
 import numpy as np
 import pandas as pd
 from pandas import Timestamp
 from src.utils.dataset_creator import DatasetCreator
 from src.utils.hdf_tools import hdf_to_df_selection
+from src.xbox2_specific.utils import dataset_utils
 
 
 class XBOX2EventBD20msSelect(DatasetCreator):
@@ -39,33 +39,17 @@ class XBOX2EventBD20msSelect(DatasetCreator):
         filter_timestamp_diff = time_diff < time_diff_threshold
         return filter_timestamp_diff
 
-    def select_events(self, context_data_file_path: Path) -> typing.List[bool]:
+    @staticmethod
+    def select_events(context_data_file_path: Path) -> pd.DataFrame:
         """
         selection of events in data
         :param context_data_file_path: path to context data file
         :return selection: boolean filter for selecting breakdown events
         """
         selection_list = ["is_bd_in_20ms"]
-        with h5py.File(context_data_file_path, "r") as file:
-            # load relevant data from context file
-            features_read = []
-            for key in selection_list:
-                features_read.append(self.read_hdf_dataset(file, key))
-            selection = features_read[0]
-            for event_index in range(1, len(features_read)):
-                selection = selection | features_read[event_index]
+        df = dataset_utils.select_events_from_list(context_data_file_path, selection_list)
 
-            event_timestamps = self.read_hdf_dataset(file, "Timestamp")
-            trend_timestamp = self.read_hdf_dataset(file, "PrevTrendData/Timestamp")
-
-            # only define healthy pulses with a time difference to the previous trend data of less than 2 s
-            filter_timestamp_diff = self.select_trend_data_events(event_timestamps, trend_timestamp, 2)
-            is_healthy = self.read_hdf_dataset(file, "clic_label/is_healthy") & filter_timestamp_diff
-
-            # select 2.5% of the healthy pulses randomly
-            selection[is_healthy] = np.random.choice(a=[True, False], size=(sum(is_healthy),), p=[0.025, 0.975])
-
-        return selection
+        return df
 
     def select_features(self, df: pd.DataFrame) -> np.ndarray:
         """
@@ -80,13 +64,7 @@ class XBOX2EventBD20msSelect(DatasetCreator):
                           "PEI_Amplitude__pulse_length", "PEI_Amplitude__pulse_amplitude",
                           "PKI_Amplitude__pulse_length", "PKI_Amplitude__pulse_amplitude",
                           "PSI_Amplitude__pulse_length", "PSI_Amplitude__pulse_amplitude"]
-        feature_names = pd.Index(selection_list)
-
-        X_df = df[feature_names]
-        X = X_df.to_numpy(dtype=float)
-        X = X[..., np.newaxis]
-        X = np.nan_to_num(X)
-
+        X = dataset_utils.select_features_from_list(df, selection_list)
         return X
 
     def select_labels(self, df: pd.DataFrame) -> np.ndarray:

@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 from src.utils.dataset_creator import DatasetCreator
 from src.utils.hdf_tools import hdf_to_df_selection
-from src.xbox2_specific.datasets.dataset_utils import select_events_from_list
+from src.xbox2_specific.utils import dataset_utils
 
 
 class SimpleSelect(DatasetCreator):
@@ -21,7 +21,7 @@ class SimpleSelect(DatasetCreator):
         :return selection: boolean filter for selecting breakdown events
         """
         selection_list = ["is_bd_in_40ms", "is_bd_in_20ms", "is_bd"]
-        selection = select_events_from_list(context_data_file_path, selection_list)
+        selection = dataset_utils.select_events_from_list(context_data_file_path, selection_list)
         df = hdf_to_df_selection(context_data_file_path, selection=selection)
         return df
 
