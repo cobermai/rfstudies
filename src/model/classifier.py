@@ -80,7 +80,7 @@ class Classifier:
         elif self.classifier_name == 'inception':
             model = inception.InceptionBlock(self.num_classes)
         else:
-            raise AssertionError
+            raise AssertionError("Model name does not exist")
 
         metrics = [
             keras.metrics.TruePositives(name='tp'),
