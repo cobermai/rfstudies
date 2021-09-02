@@ -1,14 +1,18 @@
+import os.path
 import pytest
 import tensorflow.keras as keras
 from src.model import classifier
 
 
 
-@pytest.mark.parametrize("build, model_expected",
-                         [(True, True),
-                          (False, False)]
+@pytest.mark.parametrize("build, plot_model, model_expected, plot_existence_expected",
+                         [(True, True, True, True),
+                          (False, False, False, False),
+                          (False, False, False, False),
+                          (False, True, False, False),
+                          (True, False, True, False)]
                          )
-def test__classifier(tmp_path, build, model_expected):
+def test__classifier(tmp_path, build, plot_model, model_expected, plot_existence_expected):
     """
     Test of Classifier class instantiation
     """
@@ -40,7 +44,8 @@ def test__classifier(tmp_path, build, model_expected):
                                 reduce_lr_factor=reduce_lr_factor,
                                 reduce_lr_patience=reduce_lr_patience,
                                 min_lr=min_lr,
-                                input_shape=input_shape
+                                input_shape=input_shape,
+                                plot_model=plot_model
                                 )
 
     # ASSERT
@@ -53,6 +58,7 @@ def test__classifier(tmp_path, build, model_expected):
     assert clf.epochs == epochs_expected
     assert clf.batch_size == batch_size_expected
     assert hasattr(clf, 'model') == model_expected
+    assert os.path.isfile(clf.output_directory / "plot_model_structure.png") == plot_existence_expected
 
 
 def test__build_classifier(tmp_path):
