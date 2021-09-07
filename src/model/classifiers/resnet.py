@@ -27,6 +27,7 @@ class ResnetSubBlock(layers.Layer):
         self.shortcut = ShortcutBlock(filters=n_feature_maps, kernel_size=1)
         self.add = layers.Add()
         self.relu = layers.Activation(activation='relu')
+        self.n_feature_maps = n_feature_maps
 
     def call(self, input_tensor, training=None, mask=None):
         """
@@ -43,6 +44,13 @@ class ResnetSubBlock(layers.Layer):
         out = self.add([shortcut_y, z])
         out = self.relu(out)
         return out
+
+    def get_config(self):
+        config = super().get_config().copy()
+        config.update({
+            'n_feature_maps': self.n_feature_maps
+        })
+        return config
 
 
 class ResnetBlock(Model, ABC):

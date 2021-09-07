@@ -52,6 +52,10 @@ class InceptionSubBlock(layers.Layer):
         x = self.relu(x)
         return x
 
+    def get_config(self):
+        config = super().get_config().copy()
+        return config
+
 
 class InceptionBlock(Model, ABC):
     """
