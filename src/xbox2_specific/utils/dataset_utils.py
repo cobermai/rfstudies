@@ -37,7 +37,6 @@ def select_trend_data_events(event_timestamps: np.ndarray,
 def select_events_from_list(context_data_file_path: Path, selection_list: typing.List) -> pd.DataFrame:
     """
     Function for creating selection filter of events in xbox2 data set
-    :param creator: any concrete subclass of DatasetCreator
     :param context_data_file_path: path to context data file
     :param selection_list: events to include in selection
     :return selection: boolean filter for selecting breakdown events
