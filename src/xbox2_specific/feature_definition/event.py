@@ -1,6 +1,6 @@
 """This module contains the definition and gathering of EventDataFeatures for the XBox2 data set."""
-import typing
 from functools import partial
+import typing
 import numpy as np
 from src.utils.handler_tools.feature_class import EventDataFeature
 
@@ -77,10 +77,11 @@ def _pulse_length(data: np.ndarray) -> float:
     num_total_values = len(data)
     num_relatively_large_values = len(_get_data_above_half_max(data))
     if num_total_values == 0:
-        pulse_length = 0
+        pulse_length = 0.
     else:
         pulse_length = acquisition_window * (num_relatively_large_values / num_total_values)
     return pulse_length
+
 
 def _pulse_amplitude(data: np.ndarray) -> float:
     """calculates the mean value where the amplitude is higher than the threshold (=half of the maximal value).

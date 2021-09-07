@@ -1,14 +1,14 @@
 """
 This module does the first step of the transformation. The reading and writing of the data.
 """
-import os
-from time import time
-from pathlib import Path
-import multiprocessing as mp
-import logging
 from functools import partial
-import nptdms
+import logging
+import multiprocessing as mp
+import os
+from pathlib import Path
+from time import time
 import h5py
+import nptdms
 
 logger = logging.getLogger(__name__)
 

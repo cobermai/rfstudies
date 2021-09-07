@@ -1,8 +1,8 @@
 """This module contains a class class that defines machine learning features. The Feature class contains the functions
 apply and write."""
 from dataclasses import dataclass, field
-import typing
 import logging
+import typing
 import h5py
 import numpy as np
 from src.utils.hdf_tools import hdf_path_combine
@@ -46,6 +46,7 @@ class EventAttributeFeature(ColumnWiseFeature):
         :param index: index of the event and thus location where the calculated feature will be written.
         :param attrs: attribute of the event data """
         self.vec[index] = self.func(attrs)
+
 
 class TrendDataFeature(ColumnWiseFeature):
     """Features for time series from the TrendData.
