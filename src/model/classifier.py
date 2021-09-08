@@ -2,7 +2,6 @@
 model setup according to https://www.tensorflow.org/guide/keras/custom_layers_and_models
 """
 from pathlib import Path
-import numpy as np
 from tensorflow import keras
 from tensorflow.keras import Input
 from src.model.classifiers import fcn
