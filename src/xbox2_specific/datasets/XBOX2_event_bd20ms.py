@@ -47,8 +47,8 @@ class XBOX2EventBD20msSelect(DatasetCreator):
         :return selection: boolean filter for selecting breakdown events
         """
         selection_list = ["is_bd_in_20ms"]
-        df = dataset_utils.select_events_from_list(context_data_file_path, selection_list)
-
+        df = dataset_utils.select_events_from_list(context_data_file_path=context_data_file_path,
+                                                   selection_list=selection_list)
         return df
 
     def select_features(self, df: pd.DataFrame) -> np.ndarray:
@@ -64,19 +64,18 @@ class XBOX2EventBD20msSelect(DatasetCreator):
                           "PEI_Amplitude__pulse_length", "PEI_Amplitude__pulse_amplitude",
                           "PKI_Amplitude__pulse_length", "PKI_Amplitude__pulse_amplitude",
                           "PSI_Amplitude__pulse_length", "PSI_Amplitude__pulse_amplitude"]
-        X = dataset_utils.select_features_from_list(df, selection_list)
+        X = dataset_utils.select_features_from_list(df=df,
+                                                    selection_list=selection_list)
         return X
 
-    def select_labels(self, df: pd.DataFrame) -> np.ndarray:
+    @staticmethod
+    def select_labels(df: pd.DataFrame) -> np.ndarray:
         """
         returns labels of selected events for supervised machine learning
         :param df: dataframe with selected events
         :return y: label of selected events
         """
-        y_df = df["is_healthy"]
-        y = y_df.to_numpy(dtype=float)
-        y = y[..., np.newaxis]
-        y = np.nan_to_num(y)
+        y = dataset_utils.get_labels(df=df, label="is_healthy")
         return y
 
     @staticmethod

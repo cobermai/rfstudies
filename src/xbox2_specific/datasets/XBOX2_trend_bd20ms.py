@@ -26,7 +26,8 @@ class XBOX2TrendBD20msSelect(DatasetCreator):
         :return df: pandas dataframe with data from selected events
         """
         selection_list = ["is_bd_in_20ms"]
-        selection = dataset_utils.select_events_from_list(context_data_file_path, selection_list)
+        selection = dataset_utils.select_events_from_list(context_data_file_path=context_data_file_path,
+                                                          selection_list=selection_list)
         df = hdf_to_df_selection(context_data_file_path, selection=selection)
         return df
 
@@ -49,7 +50,8 @@ class XBOX2TrendBD20msSelect(DatasetCreator):
                           "PrevTrendData__PSI_max", "PrevTrendData__PSR_max", "PrevTrendData__PEI_max",
                           "PrevTrendData__DC_Down_min", "PrevTrendData__DC_Up_min",
                           "PrevTrendData__PSI_Pulse_Width"]
-        X = dataset_utils.select_features_from_list(selection_list)
+        X = dataset_utils.select_features_from_list(df=df,
+                                                    selection_list=selection_list)
         return X
 
     @staticmethod
@@ -59,7 +61,7 @@ class XBOX2TrendBD20msSelect(DatasetCreator):
         :param df: dataframe with selected events
         :return y: label of selected events
         """
-        y = df["is_healthy"].to_numpy(dtype=bool)
+        y = dataset_utils.get_labels(df=df, label="is_healthy")
         return y
 
     @staticmethod

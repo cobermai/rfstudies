@@ -77,3 +77,17 @@ def select_features_from_list(df: pd.DataFrame, selection_list) -> np.ndarray:
     X = np.nan_to_num(X)
 
     return X
+
+
+def get_labels(df: pd.DataFrame, label: str) -> np.ndarray:
+    """
+    returns labels of selected events for supervised machine learning
+    :param df: dataframe with selected events
+    :param label: name of label to use
+    :return y: label of selected events
+    """
+    y_df = df[label]
+    y = y_df.to_numpy(dtype=float)
+    y = y[..., np.newaxis]
+    y = np.nan_to_num(y)
+    return y

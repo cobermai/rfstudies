@@ -51,5 +51,5 @@ class SimpleSelect(DatasetCreator):
         :param df: dataframe with selected events
         :return y: label of selected events
         """
-        y = df["is_healthy"].to_numpy(dtype=bool)
+        y = dataset_utils.get_labels(df=df, label="is_healthy")
         return y
