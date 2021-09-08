@@ -15,34 +15,23 @@ class DatasetCreator(ABC):
     """
     abstract class which acts as a template to create datasets
     """
-
     @staticmethod
-    def read_hdf_dataset(file: h5py.File, key: str):
-        """
-        Read dataset from hdf file
-        :param file: h5py File object with read access
-        :param key: string specifying key for dataset to read
-        :return: array containing contents of h5py dataset
-        """
-        dataset = file[key]
-        if not isinstance(dataset, h5py.Dataset):
-            raise ValueError("Specified key does not yield a hdf dataset")
-        return dataset[:]
-
     @abstractmethod
-    def select_events(self, context_data_file_path: Path) -> pd.DataFrame:
+    def select_events(context_data_file_path: Path) -> pd.DataFrame:
         """
         abstract method to select events for dataset
         """
 
+    @staticmethod
     @abstractmethod
-    def select_features(self, df: pd.DataFrame) -> np.ndarray:
+    def select_features(df: pd.DataFrame) -> np.ndarray:
         """
         abstract method to select features for dataset
         """
 
+    @staticmethod
     @abstractmethod
-    def select_labels(self, df: pd.DataFrame) -> np.ndarray:
+    def select_labels(df: pd.DataFrame) -> np.ndarray:
         """
         abstract method to select labels for dataset
         """
