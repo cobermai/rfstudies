@@ -1,3 +1,4 @@
 virtualenv
 python3.8
 hdf5-tools
+graphviz

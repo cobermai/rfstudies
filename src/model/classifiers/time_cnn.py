@@ -16,11 +16,12 @@ class TimeCNNBlock(Model, ABC):
         super(TimeCNNBlock, self).__init__()
         self.conv1_valid = layers.Conv1D(filters=6, kernel_size=7, padding='valid', activation='sigmoid')
         self.conv1_same = layers.Conv1D(filters=6, kernel_size=7, padding='same', activation='sigmoid')
-        self.AvePool = layers.AveragePooling1D(pool_size=3)
+        self.AvePool1 = layers.AveragePooling1D(pool_size=3)
         self.conv2_valid = layers.Conv1D(filters=12, kernel_size=7, padding='valid', activation='sigmoid')
         self.conv2_same = layers.Conv1D(filters=12, kernel_size=7, padding='same', activation='sigmoid')
+        self.AvePool2 = layers.AveragePooling1D(pool_size=3)
         self.flatten = layers.Flatten()
-        self.out = layers.Dense(units=num_classes,activation='sigmoid')
+        self.out = layers.Dense(units=num_classes, activation='sigmoid')
 
     def call(self, input_tensor, training=None, mask=None):
         """
@@ -33,12 +34,12 @@ class TimeCNNBlock(Model, ABC):
             x = self.conv1_same(input_tensor)
         else:
             x = self.conv1_valid(input_tensor)
-        x = self.AvePool(x)
+        x = self.AvePool1(x)
         if input_tensor.shape[1] < 60:
             x = self.conv2_same(x)
         else:
             x = self.conv2_valid(x)
-        x = self.AvePool(x)
+        x = self.AvePool2(x)
         x = self.flatten(x)
         x = self.out(x)
         return x

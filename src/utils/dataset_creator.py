@@ -30,7 +30,7 @@ class DatasetCreator(ABC):
         return dataset[:]
 
     @abstractmethod
-    def select_events(self, context_data_file_path: Path) -> typing.List[bool]:
+    def select_events(self, context_data_file_path: Path) -> pd.DataFrame:
         """
         abstract method to select events for dataset
         """
@@ -50,8 +50,8 @@ class DatasetCreator(ABC):
     @staticmethod
     def scale_data(X: np.ndarray) -> np.ndarray:
         """
-        Function scales data for prediction with standard scaler. Note that this function can be overwritten in the
-        concrete dataset selection.
+        Function scales data for with sklearn standard scaler.
+        Note that this function can be overwritten in the concrete dataset selection class.
         :param X: data array of shape (event, sample, feature)
         :return: X_scaled: scaled data array of shape (event, sample, feature)
         """
@@ -63,8 +63,8 @@ class DatasetCreator(ABC):
     @staticmethod
     def one_hot_encode(y: np.ndarray) -> np.ndarray:
         """
-        Function transforms the labels from integers to one hot vectors. Note that this function can be overwritten in
-        the concrete dataset selection.
+        Function transforms the labels from integers to one hot vectors.
+        Note that this function can be overwritten in the concrete dataset selection class.
         :param y: array with labels to encode
         :return: array of one hot encoded labels
         """
@@ -72,7 +72,8 @@ class DatasetCreator(ABC):
         return enc.fit_transform(y.reshape(-1, 1)).toarray()
 
     @staticmethod
-    def train_valid_test_split(X: np.ndarray, y: np.ndarray, splits: Optional[tuple] = None) -> typing.Tuple:
+    def train_valid_test_split(X: np.ndarray, y: np.ndarray,
+                               splits: Optional[tuple] = None) -> tuple:
         """
         Function splits data into training, testing and validation set using random sampling. Note that this function
         can be overwritten in the concrete dataset selection.
@@ -83,9 +84,14 @@ class DatasetCreator(ABC):
         """
         if splits is None:
             splits = (0.7, 0.2, 0.1)
-
-        if splits[0] == 1:
-            raise ValueError('Training set fraction cannot be 1')
+        if (splits[0] >= 1) or (splits[0] < 0):
+            raise ValueError('Training fraction cannot be >= 1 or negative')
+        if (splits[1] >= 1) or (splits[1] < 0):
+            raise ValueError('Validation fraction cannot be >= 1 or negative')
+        if (splits[2] >= 1) or (splits[2] < 0):
+            raise ValueError('Test fraction cannot be >= 1 or negative')
+        if not np.allclose(splits[0] + splits[1] + splits[2], 1):
+            raise ValueError('Splits must sum to 1')
 
         idx = np.arange(len(X))
         X_train, X_tmp, y_train, y_tmp, idx_train, idx_tmp = \
@@ -101,17 +107,17 @@ class DatasetCreator(ABC):
         return train, valid, test
 
 
-def load_dataset(creator: DatasetCreator, hdf_dir: Path) -> typing.Tuple:
+def load_dataset(creator: DatasetCreator, data_path: Path) -> typing.Tuple:
     """
     :param creator: any concrete subclass of DatasetCreator to specify dataset selection
-    :param hdf_dir: input directory with hdf files
+    :param data_path: path to datafile
     :return: train, valid, test: tuple with data of type named tuple
     """
-    event_selection = creator.select_events(context_data_file_path=hdf_dir / "context.hdf")
-    df_selected = hdf_to_df_selection(hdf_dir / "context.hdf", selection=event_selection)
+    df_event_selection = creator.select_events(data_path)
 
-    X = creator.select_features(df=df_selected)
-    y = creator.select_labels(df=df_selected)
+    X = creator.select_features(df=df_event_selection)
+
+    y = creator.select_labels(df=df_event_selection)
 
     X_scaled = creator.scale_data(X)
     y_hot = creator.one_hot_encode(y)

@@ -5,6 +5,7 @@ import h5py
 import numpy as np
 import pandas as pd
 from src.utils.dataset_creator import DatasetCreator
+from src.utils.hdf_tools import hdf_to_df_selection
 
 
 class SimpleSelect(DatasetCreator):
@@ -13,8 +14,8 @@ class SimpleSelect(DatasetCreator):
     be overwritten.
     """
     @staticmethod
-    def select_trend_data_events(event_timestamps: np.datetime64,
-                                 trend_timestamps: np.datetime64,
+    def select_trend_data_events(event_timestamps: np.ndarray,
+                                 trend_timestamps: np.ndarray,
                                  time_threshold: float) -> bool:
         """
         Selects trend data timestamps for filtering healthy pulses with time diff more than threshold.
@@ -28,7 +29,7 @@ class SimpleSelect(DatasetCreator):
         filter_timestamp_diff = time_diff < time_diff_threshold
         return filter_timestamp_diff
 
-    def select_events(self, context_data_file_path: Path) -> typing.List[bool]:
+    def select_events(self, context_data_file_path: Path) -> pd.DataFrame:
         """
         selection of events in data
         :param context_data_file_path: path to context data file
@@ -53,7 +54,10 @@ class SimpleSelect(DatasetCreator):
 
             # select 2.5% of the healthy pulses randomly
             selection[is_healthy] = np.random.choice(a=[True, False], size=(sum(is_healthy),), p=[0.025, 0.975])
-            return selection
+
+        df = hdf_to_df_selection(context_data_file_path, selection=selection)
+
+        return df
 
     def select_features(self, df: pd.DataFrame) -> np.ndarray:
         """

@@ -18,7 +18,7 @@ class Classifier:
     """
 
     def __init__(self,
-                 input_shape: np.ndarray,
+                 input_shape: tuple,
                  output_directory: Path,
                  classifier_name: str,
                  num_classes: int,
@@ -27,7 +27,12 @@ class Classifier:
                  optimizer: str,
                  epochs: int,
                  batch_size: int,
-                 build=True
+                 learning_rate: float,
+                 reduce_lr_factor: float,
+                 reduce_lr_patience: int,
+                 min_lr: float,
+                 build=True,
+                 plot_model=True
                  ):
         """
         Initializes the Classifier with specified settings
@@ -51,9 +56,17 @@ class Classifier:
         self.optimizer = optimizer
         self.epochs = epochs
         self.batch_size = batch_size
+        self.learning_rate = learning_rate
+        self.reduce_lr_factor = reduce_lr_factor
+        self.reduce_lr_patience = reduce_lr_patience
+        self.min_lr = min_lr
+        self.plot_model = plot_model
         if build:
             self.model = self.build_classifier()
             self.model.build(input_shape)
+            if plot_model is True:
+                keras.utils.plot_model(self.model, to_file=output_directory / "plot_model_structure.png",
+                                       show_shapes=True, show_layer_names=True)
 
     def build_classifier(self, **kwargs):
         """
@@ -90,12 +103,15 @@ class Classifier:
         x = Input(shape=self.input_shape[1:])
         model = keras.models.Model(inputs=[x], outputs=model.call(x))
 
+        optimizer = keras.optimizers.get(self.optimizer)
+        optimizer.learning_rate = self.learning_rate
         model.compile(loss=self.loss,
                       optimizer=self.optimizer,
                       metrics=metrics,
                       **kwargs)
-
         return model
+
+
 
     def fit_classifier(self, train, valid, **kwargs):
         """
@@ -105,13 +121,13 @@ class Classifier:
         **kwargs: Keyword arguments for tf.keras.Model.fit method
         """
         reduce_lr = keras.callbacks.ReduceLROnPlateau(
-            monitor='loss',
-            factor=0.5,
-            patience=50,
-            min_lr=0.0001)
+            monitor=self.monitor,
+            factor=self.reduce_lr_factor,
+            patience=self.reduce_lr_patience,
+            min_lr=self.min_lr)
 
         model_checkpoint = keras.callbacks.ModelCheckpoint(
-            filepath=self.output_directory / 'best_model.h5',
+            filepath=self.output_directory / 'best_model.hdf5',
             save_weights_only=True,
             monitor=self.monitor,
             save_best_only=True)

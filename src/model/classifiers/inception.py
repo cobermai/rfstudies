@@ -14,7 +14,6 @@ class InceptionSubBlock(layers.Layer):
         Initializes InceptionSubBlock
         """
         super(InceptionSubBlock, self).__init__()
-        self.input_layer = layers.InputLayer()
         self.bottleneck = layers.Conv1D(filters=32, kernel_size=1,
                                         padding='same', activation='linear', use_bias=False)
         self.conv1 = layers.Conv1D(filters=32, kernel_size=40,
@@ -67,11 +66,17 @@ class InceptionBlock(Model, ABC):
         super(InceptionBlock, self).__init__()
         self.inception1 = InceptionSubBlock()
         self.inception2 = InceptionSubBlock()
+        self.inception3 = InceptionSubBlock()
+        self.inception4 = InceptionSubBlock()
+        self.inception5 = InceptionSubBlock()
+        self.inception6 = InceptionSubBlock()
         self.shortcut1 = ShortcutBlock(filters=128, kernel_size=1, bias=False)
         self.shortcut2 = ShortcutBlock(filters=128, kernel_size=1, bias=False)
         self.gap = layers.GlobalAveragePooling1D()
-        self.add = layers.Add()
-        self.relu = layers.Activation(activation='relu')
+        self.add1 = layers.Add()
+        self.add2 = layers.Add()
+        self.relu1 = layers.Activation(activation='relu')
+        self.relu2 = layers.Activation(activation='relu')
         self.out = layers.Dense(num_classes, activation='softmax')
 
     def call(self, input_tensor, training=None, mask=None):
@@ -86,18 +91,18 @@ class InceptionBlock(Model, ABC):
         # Inception block 2
         x = self.inception2(x)
         # # Inception block 3 + shortcut
-        x = self.inception2(x)
+        x = self.inception3(x)
         shortcut = self.shortcut1(input_tensor)
-        x = self.add([x, shortcut])
-        x = self.relu(x)
+        x = self.add1([x, shortcut])
+        x = self.relu1(x)
         y = x
         # # Inception block 4
-        x = self.inception2(x)
+        x = self.inception4(x)
         # # Inception block 5 + shortcut
-        x = self.inception2(x)
+        x = self.inception5(x)
         shortcut = self.shortcut2(y)
-        x = self.add([x, shortcut])
-        x = self.relu(x)
+        x = self.add2([x, shortcut])
+        x = self.relu2(x)
         # Output stage
         gap = self.gap(x)
         out = self.out(gap)
