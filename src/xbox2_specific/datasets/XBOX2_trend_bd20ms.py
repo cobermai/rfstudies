@@ -2,7 +2,6 @@
 from collections import namedtuple
 from pathlib import Path
 from typing import Optional
-import h5py
 import numpy as np
 import pandas as pd
 from pandas import Timestamp
