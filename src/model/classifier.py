@@ -31,7 +31,8 @@ class Classifier:
                  reduce_lr_factor: float,
                  reduce_lr_patience: int,
                  min_lr: float,
-                 build=True
+                 build=True,
+                 plot_model=True
                  ):
         """
         Initializes the Classifier with specified settings
@@ -59,9 +60,13 @@ class Classifier:
         self.reduce_lr_factor = reduce_lr_factor
         self.reduce_lr_patience = reduce_lr_patience
         self.min_lr = min_lr
+        self.plot_model = plot_model
         if build:
             self.model = self.build_classifier()
             self.model.build(input_shape)
+            if plot_model is True:
+                keras.utils.plot_model(self.model, to_file=output_directory / "plot_model_structure.png",
+                                       show_shapes=True, show_layer_names=True)
 
     def build_classifier(self, **kwargs):
         """
