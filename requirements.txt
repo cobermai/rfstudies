@@ -13,3 +13,4 @@ tsfresh>=0.18.0
 python_dateutil>=2.8
 pydot>=1.4.2
 shap>=0.39.0
+pydot>=1.4.2

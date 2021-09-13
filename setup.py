@@ -19,7 +19,8 @@ REQUIREMENTS: dict = {
         'tsfresh',
         'scikit-learn>=0.24.2',
         'tensorflow>=2.5.0',
-        'shap'
+        'shap',
+        'pydot'
     ],
     'test': [
         'pytest',
