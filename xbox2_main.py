@@ -16,6 +16,7 @@ from src.model.sample_explainers.gradient_shap import ShapGradientExplainer
 from src.xbox2_specific.datasets.XBOX2_event_bd20ms import XBOX2EventBD20msSelect
 from src.xbox2_specific.datasets.XBOX2_trend_bd20ms import XBOX2TrendBD20msSelect
 
+
 def parse_input_arguments(args):
     """
     Parses input arguments
@@ -95,7 +96,7 @@ if __name__ == '__main__':
     train, valid, test = load_dataset(creator=SimpleSelect(),
                                       data_path=args_in.data_path)
     clf = modeling(train_set=train, valid_set=valid, test_set=test,
-             param_dir=args_in.file_path / "src/model" / args_in.param_name, output_dir=args_in.output_path)
+                   param_dir=args_in.file_path / "src/model" / args_in.param_name, output_dir=args_in.output_path)
 
     explanation = explain_samples(explainer=ShapGradientExplainer(), model=clf.model,
                                   X_reference=train.X, X_to_explain=test.X[:1, :, :])
