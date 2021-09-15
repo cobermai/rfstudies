@@ -16,7 +16,11 @@ class ShapDeepExplainer(ExplainerCreator):
         :param model: tensorflow functional API model
         :param X_reference: array of data which should be explained
         """
-        background = X_reference[np.random.choice(X_reference.shape[0], 100, replace=False)]
+        background_size = 100
+        if len(X_reference) > background_size:
+            background = X_reference[np.random.choice(X_reference.shape[0], background_size, replace=False)]
+        else:
+            background = X_reference
         shap.explainers._deep.deep_tf.op_handlers["AddV2"] = shap.explainers._deep.deep_tf.passthrough
         self.shap_explainer = shap.DeepExplainer(model, background)
 

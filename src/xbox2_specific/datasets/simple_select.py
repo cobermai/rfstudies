@@ -2,6 +2,7 @@
 from pathlib import Path
 import numpy as np
 import pandas as pd
+from scipy.io import arff
 from src.utils.dataset_creator import DatasetCreator
 from src.utils.hdf_tools import hdf_to_df_selection
 from src.xbox2_specific.utils import dataset_utils
@@ -14,15 +15,15 @@ class SimpleSelect(DatasetCreator):
     """
 
     @staticmethod
-    def select_events(context_data_file_path: Path) -> pd.DataFrame:
+    def select_events(file_path: Path) -> pd.DataFrame:
         """
         selection of events in data
         :param context_data_file_path: path to context data file
         :return selection: boolean filter for selecting breakdown events
         """
-        selection_list = ["is_bd_in_40ms", "is_bd_in_20ms", "is_bd"]
-        selection = dataset_utils.select_events_from_list(context_data_file_path, selection_list)
-        df = hdf_to_df_selection(context_data_file_path, selection=selection)
+
+        data = arff.loadarff(file_path)
+        df = pd.DataFrame(data[0])
         return df
 
     @staticmethod

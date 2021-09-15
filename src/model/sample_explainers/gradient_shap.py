@@ -17,7 +17,11 @@ class ShapGradientExplainer(ExplainerCreator):
         :param model: tensorflow functional API model
         :param X_reference: array of data which should be explained
         """
-        background = X_reference[np.random.choice(X_reference.shape[0], 100, replace=False)]
+        background_size = 100
+        if len(X_reference) > background_size:
+            background = X_reference[np.random.choice(X_reference.shape[0], background_size, replace=False)]
+        else:
+            background = X_reference
         self.shap_explainer = shap.GradientExplainer(model, background)
 
     def get_sample_importance(self, X_to_explain: np.ndarray) -> np.ndarray:

@@ -24,10 +24,7 @@ def parse_input_arguments(args):
     parser.add_argument('--file_path', required=False, type=Path,
                         help='path of xbox2_main.py file', default=Path().absolute())
     parser.add_argument('--data_path', required=False, type=Path,
-                        help='path of data',
-                        default=Path(
-                            "/eos/project/m/ml-for-alarm-system/private/CLIC_data_transfert/Xbox2_hdf/context.hdf")
-                        )
+                        help='path of data', default=Path().absolute() / "src/datasets/ECG200")
     parser.add_argument('--output_path', required=False, type=Path, help='path of data',
                         default=Path().absolute() / "src/output" / datetime.now().strftime("%Y-%m-%dT%H.%M.%S"))
     parser.add_argument('--dataset_name', required=False, type=str,

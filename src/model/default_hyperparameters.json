@@ -4,7 +4,7 @@
     "monitor": "loss",
     "loss": "categorical_crossentropy",
     "optimizer": "adam",
-    "epochs": 1,
+    "epochs": 100,
     "batch_size": 16,
     "learning_rate": 1e-3,
     "reduce_lr_factor": 0.5,
