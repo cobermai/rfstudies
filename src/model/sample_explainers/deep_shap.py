@@ -4,6 +4,7 @@ import numpy as np
 from src.model.explainer import ExplainerCreator
 from tensorflow.keras import Model
 
+
 class ShapDeepExplainer(ExplainerCreator):
     """
     Subclass of ExplainerCreator to explain predictions of tensorflow functional API models with shap deep explainer.
