@@ -81,14 +81,12 @@ class ECG200(DatasetCreator):
         :param test: data for testing of type named tuple
         :return: train, valid, test: Tuple with data of type named tuple
         """
+        mean = train.X.mean()
+        std = train.X.std()
 
-        X_scaled = np.zeros_like(train.X)
-        for feature_index in range(len(train.X[0, 0, :])):  # Iterate through feature
-            scaler = StandardScaler().fit(train.X[:, :, feature_index])
-
-            train.X[:, :, feature_index] = scaler.transform(train.X[:, :, feature_index])
-            valid.X[:, :, feature_index] = scaler.transform(valid.X[:, :, feature_index])
-            test.X[:, :, feature_index] = scaler.transform(test.X[:, :, feature_index])
+        train = train._replace(X=((train.X - mean) / std))
+        valid = valid._replace(X=((valid.X - mean) / std))
+        test = test._replace(X=((test.X - mean) / std))
 
         return train, valid, test
 
