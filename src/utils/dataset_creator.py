@@ -96,21 +96,24 @@ class DatasetCreator(ABC):
         return train, valid, test
 
 
-def load_dataset(creator: DatasetCreator, data_path: Path) -> typing.Tuple:
+def load_dataset(creator: DatasetCreator, data_path: Path,
+                 manual_scale: list = None, manual_split: list = None) -> typing.Tuple:
     """
     :param creator: any concrete subclass of DatasetCreator to specify dataset selection
     :param data_path: path to datafile
+    :param manual_split: list that describes a manual split of the data
+    :param manual_scale: list that describes groups of the data which is scaled separately
     :return: train, valid, test: tuple with data of type named tuple
     """
-    df_event_selection = creator.select_events(data_path)
+    df_event_selection = creator.select_events(data_path=data_path)
 
     X = creator.select_features(df=df_event_selection)
 
     y = creator.select_labels(df=df_event_selection)
 
-    X_scaled = creator.scale_data(X)
-    y_hot = creator.one_hot_encode(y)
+    train, valid, test = creator.train_valid_test_split(X=X, y=y, manual_split=manual_split)
 
-    train, valid, test = creator.train_valid_test_split(X=X_scaled, y=y_hot)
+    train, valid, test = creator.scale_data(train, valid, test)
+    train, valid, test = creator.one_hot_encode(train, valid, test)
 
     return train, valid, test
