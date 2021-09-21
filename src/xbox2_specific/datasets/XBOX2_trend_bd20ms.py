@@ -10,7 +10,6 @@ from src.utils.dataset_creator import DatasetCreator
 from src.utils.hdf_tools import hdf_to_df_selection
 from src.xbox2_specific.utils import dataset_utils
 
-
 data = namedtuple("data", ["X", "y", "idx"])
 
 
@@ -40,7 +39,8 @@ class XBOX2TrendBD20msSelect(DatasetCreator):
         :param df: dataframe with selected events
         :return df_X: label of selected events
         """
-        selection_list = ["PrevTrendData__Loadside_win", "PrevTrendData__Tubeside_win",
+        selection_list = ["run_no",
+                          "PrevTrendData__Loadside_win", "PrevTrendData__Tubeside_win",
                           "PrevTrendData__Collector", "PrevTrendData__Gun", "PrevTrendData__IP_before_PC",
                           "PrevTrendData__PC_IP", "PrevTrendData__WG_IP", "PrevTrendData__IP_Load",
                           "PrevTrendData__IP_before_structure", "PrevTrendData__US_Beam_Axis_IP",

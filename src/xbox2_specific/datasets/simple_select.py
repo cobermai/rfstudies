@@ -4,13 +4,11 @@ from pathlib import Path
 from typing import Optional
 import numpy as np
 import pandas as pd
-import xarray as xr
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.model_selection import train_test_split
 from src.utils.dataset_creator import DatasetCreator
 from src.utils.hdf_tools import hdf_to_df_selection
 from src.xbox2_specific.utils import dataset_utils
-
 
 data = namedtuple("data", ["X", "y", "idx"])
 

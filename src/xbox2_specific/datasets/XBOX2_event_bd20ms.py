@@ -1,7 +1,6 @@
 """Selecting from context data and prepare dataset XBOX2_event_bd20ms for machine learning. """
 from collections import namedtuple
 from pathlib import Path
-import typing
 from typing import Optional
 import numpy as np
 import pandas as pd
@@ -41,7 +40,8 @@ class XBOX2EventBD20msSelect(DatasetCreator):
         :param df: dataframe with selected events
         :return df_X: features of selected events
         """
-        selection_list = ["DC_Down__D1", "DC_Down__D9", "DC_Down__tsfresh__mean", "DC_Down__tsfresh__maximum",
+        selection_list = ["run_no",
+                          "DC_Down__D1", "DC_Down__D9", "DC_Down__tsfresh__mean", "DC_Down__tsfresh__maximum",
                           "DC_Down__tsfresh__median", "DC_Down__tsfresh__minimum",
                           "DC_Up__D1", "DC_Up__D9", "DC_Up__tsfresh__mean", "DC_Up__tsfresh__maximum",
                           "DC_Up__tsfresh__median", "DC_Up__tsfresh__minimum",
