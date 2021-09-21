@@ -34,7 +34,7 @@ def select_trend_data_events(event_timestamps: np.ndarray,
     return filter_timestamp_diff
 
 
-def select_events_from_list(context_data_file_path: Path, selection_list: typing.List) -> pd.DataFrame:
+def select_events_from_list(context_data_file_path: Path, selection_list: typing.List) -> list:
     """
     Function for creating selection filter of events in xbox2 data set
     :param context_data_file_path: path to context data file
@@ -71,23 +71,16 @@ def select_features_from_list(df: pd.DataFrame, selection_list) -> np.ndarray:
     :return X: label of selected events
     """
     feature_names = pd.Index(selection_list)
-
-    X = df[feature_names].to_numpy(dtype=float)
-    X = X[..., np.newaxis]
-    X = np.nan_to_num(X)
-
-    return X
+    df_X = df[feature_names]
+    return df_X
 
 
-def get_labels(df: pd.DataFrame, label: str) -> np.ndarray:
+def get_labels(df: pd.DataFrame, label: str) -> pd.Series:
     """
     returns labels of selected events for supervised machine learning
     :param df: dataframe with selected events
     :param label: name of label to use
     :return y: label of selected events
     """
-    y_df = df[label]
-    y = y_df.to_numpy(dtype=float)
-    y = y[..., np.newaxis]
-    y = np.nan_to_num(y)
-    return y
+    df_y = df[label]
+    return df_y

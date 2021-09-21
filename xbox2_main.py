@@ -94,7 +94,9 @@ if __name__ == '__main__':
         feature_handling(work_dir=args_in.data_path)
 
     train, valid, test = load_dataset(creator=SimpleSelect(),
-                                      data_path=args_in.data_path)
+                                      data_path=args_in.data_path,
+                                      manual_split=([1, 2, 3, 4, 5, 6, 7], [8], [9]),
+                                      manual_scale=None)
     clf = modeling(train_set=train, valid_set=valid, test_set=test,
                    param_dir=args_in.file_path / "src/model" / args_in.param_name, output_dir=args_in.output_path)
 
