@@ -3,9 +3,7 @@ from collections import namedtuple
 from pathlib import Path
 import typing
 from typing import Optional
-import numpy as np
 import pandas as pd
-import xarray as xr
 
 
 data = namedtuple("data", ["X", "y", "idx"])
