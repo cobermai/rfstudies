@@ -1,4 +1,5 @@
 from collections import namedtuple
+from unittest.mock import patch
 import h5py
 import numpy as np
 import pandas as pd
@@ -159,6 +160,56 @@ def test__select_labels(data):
 
     # ASSERT
     assert (y_out == y_expected).all()
+
+@pytest.mark.skip(reason="not finished")
+def test__train_valid_test_split():
+    """
+    Test train_valid_test_split() function
+    """
+    # ARRANGE
+    p = patch.multiple(dataset_creator.DatasetCreator, __abstractmethods__=set())
+    p.start()
+    creator = dataset_creator.DatasetCreator()
+    p.stop()
+    X = np.array(range(10, 20))
+    y = np.array(range(20, 30))
+    splits_expected = 0.7, 0.1, 0.2
+
+    # ACT
+    train, valid, test = creator.train_valid_test_split(X=X, y=y, splits=splits_expected)
+
+    # ASSERT
+    assert set(X) == set(train.X).union(valid.X).union(test.X)
+    assert set(y) == set(train.y).union(valid.y).union(test.y)
+    length = len(X)
+    assert set(range(length)) == set(train.idx).union(valid.idx).union(test.idx)
+    splits_output = len(train.X) / length, len(valid.X) / length, len(test.X) / length
+    assert splits_output == splits_expected
+
+
+@pytest.mark.skip(reason="not finished")
+def test__train_valid_test_split_errors():
+    # ARRANGE
+    p = patch.multiple(dataset_creator.DatasetCreator, __abstractmethods__=set())
+    p.start()
+    creator = dataset_creator.DatasetCreator()
+    p.stop()
+    X = np.array(range(10, 20))
+    y = np.array(range(20, 30))
+
+    # ACT
+    with pytest.raises(ValueError):
+        creator.train_valid_test_split(X=X, y=y, splits=(1, 0, 0))
+    with pytest.raises(ValueError):
+        creator.train_valid_test_split(X=X, y=y, splits=(0, 1, 0))
+    with pytest.raises(ValueError):
+        creator.train_valid_test_split(X=X, y=y, splits=(0, 0, 1))
+    with pytest.raises(ValueError):
+        creator.train_valid_test_split(X=X, y=y, splits=(-1, 0, 0))
+    with pytest.raises(ValueError):
+        creator.train_valid_test_split(X=X, y=y, splits=(2, 0, 0))
+    with pytest.raises(ValueError):
+        creator.train_valid_test_split(X=X, y=y, splits=(0.5, 0.5, 0.5))
 
 
 @pytest.mark.skip(reason="not finished")
