@@ -16,7 +16,7 @@ class DatasetCreator(ABC):
 
     @staticmethod
     @abstractmethod
-    def select_events(context_data_file_path: Path) -> pd.DataFrame:
+    def select_events(data_path: Path) -> pd.DataFrame:
         """
             abstract method to select events for dataset
             """
@@ -80,7 +80,7 @@ def load_dataset(creator: DatasetCreator, data_path: Path,
     :param manual_split: list that describes a manual split of the data
     :return: train, valid, test: tuple with data of type named tuple
     """
-    df_event_selection = creator.select_events(context_data_file_path=data_path)
+    df_event_selection = creator.select_events(data_path=data_path)
 
     df_X = creator.select_features(df=df_event_selection)
 

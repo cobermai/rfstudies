@@ -93,7 +93,7 @@ if __name__ == '__main__':
     if args_in.calculate_features:
         feature_handling(work_dir=args_in.data_path)
 
-    train, valid, test = load_dataset(creator=SimpleSelect(),
+    train, valid, test = load_dataset(creator=XBOX2TrendBD20msSelect(),
                                       data_path=args_in.data_path,
                                       manual_split=([1, 2, 3, 4, 5, 6, 7], [8], [9]),
                                       manual_scale=None)

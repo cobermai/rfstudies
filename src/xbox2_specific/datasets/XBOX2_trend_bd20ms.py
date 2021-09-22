@@ -19,16 +19,16 @@ class XBOX2TrendBD20msSelect(DatasetCreator):
     be overwritten.
     """
     @staticmethod
-    def select_events(context_data_file_path: Path) -> pd.DataFrame:
+    def select_events(data_path: Path) -> pd.DataFrame:
         """
         selection of events in data
-        :param context_data_file_path: path to context data file
+        :param data_path: path to context data file
         :return df: pandas dataframe with data from selected events
         """
         selection_list = ["is_bd_in_20ms"]
-        selection = dataset_utils.select_events_from_list(context_data_file_path=context_data_file_path,
+        selection = dataset_utils.select_events_from_list(context_data_file_path=data_path / "context_w_runs.hdf",
                                                           selection_list=selection_list)
-        df = hdf_to_df_selection(context_data_file_path, selection=selection)
+        df = hdf_to_df_selection(data_path / "context_w_runs.hdf", selection=selection)
         df = df[pd.Index(df["run_no"] > 0)]  # Only choose stable runs
         return df
 
