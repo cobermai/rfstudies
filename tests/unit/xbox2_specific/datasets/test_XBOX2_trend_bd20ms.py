@@ -1,3 +1,4 @@
+from collections import namedtuple
 import h5py
 import numpy as np
 import pandas as pd
@@ -5,12 +6,14 @@ import pytest
 from src.utils import dataset_creator
 from src.xbox2_specific.datasets import XBOX2_trend_bd20ms
 
+data = namedtuple("data", ["X", "y", "idx"])
+
 
 @pytest.mark.parametrize("y, \
                          y_one_hot_expected",
-                         [(np.array(['good', 'bad', 'good']),
+                         [(np.array([1, 0, 1]),
                            np.array([[0, 1], [1, 0], [0, 1]])),
-                          (np.array(['bad', 'good', 'bad']),
+                          (np.array([0, 1, 0]),
                            np.array([[1, 0], [0, 1], [1, 0]])),
                           (np.zeros(1),
                            np.array([[1]]))
@@ -21,12 +24,18 @@ def test__one_hot(y, y_one_hot_expected):
     """
     # ARRANGE
     selector = XBOX2_trend_bd20ms.XBOX2TrendBD20msSelect()
+    df = pd.DataFrame({"label": y})
+    train = data(None, df, None)
+    valid = data(None, df, None)
+    test = data(None, df, None)
 
     # ACT
-    y_one_hot = selector.one_hot_encode(y=y)
+    train_out, valid_out, test_out = selector.one_hot_encode(train, valid, test)
 
     # ASSERT
-    assert (y_one_hot == y_one_hot_expected).all()
+    assert (train_out.y == y_one_hot_expected).all()
+    assert (valid_out.y == y_one_hot_expected).all()
+    assert (test_out.y == y_one_hot_expected).all()
 
 
 @pytest.mark.skip(reason="Needs to be updated for new code structure")
@@ -85,6 +94,7 @@ def test__select_events(tmpdir, dummy_features, selection_filter_expected):
     assert (selection_filter_expected == selection_filter_out).all()
 
 
+@pytest.mark.skip(reason="not finished")
 @pytest.mark.parametrize("dummy_data",
                          [([10, 20]),
                           ([-1., 3.])
@@ -127,6 +137,7 @@ def test__select_features(dummy_data):
     assert (X_out == X_expected).all()
 
 
+@pytest.mark.skip(reason="not finished")
 @pytest.mark.parametrize("data",
                          [np.ones((10, ), dtype=bool),
                           np.zeros((10, ), dtype=bool)

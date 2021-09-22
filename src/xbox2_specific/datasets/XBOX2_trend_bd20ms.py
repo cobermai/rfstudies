@@ -155,20 +155,21 @@ class XBOX2TrendBD20msSelect(DatasetCreator):
 
             # standard scale each run included in manual scale separately
             for i in manual_scale:
-                train_X_i = train_X[pd.Index(train_X["run_no"] == i)]
-                valid_X_i = valid_X[pd.Index(valid_X["run_no"] == i)]
-                test_X_i = test_X[pd.Index(test_X["run_no"] == i)]
+                train_run_idx = pd.Index(train_X["run_no"] == i)
+                valid_run_idx = pd.Index(valid_X["run_no"] == i)
+                test_run_idx = pd.Index(test_X["run_no"] == i)
 
-                mean = train_X_i.mean()
-                std = train_X_i.std()
+                train_X_i = train_X[train_run_idx]
+                valid_X_i = valid_X[valid_run_idx]
+                test_X_i = test_X[test_run_idx]
 
-                train_X_i_scaled = df_to_numpy_for_ml((train_X_i - mean) / std)
-                valid_X_i_scaled = df_to_numpy_for_ml((valid_X_i - mean) / std)
-                test_X_i_scaled = df_to_numpy_for_ml((test_X_i - mean) / std)
+                train_X_i_scaled = df_to_numpy_for_ml((train_X_i - train_X_i.mean()) / train_X_i.std())
+                valid_X_i_scaled = df_to_numpy_for_ml((valid_X_i - valid_X_i.mean()) / valid_X_i.std())
+                test_X_i_scaled = df_to_numpy_for_ml((test_X_i - test_X_i.mean) / test_X_i.std())
 
-                train_X_scaled[pd.Index(train_X["run_no"] == i)] = train_X_i_scaled
-                valid_X_scaled[pd.Index(valid_X["run_no"] == i)] = valid_X_i_scaled
-                test_X_scaled[pd.Index(test_X["run_no"] == i)] = test_X_i_scaled
+                train_X_scaled[train_run_idx] = train_X_i_scaled
+                valid_X_scaled[valid_run_idx] = valid_X_i_scaled
+                test_X_scaled[test_run_idx] = test_X_i_scaled
 
             train = train._replace(X=train_X_scaled)
             valid = valid._replace(X=valid_X_scaled)
@@ -181,10 +182,10 @@ class XBOX2TrendBD20msSelect(DatasetCreator):
         """
         Function transforms the labels from integers to one hot vectors.
         Note that this function can be overwritten in the concrete dataset selection class.
-        :param train: data for training of type named tuple
-        :param valid: data for validation of type named tuple
-        :param test: data for testing of type named tuple
-        :return: train, valid, test: Tuple with data of type named tuple
+        :param train: data for training with type named tuple which has attributes X, y and idx
+        :param valid: data for validation with type named tuple which has attributes X, y and idx
+        :param test: data for testing with type named tuple which has attributes X, y and idx
+        :return: train, valid, test: Tuple containing data with type named tuple which has attributes X, y and idx
         """
         train_y = df_to_numpy_for_ml(train.y.loc[:, train.y.columns != "run_no"])
         valid_y = df_to_numpy_for_ml(valid.y.loc[:, valid.y.columns != "run_no"])

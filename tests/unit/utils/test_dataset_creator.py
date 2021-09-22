@@ -6,55 +6,26 @@ import pytest
 from src.utils import dataset_creator
 
 
-def test__train_valid_test_split():
+@patch.multiple(dataset_creator.DatasetCreator, __abstractmethods__=set())
+def test__load_dataset(tmpdir):
     """
-    Test train_valid_test_split() function
+    Test load_dataset() function
     """
     # ARRANGE
-    p = patch.multiple(dataset_creator.DatasetCreator, __abstractmethods__=set())
-    p.start()
     creator = dataset_creator.DatasetCreator()
-    p.stop()
-    X = np.array(range(10, 20))
-    y = np.array(range(20, 30))
-    splits_expected = 0.7, 0.1, 0.2
 
     # ACT
-    train, valid, test = creator.train_valid_test_split(X=X, y=y, splits=splits_expected)
 
     # ASSERT
-    assert set(X) == set(train.X).union(valid.X).union(test.X)
-    assert set(y) == set(train.y).union(valid.y).union(test.y)
-    length = len(X)
-    assert set(range(length)) == set(train.idx).union(valid.idx).union(test.idx)
-    splits_output = len(train.X) / length, len(valid.X) / length, len(test.X) / length
-    assert splits_output == splits_expected
+    assert hasattr(creator, "select_events")
+    assert hasattr(creator, "select_features")
+    assert hasattr(creator, "select_labels")
+    assert hasattr(creator, "train_valid_test_split")
+    assert hasattr(creator, "scale_data")
+    assert hasattr(creator, "one_hot_encode")
 
 
-def test__train_valid_test_split_errors():
-    # ARRANGE
-    p = patch.multiple(dataset_creator.DatasetCreator, __abstractmethods__=set())
-    p.start()
-    creator = dataset_creator.DatasetCreator()
-    p.stop()
-    X = np.array(range(10, 20))
-    y = np.array(range(20, 30))
-
-    # ACT
-    with pytest.raises(ValueError):
-        creator.train_valid_test_split(X=X, y=y, splits=(1, 0, 0))
-    with pytest.raises(ValueError):
-        creator.train_valid_test_split(X=X, y=y, splits=(0, 1, 0))
-    with pytest.raises(ValueError):
-        creator.train_valid_test_split(X=X, y=y, splits=(0, 0, 1))
-    with pytest.raises(ValueError):
-        creator.train_valid_test_split(X=X, y=y, splits=(-1, 0, 0))
-    with pytest.raises(ValueError):
-        creator.train_valid_test_split(X=X, y=y, splits=(2, 0, 0))
-    with pytest.raises(ValueError):
-        creator.train_valid_test_split(X=X, y=y, splits=(0.5, 0.5, 0.5))
-
-
+@pytest.mark.skip(reason="not finished")
 @patch.multiple(dataset_creator.DatasetCreator, __abstractmethods__=set(),
                 select_events=MagicMock(return_value=np.ones((10,), dtype=bool)),
                 select_features=MagicMock(return_value=np.ones((10, 10, 10), dtype=bool)),

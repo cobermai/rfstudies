@@ -73,10 +73,7 @@ def test__select_trend_data_events():
     # ASSERT
     assert (time_filter_expected == time_filter_out).all()
 
-#
-# @pytest.mark.parametrize("dataset, selection_expected",
-#                          ([np.ones((10,), dtype=bool), np.ones((10,), dtype=bool)])
-#                          )
+
 def test__select_events_from_list(tmpdir):
     """
     Test select_events_from_list() function
@@ -140,6 +137,7 @@ def test__select_features_from_list():
     assert (X_expected == X_out).all
 
 
+@pytest.mark.skip(reason="not finished")
 def test__get_labels():
     """
     Test select_labels_from_df()

@@ -8,6 +8,7 @@ from sklearn.preprocessing import OneHotEncoder
 from sklearn.model_selection import train_test_split
 from src.utils.dataset_creator import DatasetCreator
 from src.utils.hdf_tools import hdf_to_df_selection
+from src.utils.hdf_tools import hdf_to_xarray_selection
 from src.xbox2_specific.utils import dataset_utils
 
 data = namedtuple("data", ["X", "y", "idx"])
@@ -173,10 +174,10 @@ class SimpleSelect(DatasetCreator):
         """
         Function transforms the labels from integers to one hot vectors.
         Note that this function can be overwritten in the concrete dataset selection class.
-        :param train: data for training of type named tuple
-        :param valid: data for validation of type named tuple
-        :param test: data for testing of type named tuple
-        :return: train, valid, test: Tuple with data of type named tuple
+        :param train: data for training with type named tuple which has attributes X, y and idx
+        :param valid: data for validation with type named tuple which has attributes X, y and idx
+        :param test: data for testing with type named tuple which has attributes X, y and idx
+        :return: train, valid, test: Tuple containing data with type named tuple which has attributes X, y and idx
         """
         train_y = df_to_numpy_for_ml(train.y.loc[:, train.y.columns != "run_no"])
         valid_y = df_to_numpy_for_ml(valid.y.loc[:, valid.y.columns != "run_no"])
