@@ -1,6 +1,6 @@
 import os.path
 import pytest
-import tensorflow.keras as keras
+from tensorflow import keras
 from src.model import classifier
 
 
