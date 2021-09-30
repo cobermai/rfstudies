@@ -1,6 +1,7 @@
 import pytest
 import numpy as np
 import tensorflow as tf
+from tensorflow import keras
 import shap
 from shap.explainers._deep import Deep
 from src.model.sample_explainers import deep_shap
@@ -32,17 +33,16 @@ def test__build_explainer():
     ])
     X_reference = np.ones(shape=(200, 4))
     explainer = deep_shap.ShapDeepExplainer()
-
-    background = X_reference[np.random.choice(X_reference.shape[0], 100, replace=False)]
+    background_size = 100
+    background = X_reference[np.random.choice(X_reference.shape[0], background_size, replace=False)]
     shap.explainers._deep.deep_tf.op_handlers["AddV2"] = shap.explainers._deep.deep_tf.passthrough
-    shap_explainer_expected = shap.DeepExplainer(model, background)
+    explainer_model_expected = shap.DeepExplainer(model, background)
 
     # ACT
-    explainer.build_explainer(model, X_reference)
+    explainer_model_out = explainer.build_explainer(model, X_reference)
 
     # ASSERT
-    assert hasattr(explainer, "shap_explainer")
-    assert explainer.shap_explainer == shap_explainer_expected
+    assert(explainer_model_out == explainer_model_expected)
 
 
 @pytest.mark.skip(reason="not finished")
@@ -55,14 +55,14 @@ def test__get_sample_importance():
         tf.keras.layers.Flatten(input_shape=(2, 2)),
         tf.keras.layers.Dense(2, activation='relu')
     ])
-    X_reference = np.ones(shape=(200, 4))
+    X_reference = np.ones(shape=(200, 2, 2))
     explainer = deep_shap.ShapDeepExplainer()
-    X_to_explain = np.ones(shape=(200, 4))
+    explainer_model = explainer.build_explainer(model, X_reference)
+    X_to_explain = np.ones(shape=(200, 2, 2))
+    sample_importance_expected = explainer_model = explainer_model.shap_values(X_to_explain)
 
-    sample_importance_expected = explainer.shap_explainer.shap_values(X_to_explain)
     # ACT
-    explainer.build_explainer(model, X_reference)
-    sample_importance = explainer.get_sample_importance(X_to_explain)
+    sample_importance = explainer.get_sample_importance(explainer_model, X_to_explain)
 
     # ASSERT
-    assert sample_importance == sample_importance_expected
+    assert len(sample_importance) == len(sample_importance_expected)
