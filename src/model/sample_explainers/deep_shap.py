@@ -24,9 +24,10 @@ class ShapDeepExplainer(ExplainerCreator):
         return shap.DeepExplainer(model, background)
 
     @staticmethod
-    def get_sample_importance(explainer_model: typing.Any, data_to_explain: np.ndarray) -> list:
+    def get_sample_importance(explainer_model: typing.Any, data_to_explain: np.ndarray) -> typing.Union[np.ndarray, list]:
         """
         Method to get sample importance values
+        :param explainer_model: explainable AI model
         :param X_to_explain: data which should be explained
         :return: shap_values: list of arrays with importance for each label
         """

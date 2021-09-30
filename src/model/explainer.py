@@ -18,7 +18,7 @@ class ExplainerCreator(ABC):
 
     @staticmethod
     @abstractmethod
-    def get_sample_importance(explainer_model: typing.Any, data_to_explain: np.ndarray) -> list:
+    def get_sample_importance(explainer_model: typing.Any, data_to_explain: np.ndarray) -> typing.Union[np.ndarray, list]:
         """
         abstract method to use explainer to get important samples
         """
@@ -27,7 +27,7 @@ class ExplainerCreator(ABC):
 def explain_samples(explainer: ExplainerCreator,
                     model: Model,
                     X_reference: np.ndarray,
-                    X_to_explain: np.ndarray) -> list:
+                    X_to_explain: np.ndarray) -> typing.Union[np.ndarray, list]:
     """
     :param explainer: any concrete subclass of Explainer to explain prediction
     :param model: tensorflow model of type functional API
