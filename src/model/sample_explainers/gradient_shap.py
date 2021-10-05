@@ -24,12 +24,13 @@ class ShapGradientExplainer(ExplainerCreator):
         return shap.GradientExplainer(model, background)
 
     @staticmethod
-    def get_sample_importance(explainer_model: typing.Any, X_to_explain: np.ndarray) -> typing.Union[np.ndarray, list]:
+    def get_sample_importance(explainer_model: typing.Any,
+                              data_to_explain: np.ndarray) -> typing.Union[np.ndarray, list]:
         """
         Method to get sample importance values
         :param explainer_model: explainable AI model
-        :param X_to_explain: data which should be explained
+        :param data_to_explain: data which should be explained
         :return: shap_values: list of arrays with importance for each label
         """
-        shap_values = explainer_model.shap_values(X_to_explain)
+        shap_values = explainer_model.shap_values(data_to_explain)
         return shap_values

@@ -18,7 +18,8 @@ class ExplainerCreator(ABC):
 
     @staticmethod
     @abstractmethod
-    def get_sample_importance(explainer_model: typing.Any, data_to_explain: np.ndarray) -> typing.Union[np.ndarray, list]:
+    def get_sample_importance(explainer_model: typing.Any,
+                              data_to_explain: np.ndarray) -> typing.Union[np.ndarray, list]:
         """
         abstract method to use explainer to get important samples
         """
