@@ -3,11 +3,11 @@ from collections import namedtuple
 from pathlib import Path
 from typing import Optional
 import numpy as np
-import pandas as pd
+import xarray as xr
+import h5py
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.model_selection import train_test_split
 from src.utils.dataset_creator import DatasetCreator
-from src.utils.hdf_tools import hdf_to_df_selection
 from src.xbox2_specific.utils import dataset_utils
 
 data = namedtuple("data", ["X", "y", "idx"])
@@ -19,63 +19,91 @@ class XBOX2TrendBD20msSelect(DatasetCreator):
     be overwritten.
     """
     @staticmethod
-    def select_events(data_path: Path) -> pd.DataFrame:
+    def select_events(data_path: Path) -> list[bool]:
         """
         selection of events in data
         :param data_path: path to context data file
         :return df: pandas dataframe with data from selected events
         """
-        selection_list = ["is_bd_in_20ms"]
-        selection = dataset_utils.select_events_from_list(context_data_file_path=data_path / "context_w_runs.hdf",
-                                                          selection_list=selection_list)
-        df = hdf_to_df_selection(data_path / "context_w_runs.hdf", selection=selection)
-        df = df[pd.Index(df["run_no"] > 0)]  # Only choose stable runs
-        return df
+        # select only events with breakdown in 20 ms + some healthy events
+        bd_selection_list = ["is_bd_in_20ms"]
+        selection = dataset_utils.select_events_from_list(context_data_file_path=data_path / "context.hdf",
+                                                          selection_list=bd_selection_list)
+        return selection
 
     @staticmethod
-    def select_features(df: pd.DataFrame) -> np.ndarray:
+    def select_features(data_path: Path, selection: list[bool]) -> xr.DataArray:
         """
         returns features of selected events for modeling
-        :param df: dataframe with selected events
-        :return df_X: label of selected events
+        :param data_path: path to data
+        :param selection: boolean list for indexing which events to select
+        :return df_X: features of selected events
         """
-        selection_list = ["run_no",
-                          "PrevTrendData__Loadside_win", "PrevTrendData__Tubeside_win",
-                          "PrevTrendData__Collector", "PrevTrendData__Gun", "PrevTrendData__IP_before_PC",
-                          "PrevTrendData__PC_IP", "PrevTrendData__WG_IP", "PrevTrendData__IP_Load",
-                          "PrevTrendData__IP_before_structure", "PrevTrendData__US_Beam_Axis_IP",
-                          "PrevTrendData__Klystron_Flange_Temp", "PrevTrendData__Load_Temp",
-                          "PrevTrendData__PC_Left_Cavity_Temp", "PrevTrendData__PC_Right_Cavity_Temp",
-                          "PrevTrendData__Bunker_WG_Temp", "PrevTrendData__Structure_Input_Temp",
-                          "PrevTrendData__Chiller_1", "PrevTrendData__Chiller_2", "PrevTrendData__Chiller_3",
-                          "PrevTrendData__PKI_FT_avg", "PrevTrendData__PSI_FT_avg", "PrevTrendData__PSR_FT_avg",
-                          "PrevTrendData__PSI_max", "PrevTrendData__PSR_max", "PrevTrendData__PEI_max",
-                          "PrevTrendData__DC_Down_min", "PrevTrendData__DC_Up_min",
-                          "PrevTrendData__PSI_Pulse_Width"]
-        df_X = dataset_utils.select_features_from_list(df=df,
-                                                       selection_list=selection_list)
-        return df_X
+        feature_list = ["run_no",
+                        "PrevTrendData/Loadside win", "PrevTrendData/Tubeside win",
+                        "PrevTrendData/Collector", "PrevTrendData/Gun", "PrevTrendData/IP before PC",
+                        "PrevTrendData/PC IP", "PrevTrendData/WG IP", "PrevTrendData/IP Load",
+                        "PrevTrendData/IP before structure", "PrevTrendData/US Beam Axis IP",
+                        "PrevTrendData/Klystron Flange Temp", "PrevTrendData/Load Temp",
+                        "PrevTrendData/PC Left Cavity Temp", "PrevTrendData/PC Right Cavity Temp",
+                        "PrevTrendData/Bunker WG Temp", "PrevTrendData/Structure Input Temp",
+                        "PrevTrendData/Chiller 1", "PrevTrendData/Chiller 2", "PrevTrendData/Chiller 3",
+                        "PrevTrendData/PKI FT avg", "PrevTrendData/PSI FT avg", "PrevTrendData/PSR FT avg",
+                        "PrevTrendData/PSI max", "PrevTrendData/PSR max", "PrevTrendData/PEI max",
+                        "PrevTrendData/DC Down min", "PrevTrendData/DC Up min",
+                        "PrevTrendData/PSI Pulse Width"]
+
+        # Get selected features
+        with h5py.File(data_path / "context.hdf") as file:
+            data = np.empty(shape=(len(np.arange(sum(selection))), 1, len(feature_list)))
+            for feature_ind, feature in enumerate(feature_list):
+                data[:, 0, feature_ind] = dataset_utils.read_hdf_dataset(file, feature)[selection]
+            run_no = dataset_utils.read_hdf_dataset(file, "run_no")[selection]
+            Timestamp = dataset_utils.read_hdf_dataset(file, "Timestamp")[selection]
+
+        # Create xarray DataArray
+        dim_names = ["event", "samples", "feature"]
+        da_X = xr.DataArray(data=data,
+                            dims=dim_names,
+                            coords={"event": Timestamp,
+                                    "feature": feature_list
+                                    })
+
+        da_X = da_X.assign_coords(run_no=("event", run_no))
+        return da_X
 
     @staticmethod
-    def select_labels(df: pd.DataFrame) -> pd.DataFrame:
+    def select_labels(data_path: Path, selection: list) -> xr.DataArray:
         """
         returns labels of selected events for supervised machine learning
-        :param df: dataframe with selected events
+        :param data_path: path to data
+        :param selection: boolean list for indexing which events to select
         :return df_y: label of selected events
         """
-        y_df = dataset_utils.get_labels(df=df, label="is_healthy")
-        y_df = pd.concat([y_df, dataset_utils.get_labels(df=df, label="run_no")], axis=1)
-        return y_df
+        label_name = "is_healthy"
+
+        with h5py.File(data_path / "context.hdf") as file:
+            is_healthy = dataset_utils.read_hdf_dataset(file, label_name)[selection]
+            run_no = dataset_utils.read_hdf_dataset(file, "run_no")[selection]
+
+        is_healthy = is_healthy[..., np.newaxis]
+        dim_names = ["event", "feature"]
+        da_y = xr.DataArray(data=is_healthy,
+                            dims=dim_names,
+                            coords={"feature": [label_name]
+                                    })
+        da_y = da_y.assign_coords(run_no=("event", run_no))
+        return da_y
 
     @staticmethod
-    def train_valid_test_split(df_X: pd.DataFrame, df_y: pd.DataFrame,
+    def train_valid_test_split(da_X: xr.DataArray, da_y: xr.DataArray,
                                splits: Optional[tuple] = None,
                                manual_split: Optional[tuple] = None) -> tuple:
         """
         Function splits data into training, testing and validation set using random sampling. Note that this function
         can be overwritten in the concrete dataset selection.
-        :param df_X: input data array of shape (event, sample, feature)
-        :param df_y: output data array of shape (event)
+        :param da_X: input data array of shape (event, sample, feature)
+        :param da_y: output data array of shape (event)
         :param splits: tuple specifying splitting fractions (training, validation, test)
         :param manual_split: tuple of lists specifying which runs to put in different sets (train, valid, test).
         :return: train, valid, test: Tuple with data of type named tuple
@@ -93,9 +121,9 @@ class XBOX2TrendBD20msSelect(DatasetCreator):
             raise ValueError('Splits must sum to 1')
 
         if manual_split is None:
-            idx = df_X.index
+            idx = np.arange(len(da_X["event"]))
             X_train, X_tmp, y_train, y_tmp, idx_train, idx_tmp = \
-                train_test_split(df_X, df_y, idx, train_size=splits[0])
+                train_test_split(da_X, da_y, idx, train_size=splits[0])
             X_valid, X_test, y_valid, y_test, idx_valid, idx_test = \
                 train_test_split(X_tmp, y_tmp, idx_tmp, train_size=splits[1] / (1 - (splits[0])))
         else:
@@ -103,15 +131,17 @@ class XBOX2TrendBD20msSelect(DatasetCreator):
             valid_runs = manual_split[1]
             test_runs = manual_split[2]
 
-            X_train = df_X[pd.Index(df_X["run_no"].isin(train_runs))]
-            y_train = df_y[pd.Index(df_y["run_no"].isin(train_runs))]
-            idx_train = df_X.index[pd.Index(df_X["run_no"].isin(train_runs))]
-            X_valid = df_X[pd.Index(df_X["run_no"].isin(valid_runs))]
-            y_valid = df_y[pd.Index(df_y["run_no"].isin(valid_runs))]
-            idx_valid = df_X.index[pd.Index(df_X["run_no"].isin(valid_runs))]
-            X_test = df_X[pd.Index(df_X["run_no"].isin(test_runs))]
-            y_test = df_y[pd.Index(df_y["run_no"].isin(test_runs))]
-            idx_test = df_X.index[pd.Index(df_X["run_no"].isin(test_runs))]
+            idx = np.arange(len(da_X["event"]))
+
+            X_train = da_X[da_X["run_no"].isin(train_runs)]
+            y_train = da_y[da_y["run_no"].isin(train_runs)]
+            idx_train = idx[da_X["run_no"].isin(train_runs)]
+            X_valid = da_X[da_X["run_no"].isin(valid_runs)]
+            y_valid = da_y[da_y["run_no"].isin(valid_runs)]
+            idx_valid = idx[da_X["run_no"].isin(valid_runs)]
+            X_test = da_X[da_X["run_no"].isin(test_runs)]
+            y_test = da_y[da_y["run_no"].isin(test_runs)]
+            idx_test = idx[da_X["run_no"].isin(test_runs)]
 
         train = data(X_train, y_train, idx_train)
         valid = data(X_valid, y_valid, idx_valid)
@@ -132,12 +162,12 @@ class XBOX2TrendBD20msSelect(DatasetCreator):
         :return: train, valid, test: Tuple with data of type named tuple
         """
         if manual_scale is None:  # standard scale all using mean and std of train set
-            mean = train.X.mean()
-            std = train.X.std()
+            mean = np.mean(train.X, axis=0)
+            std = np.std(train.X, axis=0)
 
-            train_X_scaled = df_to_numpy_for_ml((train.X - mean) / std)
-            valid_X_scaled = df_to_numpy_for_ml((valid.X - mean) / std)
-            test_X_scaled = df_to_numpy_for_ml((test.X - mean) / std)
+            train_X_scaled = dataset_utils.da_to_numpy_for_ml((train.X - mean) / std)
+            valid_X_scaled = dataset_utils.da_to_numpy_for_ml((valid.X - mean) / std)
+            test_X_scaled = dataset_utils.da_to_numpy_for_ml((test.X - mean) / std)
 
             train = train._replace(X=train_X_scaled)
             valid = valid._replace(X=valid_X_scaled)
@@ -155,21 +185,28 @@ class XBOX2TrendBD20msSelect(DatasetCreator):
 
             # standard scale each run included in manual scale separately
             for i in manual_scale:
-                train_run_idx = pd.Index(train_X["run_no"] == i)
-                valid_run_idx = pd.Index(valid_X["run_no"] == i)
-                test_run_idx = pd.Index(test_X["run_no"] == i)
+                if any(train_X["run_no"] == i):
+                    train_X_i = train_X[train_X["run_no"] == i]
+                    mean_train = np.mean(train_X_i, axis=0)
+                    std_train = np.std(train_X_i, axis=0)
+                    train_X_i_scaled = dataset_utils.da_to_numpy_for_ml((train_X_i - mean_train) / std_train)
+                    train_X_scaled[train_X["run_no"] == i] = train_X_i_scaled
+                if any(valid_X["run_no"] == i):
+                    valid_X_i = valid_X[valid_X["run_no"] == i]
+                    mean_valid = np.mean(valid_X_i, axis=0)
+                    std_valid = np.std(valid_X_i, axis=0)
+                    valid_X_i_scaled = dataset_utils.da_to_numpy_for_ml((valid_X_i - mean_valid) / std_valid)
+                    valid_X_scaled[valid_X["run_no"] == i] = valid_X_i_scaled
+                if any(test_X["run_no"] == i):
+                    test_X_i = test_X[test_X["run_no"] == i]
+                    mean_test = np.mean(test_X_i, axis=0)
+                    std_test = np.std(test_X_i, axis=0)
+                    test_X_i_scaled = dataset_utils.da_to_numpy_for_ml((test_X_i - mean_test) / std_test)
+                    test_X_scaled[test_X["run_no"] == i] = test_X_i_scaled
 
-                train_X_i = train_X[train_run_idx]
-                valid_X_i = valid_X[valid_run_idx]
-                test_X_i = test_X[test_run_idx]
-
-                train_X_i_scaled = df_to_numpy_for_ml((train_X_i - train_X_i.mean()) / train_X_i.std())
-                valid_X_i_scaled = df_to_numpy_for_ml((valid_X_i - valid_X_i.mean()) / valid_X_i.std())
-                test_X_i_scaled = df_to_numpy_for_ml((test_X_i - test_X_i.mean) / test_X_i.std())
-
-                train_X_scaled[train_run_idx] = train_X_i_scaled
-                valid_X_scaled[valid_run_idx] = valid_X_i_scaled
-                test_X_scaled[test_run_idx] = test_X_i_scaled
+            train_X_scaled = dataset_utils.da_to_numpy_for_ml(train_X_scaled)
+            valid_X_scaled = dataset_utils.da_to_numpy_for_ml(valid_X_scaled)
+            test_X_scaled = dataset_utils.da_to_numpy_for_ml(test_X_scaled)
 
             train = train._replace(X=train_X_scaled)
             valid = valid._replace(X=valid_X_scaled)
@@ -187,42 +224,14 @@ class XBOX2TrendBD20msSelect(DatasetCreator):
         :param test: data for testing with type named tuple which has attributes X, y and idx
         :return: train, valid, test: Tuple containing data with type named tuple which has attributes X, y and idx
         """
-        train_y = df_to_numpy_for_ml(train.y.loc[:, train.y.columns != "run_no"])
-        valid_y = df_to_numpy_for_ml(valid.y.loc[:, valid.y.columns != "run_no"])
-        test_y = df_to_numpy_for_ml(test.y.loc[:, test.y.columns != "run_no"])
+        train_y = dataset_utils.da_to_numpy_for_ml(train.y)
+        valid_y = dataset_utils.da_to_numpy_for_ml(valid.y)
+        test_y = dataset_utils.da_to_numpy_for_ml(test.y)
 
         enc = OneHotEncoder(categories='auto').fit(train_y.reshape(-1, 1))
+
         train = train._replace(y=enc.transform(train_y.reshape(-1, 1)).toarray())
         valid = valid._replace(y=enc.transform(valid_y.reshape(-1, 1)).toarray())
         test = test._replace(y=enc.transform(test_y.reshape(-1, 1)).toarray())
 
         return train, valid, test
-
-
-def df_to_numpy_for_ml(df):
-    out = df.to_numpy(dtype=float)
-    out = out[..., np.newaxis]
-    out = np.nan_to_num(out)
-
-    return out
-
-
-if __name__ == '__main__':
-    selector = XBOX2TrendBD20msSelect()
-    data_path = Path('C:\\Users\\holge\\cernbox\\CLIC_data\\Xbox2_hdf\\context.hdf')
-    df = selector.select_events(context_data_file_path=data_path)
-
-    run_selection = selector.select_run(df, 1)
-    for i in range(2, 10):
-        run_selection = run_selection.append(selector.select_run(df, i))
-
-    X = selector.select_features(df=df)
-    y = selector.select_labels(df=df)
-
-
-    print("Elements in runs")
-    print(sum(run_selection))
-    print("Breakdowns in event selection")
-    print(len(y) - sum(y))
-    print("Breakdowns in from events in run selection")
-    print(len(y[run_selection]) - sum(y[run_selection]))

@@ -1,8 +1,11 @@
 from pathlib import Path
 import typing
+from itertools import compress
 import h5py
 import numpy as np
 import pandas as pd
+import xarray as xr
+from scipy.interpolate import interp1d
 
 
 def read_hdf_dataset(file: h5py.File, key: str):
@@ -42,20 +45,30 @@ def select_events_from_list(context_data_file_path: Path, selection_list: typing
     :return selection: boolean filter for selecting breakdown events
     """
     with h5py.File(context_data_file_path, "r") as file:
-        # load relevant data from context file
-        features_read = []
+        # define relevant breakdown events from context file
+        bds_read = []
         for key in selection_list:
-            features_read.append(read_hdf_dataset(file, key))
-        selection = features_read[0]
-        for event_index in range(1, len(features_read)):
-            selection = selection | features_read[event_index]
+            bds_read.append(read_hdf_dataset(file, key))
+        bd_selection = bds_read[0]
+        for event_index in range(1, len(bds_read)):
+            bd_selection = bd_selection | bds_read[event_index]
 
+        run_no = read_hdf_dataset(file, "run_no")
+
+        # define stable runs
+        stable_run = run_no > 0
+
+        # TODO: implement selection of followup and primal bds in context file?
+
+        selection = bd_selection & stable_run  # selected breakdowns
+
+        # load timestamps for filtering healthy events
         event_timestamps = read_hdf_dataset(file, "Timestamp")
         trend_timestamp = read_hdf_dataset(file, "PrevTrendData/Timestamp")
 
         # only define healthy pulses with a time difference to the previous trend data of less than 2 s
-        filter_timestamp_diff = select_trend_data_events(event_timestamps, trend_timestamp, 2)
-        is_healthy = read_hdf_dataset(file, "clic_label/is_healthy") & filter_timestamp_diff
+        healthy_filter_timestamp_diff = select_trend_data_events(event_timestamps, trend_timestamp, 2)
+        is_healthy = read_hdf_dataset(file, "clic_label/is_healthy") & healthy_filter_timestamp_diff & stable_run
 
         # select 2.5% of the healthy pulses randomly
         selection[is_healthy] = np.random.choice(a=[True, False], size=(sum(is_healthy),), p=[0.025, 0.975])
@@ -63,24 +76,59 @@ def select_events_from_list(context_data_file_path: Path, selection_list: typing
     return selection
 
 
-def select_features_from_list(df: pd.DataFrame, selection_list) -> np.ndarray:
-    """
-    returns features of selected events for modeling
-    :param df: dataframe with selected events
-    :param selection_list: list of features to include in selection
-    :return X: label of selected events
-    """
-    feature_names = pd.Index(selection_list)
-    df_X = df[feature_names]
-    return df_X
+def hdf_ext_link_to_da_selection(file_path, selection, feature_list) -> xr.DataArray:
+    with h5py.File(file_path, "r") as file:
+        # find name of groups to be read
+        groups_list = list(file.keys())
+        list_of_events = list(compress(groups_list, selection))
+
+        # buffer for data
+        data_array = np.empty(shape=(len(list_of_events), 1600, len(feature_list)))
+        event_timestamps = []
+        for event_ind, event in enumerate(list_of_events):
+            # get timestamp from group name
+            if "Log" in event:
+                timestamp = event[23:]
+            elif "Breakdown" in event:
+                timestamp = event[29:]
+            temp = np.array(list(timestamp))
+            temp[[4, 7, 10]] = '-', '-', 'T'
+            timestamp = "".join(list(temp))
+            event_timestamps.append(np.datetime64(timestamp))
+
+            # read features
+            for feature_ind, feature in enumerate(feature_list):
+                data = file[event][feature][:]
+                ts_length = len(data)
+
+                # Interpolate if time series is not 3200 points
+                if ts_length < 3200:
+                    x_low = np.linspace(0, 1, num=ts_length, endpoint=True)
+                    x_high = np.linspace(0, 1, num=3200, endpoint=True)
+                    interpolate = interp1d(x_low, data, kind='linear')
+                    data = interpolate(x_high)
+
+                # Downsample by taking every 2nd sample
+                # TODO: better way to do this?
+                data = data[::2]
+                data_array[event_ind, :, feature_ind] = data
+
+    # Create xarray DataArray
+    dim_names = ["event", "time", "feature"]
+    feature_names = [feature.replace("/", "__").replace(" ", "_") for feature in feature_list]
+    sample_time = 1.25e-9
+    time_steps = np.multiply(np.array(list(range(1600))), sample_time)
+    da = xr.DataArray(data=data_array,
+                      dims=dim_names,
+                      coords={"event": event_timestamps,
+                              "time": time_steps,
+                              "feature": feature_names
+                              }
+                      )
+    return da
 
 
-def get_labels(df: pd.DataFrame, label: str) -> pd.Series:
-    """
-    returns labels of selected events for supervised machine learning
-    :param df: dataframe with selected events
-    :param label: name of label to use
-    :return y: label of selected events
-    """
-    df_y = df[label]
-    return df_y
+def da_to_numpy_for_ml(da: xr.DataArray) -> xr.DataArray:
+    out = da.values
+    out = np.nan_to_num(out)
+    return out
