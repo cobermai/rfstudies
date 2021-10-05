@@ -75,8 +75,8 @@ def modeling(train_set, valid_set, test_set, param_dir: Path, output_dir: Path, 
     if fit_classifier:
         clf.fit_classifier(train_set, valid_set)
     clf.model.load_weights(output_dir / 'best_model.hdf5')
-    results = clf.model.evaluate(x=test_set.X, y=test_set.y, return_dict=True)
-    pd.DataFrame.from_dict(results, orient='index').T.to_csv(output_dir / "results.csv")
+    results = clf.model.evaluate(x=test_set.X, y=test_set.y)
+    #pd.DataFrame.from_dict(results, orient='index').T.to_csv(output_dir / "results.csv")
     return clf
 
 def explanation(classifier, train_set, valid_set, test_set, output_dir: Path):

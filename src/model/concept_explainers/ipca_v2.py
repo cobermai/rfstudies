@@ -23,6 +23,9 @@ from numpy import inf
 from numpy.random import seed
 from scipy.special import comb
 import tensorflow as tf
+from tensorflow.python.framework.ops import disable_eager_execution
+
+disable_eager_execution() #obch
 
 seed(0)
 tf.random.set_seed(0)
@@ -452,7 +455,7 @@ def topic_model_shap(predict,
   #print(metric1)
   metric1.append(mean_sim(topic_prob_n, n_concept))
   topic_model_pr.compile(
-      loss=given_loss( loss1=loss1),
+      loss=given_loss(loss1=loss1),
       optimizer=optimizer,metrics=metric1)
   print(topic_model_pr.summary())
   if load:
@@ -492,9 +495,17 @@ def topic_model_new_toy(predict,
   rec_vector_2 = Weight((500, f_train.shape[3]))(f_input)
   rec_layer_1 = Lambda(lambda x:K.relu(K.dot(x[0],x[1])))([topic_prob_nn, rec_vector_1])
   rec_layer_2 = Lambda(lambda x:K.dot(x[0],x[1]))([rec_layer_1, rec_vector_2])
-  pred = predict(rec_layer_2)
+
+  #resh_layer = tf.keras.layers.Reshape([rec_layer_2.shape[-1]])(rec_layer_2)
+
+  resh_layer = tf.reshape(rec_layer_2, (-1, predict.layers[0].input_shape[0][1])) #obch
+
+  pred = predict(resh_layer)
   topic_model_pr = Model(inputs=f_input, outputs=pred)
   topic_model_pr.layers[-1].trainable = False
+
+  #keras.utils.plot_model(topic_model_pr, to_file="topic_model_pr.png", show_shapes=True, show_layer_names=True) #obch
+
   if opt =='sgd':
     optimizer = SGD(lr=0.001)
     optimizer_state = [optimizer.iterations, optimizer.lr,
@@ -508,8 +519,10 @@ def topic_model_new_toy(predict,
 
   metric1.append(mean_sim(topic_prob_n, n_concept))
   topic_model_pr.compile(
-      loss=topic_loss_toy(topic_prob_n, topic_vector_n,  n_concept, f_input, loss1=loss1, para = para),
-      optimizer=optimizer,metrics=metric1)
+      loss=topic_loss_toy(topic_prob_n, topic_vector_n,  n_concept, f_input, loss1=loss1, para=para),
+      optimizer=optimizer,
+      metrics=metric1,
+      experimental_run_tf_function=False)
   print(topic_model_pr.summary())
   if load:
     topic_model_pr.load_weights(load)
