@@ -3,6 +3,7 @@ This module applies conversion and gathering on xbox2 data.
 """
 import argparse
 import logging
+import psutil
 from pathlib import Path
 import coloredlogs
 import h5py
@@ -20,10 +21,12 @@ def transform(tdms_dir: Path, hdf_dir: Path) -> None:
     :param tdms_dir: input directory with tdms files
     :param hdf_dir: output directory with hdf files
     """
+    cpu_count = psutil.cpu_count(logical=False)
+
     Path(hdf_dir, "data").mkdir(parents=False, exist_ok=True)
 
     # read tdms files, convert them to hdf5 and write them into hdf_dir/data/
-    Convert(check_already_converted=True, num_processes=4) \
+    Convert(check_already_converted=True, num_processes=cpu_count) \
         .from_tdms(tdms_dir) \
         .to_hdf(hdf_dir / "data").run()
 
@@ -38,7 +41,7 @@ def transform(tdms_dir: Path, hdf_dir: Path) -> None:
             num_of_samples = 35
             return len_equal and len(ch_shapes) == num_of_samples
 
-    Gatherer(if_fulfills=td_func_to_fulfill, on_error=False, num_processes=4)\
+    Gatherer(if_fulfills=td_func_to_fulfill, on_error=False, num_processes=cpu_count)\
         .gather(src_file_paths=hdf_dir.glob("data/Trend*.hdf"),
                 dest_file_path=hdf_dir / "TrendDataExtLinks.hdf")
 
@@ -67,8 +70,8 @@ def transform(tdms_dir: Path, hdf_dir: Path) -> None:
                 and ch_len.count(num_of_values_ni5761) == number_of_signals_monitored_with_ni5761 \
                 and not any(has_smelly_values(ch[:]) for ch in grp.values())
 
-    Gatherer(if_fulfills=ed_func_to_fulfill, on_error=False, num_processes=1)\
-        .gather(src_file_paths=hdf_dir.glob("data/EventData_201804*.hdf"),
+    Gatherer(if_fulfills=ed_func_to_fulfill, on_error=False, num_processes=cpu_count)\
+        .gather(src_file_paths=hdf_dir.glob("data/EventData*.hdf"),
                 dest_file_path=hdf_dir / "EventDataExtLinks.hdf")
 
 
