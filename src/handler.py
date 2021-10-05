@@ -13,6 +13,7 @@ import tsfresh
 from tqdm import tqdm
 from src.utils.handler_tools.context_data_creator import ContextDataCreator
 from src.utils.handler_tools.context_data_writer import ColumnWiseContextDataWriter, RowWiseContextDataWriter
+from src.utils.handler_tools.post_processing import get_run_no
 from src.utils.hdf_tools import hdf_path_combine, sort_by
 from src.xbox2_specific.feature_definition.attribute import get_event_attribute_features
 from src.xbox2_specific.feature_definition.event import get_event_data_features
@@ -117,6 +118,7 @@ class XBox2ContextDataCreator(ContextDataCreator):
             file.create_dataset(name="is_bd_in_20ms", data=np.append(is_bd[1:], [False]))
             file.create_dataset(name="is_bd_in_40ms", data=np.append(is_bd[2:], [False, False]))
             file.create_dataset(name="is_healthy", data=file["clic_label/is_healthy"])
+            file.create_dataset(name="run_no", data=get_run_no(file))
 
 
 if __name__ == "__main__":

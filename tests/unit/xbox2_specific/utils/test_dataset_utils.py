@@ -113,7 +113,6 @@ def test__select_events_from_list(tmpdir):
     # ACT
     np.random.seed(42)
     selection_out = dataset_utils.select_events_from_list(path, selection_list)
-    print(selection_out)
 
     # ASSERT
     assert (selection_out == selection_expected).all()
@@ -139,3 +138,23 @@ def test__select_features_from_list():
 
     # ASSERT
     assert (X_expected == X_out).all
+
+
+def test__get_labels():
+    """
+    Test select_labels_from_df()
+    """
+    # ARRANGE
+    y = np.ones((10, ))
+    y_expected = y[..., np.newaxis]
+    y_expected = np.nan_to_num(y_expected)
+    label = "healthy"
+    df = pd.DataFrame({
+        label: y,
+    })
+
+    # ACT
+    y_out = dataset_utils.get_labels(df=df, label=label)
+
+    # ASSERT
+    assert (y_expected == y_out).all

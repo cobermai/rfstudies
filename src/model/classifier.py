@@ -2,7 +2,6 @@
 model setup according to https://www.tensorflow.org/guide/keras/custom_layers_and_models
 """
 from pathlib import Path
-import numpy as np
 from tensorflow import keras
 from tensorflow.keras import Input
 from src.model.classifiers import fcn
@@ -31,7 +30,8 @@ class Classifier:
                  reduce_lr_factor: float,
                  reduce_lr_patience: int,
                  min_lr: float,
-                 build=True
+                 build=True,
+                 output_model_structure=True
                  ):
         """
         Initializes the Classifier with specified settings
@@ -59,9 +59,13 @@ class Classifier:
         self.reduce_lr_factor = reduce_lr_factor
         self.reduce_lr_patience = reduce_lr_patience
         self.min_lr = min_lr
+        self.output_model_structure = output_model_structure
         if build:
             self.model = self.build_classifier()
             self.model.build(input_shape)
+            if output_model_structure is True:
+                keras.utils.plot_model(self.model, to_file=output_directory / "plot_model_structure.png",
+                                       show_shapes=True, show_layer_names=True)
 
     def build_classifier(self, **kwargs):
         """
@@ -101,7 +105,7 @@ class Classifier:
         optimizer = keras.optimizers.get(self.optimizer)
         optimizer.learning_rate = self.learning_rate
         model.compile(loss=self.loss,
-                      optimizer=optimizer,
+                      optimizer=self.optimizer,
                       metrics=metrics,
                       **kwargs)
 
@@ -121,7 +125,7 @@ class Classifier:
             min_lr=self.min_lr)
 
         model_checkpoint = keras.callbacks.ModelCheckpoint(
-            filepath=self.output_directory / 'best_model.h5',
+            filepath=self.output_directory / 'best_model.hdf5',
             save_weights_only=True,
             monitor=self.monitor,
             save_best_only=True)
