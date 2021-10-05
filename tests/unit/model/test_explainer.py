@@ -20,7 +20,6 @@ def test__ExplainerCreator():
     assert hasattr(explainer_instance, "get_sample_importance")
 
 
-@pytest.mark.skip(reason="not finished")
 @patch.multiple(explainer.ExplainerCreator, __abstractmethods__=set(),
                 get_sample_importance=MagicMock(return_value=np.ones((10,), dtype=bool)),
                 )
@@ -37,4 +36,6 @@ def test__explain_samples():
     sample_importance = explainer.explain_samples(explainer_instance, model, X_to_reference, X_to_explain)
 
     # ASSERT
-    sample_importance == sample_importance_expected
+    comparison_list = np.array([sample_importance[i] == sample_importance_expected[i]
+                                for i in range(len(sample_importance))])
+    assert np.all(comparison_list)

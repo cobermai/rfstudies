@@ -17,7 +17,6 @@ def test__ShapGradientExplorer():
     assert hasattr(explainer, "get_sample_importance")
 
 
-@pytest.mark.skip(reason="not finished")
 def test__build_explainer():
     """
     Function for testing build_explainer method of ShapGradientExplainer
@@ -38,10 +37,10 @@ def test__build_explainer():
     explainer_model_out = explainer.build_explainer(model, X_reference)
 
     # ASSERT
-    assert(explainer_model_out == explainer_model_expected)
+    assert(type(explainer_model_out) is type(explainer_model_expected))
 
 
-@pytest.mark.skip(reason="not finished")
+# @pytest.mark.skip(reason="not finished")
 def test__get_sample_importance():
     """
     Function for testing get_sample_importance method of ShapGradientExplainer
@@ -62,4 +61,7 @@ def test__get_sample_importance():
     sample_importance = explainer.get_sample_importance(explainer_model, X_to_explain)
 
     # ASSERT
-    assert len(sample_importance) == len(sample_importance_expected)
+    comparison_list = np.array([sample_importance[i] == sample_importance_expected[i]
+                                for i in range(len(sample_importance))])
+    assert np.all(comparison_list)
+
