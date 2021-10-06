@@ -1,4 +1,4 @@
-import tensorflow.keras as keras
+from tensorflow import keras
 from src.model.classifiers import inception
 
 

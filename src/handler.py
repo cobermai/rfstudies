@@ -13,6 +13,7 @@ import tsfresh
 from tqdm import tqdm
 from src.utils.handler_tools.context_data_creator import ContextDataCreator
 from src.utils.handler_tools.context_data_writer import ColumnWiseContextDataWriter, RowWiseContextDataWriter
+from src.utils.handler_tools.post_processing import get_run_no
 from src.utils.hdf_tools import hdf_path_combine, sort_by
 from src.xbox2_specific.feature_definition.attribute import get_event_attribute_features
 from src.xbox2_specific.feature_definition.event import get_event_data_features
@@ -99,47 +100,6 @@ class XBox2ContextDataCreator(ContextDataCreator):
         for feature in event_data_features:
             column_wise_handler.write_column(feature)
 
-    @staticmethod
-    def assign_run_no(timestamps: np.datetime64):
-        # Hardcoded timestamps for classifying runs. Format is [start, stop, run_no]. Negative run_no is commissioning.
-        timestamp_list_run = np.array([
-            [np.datetime64('2018-05-15 21:16:59.626459'), np.datetime64('2018-05-23 14:41:58.024856'), -1],
-            [np.datetime64('2018-05-23 14:42:58.036909'), np.datetime64('2018-06-01 11:41:23.304752'), 1],
-            [np.datetime64('2018-06-01 11:42:23.326588'), np.datetime64('2018-06-10 09:57:46.167949'), -2],
-            [np.datetime64('2018-06-10 09:58:46.176918'), np.datetime64('2018-06-20 10:49:26.504749'), 2],
-            [np.datetime64('2018-06-20 10:50:26.517873'), np.datetime64('2018-06-27 01:56:14.100424'), -3],
-            [np.datetime64('2018-06-27 01:57:14.092206'), np.datetime64('2018-07-17 08:49:18.581234'), 3],
-            [np.datetime64('2018-07-17 08:50:18.644042'), np.datetime64('2018-07-17 14:24:22.808270'), -4],
-            [np.datetime64('2018-07-17 14:25:22.808983'), np.datetime64('2018-07-26 15:56:55.238768'), 4],
-            [np.datetime64('2018-07-26 15:57:55.254684'), np.datetime64('2018-07-30 12:58:28.800693'), -5],
-            [np.datetime64('2018-07-30 12:59:28.850502'), np.datetime64('2018-08-09 07:18:19.717621'), 5],
-            [np.datetime64('2018-08-09 07:19:19.717776'), np.datetime64('2018-08-16 07:48:45.260491'), -6],
-            [np.datetime64('2018-08-16 07:49:45.217265'), np.datetime64('2018-08-22 19:07:06.581874'), 6],
-            [np.datetime64('2018-08-24 22:53:03.560161'), np.datetime64('2018-08-27 20:21:22.319445'), -7],
-            [np.datetime64('2018-08-27 20:22:22.331644'), np.datetime64('2018-09-03 09:53:18.547360'), 7],
-            [np.datetime64('2018-09-03 09:54:18.540067'), np.datetime64('2018-09-05 16:48:36.589576'), -8],
-            [np.datetime64('2018-09-05 16:49:36.595947'), np.datetime64('2018-09-17 06:27:33.398326'), 8],
-            [np.datetime64('2018-09-17 06:28:33.412608'), np.datetime64('2018-09-19 00:05:14.894480'), -9],
-            [np.datetime64('2018-09-19 00:06:14.912150'), np.datetime64('2018-09-25 09:51:59.222968'), 9]
-        ])
-
-        runs_assigned = np.zeros(shape=timestamps.shape, dtype=int)
-        for run in timestamp_list_run:
-            run_start = run[0]
-            run_end = run[1]
-            runs_assigned[(timestamps >= run_start) & (timestamps <= run_end)] = run[2]
-        return runs_assigned
-
-    def _get_run_no(self, file: h5py.File):
-        """
-        returns the Timestamp from group properties/attribute in numpy datetime format
-        :param file: hdf5 data file with timestamps
-        :return run_no: assigned run numbers of data in file
-        """
-        timestamps = file["Timestamp"]
-        run_no = self.assign_run_no(timestamps)
-        return run_no
-
     def feature_post_processing(self):
         """After the other features have been calculated, some new features will be added resulting from the ones
         already calculated."""
@@ -158,7 +118,7 @@ class XBox2ContextDataCreator(ContextDataCreator):
             file.create_dataset(name="is_bd_in_20ms", data=np.append(is_bd[1:], [False]))
             file.create_dataset(name="is_bd_in_40ms", data=np.append(is_bd[2:], [False, False]))
             file.create_dataset(name="is_healthy", data=file["clic_label/is_healthy"])
-            file.create_dataset(name="run_no", data=self._get_run_no(file))
+            file.create_dataset(name="run_no", data=get_run_no(file))
 
 
 if __name__ == "__main__":

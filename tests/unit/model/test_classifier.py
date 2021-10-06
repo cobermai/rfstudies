@@ -1,18 +1,18 @@
 import os.path
 import pytest
-import tensorflow.keras as keras
+from tensorflow import keras
 from src.model import classifier
 
 
 
-@pytest.mark.parametrize("build, plot_model, model_expected, plot_existence_expected",
+@pytest.mark.parametrize("build, output_model_structure, model_expected, plot_existence_expected",
                          [(True, True, True, True),
                           (False, False, False, False),
                           (False, False, False, False),
                           (False, True, False, False),
                           (True, False, True, False)]
                          )
-def test__classifier(tmp_path, build, plot_model, model_expected, plot_existence_expected):
+def test__classifier(tmp_path, build, output_model_structure, model_expected, plot_existence_expected):
     """
     Test of Classifier class instantiation
     """
@@ -45,7 +45,7 @@ def test__classifier(tmp_path, build, plot_model, model_expected, plot_existence
                                 reduce_lr_patience=reduce_lr_patience,
                                 min_lr=min_lr,
                                 input_shape=input_shape,
-                                plot_model=plot_model
+                                output_model_structure=output_model_structure
                                 )
 
     # ASSERT
