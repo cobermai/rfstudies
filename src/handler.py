@@ -130,11 +130,11 @@ class XBox2ContextDataCreator(ContextDataCreator):
             runs_assigned[(timestamps >= run_start) & (timestamps <= run_end)] = run[2]
         return runs_assigned
 
-    def _get_run_no(self, file):
+    def _get_run_no(self, file: h5py.File):
         """
         returns the Timestamp from group properties/attribute in numpy datetime format
-        :param attrs: the h5py.AttributeManager of an hdf.Group object
-        :return: numpy datetime format of the timestamp
+        :param file: hdf5 data file with timestamps
+        :return run_no: assigned run numbers of data in file
         """
         timestamps = file["Timestamp"]
         run_no = self.assign_run_no(timestamps)
