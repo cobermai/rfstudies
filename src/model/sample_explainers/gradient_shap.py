@@ -17,10 +17,13 @@ class ShapGradientExplainer(ExplainerCreator):
         Method to build model explainer
         :param model: tensorflow functional API model
         :param X_reference: array of data which should be explained
-        :return: shap deep explainer class
+        :return: shap gradient explainer
         """
         background_size = 100
-        background = X_reference[np.random.choice(X_reference.shape[0], background_size, replace=False)]
+        if len(X_reference) > background_size:
+            background = X_reference[np.random.choice(X_reference.shape[0], background_size, replace=False)]
+        else:
+            background = X_reference
         return shap.GradientExplainer(model, background)
 
     @staticmethod

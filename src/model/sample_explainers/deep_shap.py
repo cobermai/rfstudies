@@ -19,7 +19,10 @@ class ShapDeepExplainer(ExplainerCreator):
         :return: shap deep explainer class
         """
         background_size = 100
-        background = X_reference[np.random.choice(X_reference.shape[0], background_size, replace=False)]
+        if len(X_reference) > background_size:
+            background = X_reference[np.random.choice(X_reference.shape[0], background_size, replace=False)]
+        else:
+            background = X_reference
         shap.explainers._deep.deep_tf.op_handlers["AddV2"] = shap.explainers._deep.deep_tf.passthrough
         return shap.DeepExplainer(model, background)
 
