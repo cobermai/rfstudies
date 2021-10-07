@@ -82,11 +82,11 @@ def load_dataset(creator: DatasetCreator, data_path: Path,
     """
     selection = creator.select_events(data_path=data_path)
 
-    da_X = creator.select_features(data_path=data_path, selection=selection)
+    X_DataArray = creator.select_features(data_path=data_path, selection=selection)
 
-    da_y = creator.select_labels(data_path=data_path, selection=selection)
+    y_DataArray = creator.select_labels(data_path=data_path, selection=selection)
 
-    train, valid, test = creator.train_valid_test_split(da_X=da_X, da_y=da_y, manual_split=manual_split)
+    train, valid, test = creator.train_valid_test_split(X_DataArray=X_DataArray, y_DataArray=y_DataArray, manual_split=manual_split)
     train, valid, test = creator.scale_data(train, valid, test, manual_scale=manual_scale)
     train, valid, test = creator.one_hot_encode(train, valid, test)
 

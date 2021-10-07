@@ -10,7 +10,9 @@ from src.model.classifier import Classifier
 from src.transformation import transform
 from src.utils.dataset_creator import load_dataset
 from src.utils import hdf_tools
-from src.xbox2_specific.datasets.simple_select import SimpleSelect
+# from src.xbox2_specific.datasets.simple_select import SimpleSelect
+from src.xbox2_specific.datasets.XBOX2_event_bd20ms import XBOX2EventBD20msSelect
+from src.xbox2_specific.datasets.XBOX2_trend_bd20ms import XBOX2TrendBD20msSelect
 from src.model.explainer import explain_samples
 from src.model.sample_explainers.gradient_shap import ShapGradientExplainer
 
@@ -91,7 +93,7 @@ if __name__ == '__main__':
     if args_in.calculate_features:
         feature_handling(work_dir=args_in.data_path)
 
-    train, valid, test = load_dataset(creator=XBOX2TrendBD20msSelect(),
+    train, valid, test = load_dataset(creator=XBOX2EventBD20msSelect(),
                                       data_path=args_in.data_path,
                                       manual_split=([1, 2, 3, 4, 5, 6, 7], [8], [9]),
                                       manual_scale=None)

@@ -24,7 +24,7 @@ class XBOX2EventBD20msSelect(DatasetCreator):
         """
         selection of events in data
         :param data_path: path to context data file
-        :return selection: boolean filter for selecting breakdown events
+        :return: boolean filter for selecting breakdown events
         """
         # select only events with breakdown in 20 ms + some healthy events
         bd_selection_list = ["is_bd_in_20ms"]
@@ -39,7 +39,7 @@ class XBOX2EventBD20msSelect(DatasetCreator):
         returns features of selected events for modeling
         :param data_path: path to data
         :param selection: boolean list for indexing which events to select
-        :return da_X: features of selected events
+        :return: features of selected events
         """
         feature_list = ["PEI Amplitude",
                         "PSI Amplitude",
@@ -63,7 +63,7 @@ class XBOX2EventBD20msSelect(DatasetCreator):
         returns labels of selected events for supervised machine learning
         :param data_path: path to data
         :param selection: boolean list for indexing which events to select
-        :return df_y: label of selected events
+        :return: label of selected events
         """
         label_name = "is_healthy"
 
@@ -73,25 +73,25 @@ class XBOX2EventBD20msSelect(DatasetCreator):
 
         is_healthy = is_healthy[..., np.newaxis]
         dim_names = ["event", "feature"]
-        da_y = xr.DataArray(data=is_healthy,
+        y_DataArray = xr.DataArray(data=is_healthy,
                             dims=dim_names,
                             coords={"feature": [label_name]
                                     })
-        da_y = da_y.assign_coords(run_no=("event", run_no))
-        return da_y
+        y_DataArray = y_DataArray.assign_coords(run_no=("event", run_no))
+        return y_DataArray
 
     @staticmethod
-    def train_valid_test_split(da_X: xr.DataArray, da_y: xr.DataArray,
+    def train_valid_test_split(X_DataArray: xr.DataArray, y_DataArray: xr.DataArray,
                                splits: Optional[tuple] = None,
                                manual_split: Optional[tuple] = None) -> tuple:
         """
         Function splits data into training, testing and validation set using random sampling. Note that this function
         can be overwritten in the concrete dataset selection.
-        :param da_X: input data array of shape (event, sample, feature)
-        :param da_y: output data array of shape (event)
+        :param X_DataArray: input data array of shape (event, sample, feature)
+        :param y_DataArray: output data array of shape (event)
         :param splits: tuple specifying splitting fractions (training, validation, test)
         :param manual_split: tuple of lists specifying which runs to put in different sets (train, valid, test).
-        :return: train, valid, test: Tuple with data of type named tuple
+        :return: Tuple with data of type named tuple
         """
 
         if splits is None:
@@ -106,9 +106,9 @@ class XBOX2EventBD20msSelect(DatasetCreator):
             raise ValueError('Splits must sum to 1')
 
         if manual_split is None:
-            idx = np.arange(len(da_X["event"]))
+            idx = np.arange(len(X_DataArray["event"]))
             X_train, X_tmp, y_train, y_tmp, idx_train, idx_tmp = \
-                train_test_split(da_X, da_y, idx, train_size=splits[0])
+                train_test_split(X_DataArray, y_DataArray, idx, train_size=splits[0])
             X_valid, X_test, y_valid, y_test, idx_valid, idx_test = \
                 train_test_split(X_tmp, y_tmp, idx_tmp, train_size=splits[1] / (1 - (splits[0])))
         else:
@@ -116,17 +116,17 @@ class XBOX2EventBD20msSelect(DatasetCreator):
             valid_runs = manual_split[1]
             test_runs = manual_split[2]
 
-            idx = np.arange(len(da_X["event"]))
+            idx = np.arange(len(X_DataArray["event"]))
 
-            X_train = da_X[da_X["run_no"].isin(train_runs)]
-            y_train = da_y[da_y["run_no"].isin(train_runs)]
-            idx_train = idx[da_X["run_no"].isin(train_runs)]
-            X_valid = da_X[da_X["run_no"].isin(valid_runs)]
-            y_valid = da_y[da_y["run_no"].isin(valid_runs)]
-            idx_valid = idx[da_X["run_no"].isin(valid_runs)]
-            X_test = da_X[da_X["run_no"].isin(test_runs)]
-            y_test = da_y[da_y["run_no"].isin(test_runs)]
-            idx_test = idx[da_X["run_no"].isin(test_runs)]
+            X_train = X_DataArray[X_DataArray["run_no"].isin(train_runs)]
+            y_train = y_DataArray[y_DataArray["run_no"].isin(train_runs)]
+            idx_train = idx[X_DataArray["run_no"].isin(train_runs)]
+            X_valid = X_DataArray[X_DataArray["run_no"].isin(valid_runs)]
+            y_valid = y_DataArray[y_DataArray["run_no"].isin(valid_runs)]
+            idx_valid = idx[X_DataArray["run_no"].isin(valid_runs)]
+            X_test = X_DataArray[X_DataArray["run_no"].isin(test_runs)]
+            y_test = y_DataArray[y_DataArray["run_no"].isin(test_runs)]
+            idx_test = idx[X_DataArray["run_no"].isin(test_runs)]
 
         train = data(X_train, y_train, idx_train)
         valid = data(X_valid, y_valid, idx_valid)
