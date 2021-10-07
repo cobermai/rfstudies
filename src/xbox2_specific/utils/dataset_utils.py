@@ -86,14 +86,8 @@ def hdf_ext_link_to_da_selection(file_path, selection, feature_list) -> xr.DataA
         data_array = np.empty(shape=(len(list_of_events), 1600, len(feature_list)))
         event_timestamps = []
         for event_ind, event in enumerate(list_of_events):
-            # get timestamp from group name
-            if "Log" in event:
-                timestamp = event[23:]
-            elif "Breakdown" in event:
-                timestamp = event[29:]
-            temp = np.array(list(timestamp))
-            temp[[4, 7, 10]] = '-', '-', 'T'
-            timestamp = "".join(list(temp))
+            # get timestamp from group attributes
+            timestamp = file[event].attrs.get("Timestamp")
             event_timestamps.append(np.datetime64(timestamp))
 
             # read features
