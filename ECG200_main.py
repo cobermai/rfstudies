@@ -4,7 +4,6 @@ from datetime import datetime
 import json
 from pathlib import Path
 import sys
-import pandas as pd
 import matplotlib as mpl
 from src.handler import XBox2ContextDataCreator
 from src.model.classifier import Classifier
@@ -15,6 +14,7 @@ from src.datasets.ECG200 import ECG200
 from src.model.explainer import explain_samples
 from src.model.sample_explainers.gradient_shap import ShapGradientExplainer
 from src.model.concept_explainers.concept_shap import ShapConceptExplainer
+
 
 def parse_input_arguments(args):
     """
@@ -79,6 +79,7 @@ def modeling(train_set, valid_set, test_set, param_dir: Path, output_dir: Path, 
     #pd.DataFrame.from_dict(results, orient='index').T.to_csv(output_dir / "results.csv")
     return clf
 
+
 def explanation(classifier, train_set, valid_set, test_set, output_dir: Path):
 
     def plot_importance(X_to_explain, y_pred, explanation):
@@ -107,6 +108,7 @@ def explanation(classifier, train_set, valid_set, test_set, output_dir: Path):
                               X_to_explain=test_set.X[is_correct_pred, :, :])
 
     plot_importance(X_to_explain=test_set.X, y_pred=y_pred, explanation=ex_pred)
+
 
 if __name__ == '__main__':
     args_in = parse_input_arguments(args=sys.argv[1:])
