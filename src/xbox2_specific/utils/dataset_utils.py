@@ -70,59 +70,58 @@ def select_events_from_list(context_data_file_path: Path, selection_list: typing
         healthy_filter_timestamp_diff = select_trend_data_events(event_timestamps, trend_timestamp, 2)
         is_healthy = read_hdf_dataset(file, "clic_label/is_healthy") & healthy_filter_timestamp_diff & stable_run
 
-        # select 2.5% of the healthy pulses randomly
+        # also select 2.5% of the healthy pulses randomly
         selection[is_healthy] = np.random.choice(a=[True, False], size=(sum(is_healthy),), p=[0.025, 0.975])
 
     return selection
 
 
 def hdf_ext_link_to_da_selection(file_path, selection, feature_list) -> xr.DataArray:
+    """
+    Function that reads features from external link hdf file and returns data as xarray DataArray
+    :param file_path: path to data files
+    :param selection: boolean array for selecting groups in external link file
+    :param feature_list: list of feature names to be included in data
+    """
     with h5py.File(file_path, "r") as file:
         # find name of groups to be read
         groups_list = list(file.keys())
         list_of_events = list(compress(groups_list, selection))
 
         # buffer for data
-        data_array = np.empty(shape=(len(list_of_events), 1600, len(feature_list)))
-        event_timestamps = []
+        data = np.empty(shape=(len(list_of_events), 1600, len(feature_list)))
         for event_ind, event in enumerate(list_of_events):
-            # get timestamp from group attributes
-            timestamp = file[event].attrs.get("Timestamp")
-            event_timestamps.append(np.datetime64(timestamp))
-
             # read features
             for feature_ind, feature in enumerate(feature_list):
-                data = file[event][feature][:]
-                ts_length = len(data)
-
+                data_feature = file[event][feature][:]
+                ts_length = len(data_feature)
                 # Interpolate if time series is not 3200 points
                 if ts_length < 3200:
                     x_low = np.linspace(0, 1, num=ts_length, endpoint=True)
                     x_high = np.linspace(0, 1, num=3200, endpoint=True)
-                    interpolate = interp1d(x_low, data, kind='linear')
-                    data = interpolate(x_high)
-
+                    interpolate = interp1d(x_low, data_feature, kind='linear')
+                    data_feature = interpolate(x_high)
                 # Downsample by taking every 2nd sample
                 # TODO: better way to do this?
-                data = data[::2]
-                data_array[event_ind, :, feature_ind] = data
+                data_feature = data_feature[::2]
+                data[event_ind, :, feature_ind] = data_feature
 
     # Create xarray DataArray
-    dim_names = ["event", "time", "feature"]
+    dim_names = ["event", "sample", "feature"]
     feature_names = [feature.replace("/", "__").replace(" ", "_") for feature in feature_list]
-    sample_time = 1.25e-9
-    time_steps = np.multiply(np.array(list(range(1600))), sample_time)
-    da = xr.DataArray(data=data_array,
-                      dims=dim_names,
-                      coords={"event": event_timestamps,
-                              "time": time_steps,
-                              "feature": feature_names
-                              }
-                      )
-    return da
+    data_array = xr.DataArray(data=data,
+                              dims=dim_names,
+                              coords={"feature": feature_names}
+                              )
+    return data_array
 
 
-def da_to_numpy_for_ml(da: xr.DataArray) -> xr.DataArray:
-    out = da.values
+def da_to_numpy_for_ml(data_array: xr.DataArray) -> np.ndarray:
+    """
+    Function that takes raw values of xarray, replaces NaN with zero and infinity with large finite numbers
+    :param data_array: xarray DataArray
+    :return: numpy array ready for machine learning algorithms
+    """
+    out = data_array.values
     out = np.nan_to_num(out)
     return out

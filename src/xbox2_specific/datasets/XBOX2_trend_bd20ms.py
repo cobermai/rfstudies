@@ -18,6 +18,7 @@ class XBOX2TrendBD20msSelect(DatasetCreator):
     Subclass of DatasetCreator to specify dataset selection. None of the abstract functions from abstract class can
     be overwritten.
     """
+
     @staticmethod
     def select_events(data_path: Path) -> list[bool]:
         """
@@ -29,18 +30,9 @@ class XBOX2TrendBD20msSelect(DatasetCreator):
         bd_selection_list = ["is_bd_in_20ms"]
         selection = dataset_utils.select_events_from_list(context_data_file_path=data_path / "context.hdf",
                                                           selection_list=bd_selection_list)
-        return selection
 
-    @staticmethod
-    def select_features(data_path: Path, selection: list[bool]) -> xr.DataArray:
-        """
-        returns features of selected events for modeling
-        :param data_path: path to data
-        :param selection: boolean list for indexing which events to select
-        :return: features of selected events
-        """
-        feature_list = ["run_no",
-                        "PrevTrendData/Loadside win", "PrevTrendData/Tubeside win",
+        # read features into data_array
+        feature_list = ["PrevTrendData/Loadside win", "PrevTrendData/Tubeside win",
                         "PrevTrendData/Collector", "PrevTrendData/Gun", "PrevTrendData/IP before PC",
                         "PrevTrendData/PC IP", "PrevTrendData/WG IP", "PrevTrendData/IP Load",
                         "PrevTrendData/IP before structure", "PrevTrendData/US Beam Axis IP",
@@ -52,62 +44,63 @@ class XBOX2TrendBD20msSelect(DatasetCreator):
                         "PrevTrendData/PSI max", "PrevTrendData/PSR max", "PrevTrendData/PEI max",
                         "PrevTrendData/DC Down min", "PrevTrendData/DC Up min",
                         "PrevTrendData/PSI Pulse Width"]
+        label_name = "is_bd_in_20ms"
 
-        # Get selected features
+        # Get selected features and label
         with h5py.File(data_path / "context.hdf") as file:
             data = np.empty(shape=(len(np.arange(sum(selection))), 1, len(feature_list)))
             for feature_ind, feature in enumerate(feature_list):
                 data[:, 0, feature_ind] = dataset_utils.read_hdf_dataset(file, feature)[selection]
-            run_no = dataset_utils.read_hdf_dataset(file, "run_no")[selection]
-            Timestamp = dataset_utils.read_hdf_dataset(file, "Timestamp")[selection]
+                is_bd_in_20ms = dataset_utils.read_hdf_dataset(file, label_name)[selection]
+                timestamp = dataset_utils.read_hdf_dataset(file, "Timestamp")[selection]
+                run_no = dataset_utils.read_hdf_dataset(file, "run_no")[selection]
 
         # Create xarray DataArray
-        dim_names = ["event", "samples", "feature"]
+        dim_names = ["event", "sample", "feature"]
         feature_names = [feature.replace("/", "__").replace(" ", "_") for feature in feature_list]
-        X_DataArray = xr.DataArray(data=data,
-                                   dims=dim_names,
-                                   coords={"event": Timestamp,
-                                           "feature": feature_names
-                                           })
-
-        X_DataArray = X_DataArray.assign_coords(run_no=("event", run_no))
-        return X_DataArray
+        data_array = xr.DataArray(data=data,
+                                  dims=dim_names,
+                                  coords={"feature": feature_names})
+        # add label to data_array
+        data_array = data_array.assign_coords(is_bd_in_20ms=("event", is_bd_in_20ms))
+        # add meta data
+        data_array = data_array.assign_coords(run_no=("event", run_no))
+        data_array = data_array.assign_coords(timestamp=("event", timestamp))
+        return data_array
 
     @staticmethod
-    def select_labels(data_path: Path, selection: list) -> xr.DataArray:
+    def select_features(data_array: xr.DataArray) -> xr.DataArray:
+        """
+        returns features of selected events for modeling
+        :param data_array: xarray DataArray with data
+        :return: xarray DataArray with features of selected events
+        """
+        X_data_array = data_array.drop_vars('is_bd_in_20ms')
+        return X_data_array
+
+    @staticmethod
+    def select_labels(data_array: xr.DataArray) -> xr.DataArray:
         """
         returns labels of selected events for supervised machine learning
-        :param data_path: path to data
-        :param selection: boolean list for indexing which events to select
-        :return: label of selected events
+        :param data_array: xarray data array of data from selected events
+        :return: labels of selected events
         """
-        label_name = "is_healthy"
-
-        with h5py.File(data_path / "context.hdf") as file:
-            is_healthy = dataset_utils.read_hdf_dataset(file, label_name)[selection]
-            run_no = dataset_utils.read_hdf_dataset(file, "run_no")[selection]
-
-        is_healthy = is_healthy[..., np.newaxis]
-        dim_names = ["event", "feature"]
-        y_DataArray = xr.DataArray(data=is_healthy,
-                            dims=dim_names,
-                            coords={"feature": [label_name]
-                                    })
-        y_DataArray = y_DataArray.assign_coords(run_no=("event", run_no))
-        return y_DataArray
+        label_name = "is_bd_in_20ms"
+        y_data_array = data_array[label_name]
+        return y_data_array
 
     @staticmethod
-    def train_valid_test_split(X_DataArray: xr.DataArray, y_DataArray: xr.DataArray,
+    def train_valid_test_split(X_data_array: xr.DataArray, y_data_array: xr.DataArray,
                                splits: Optional[tuple] = None,
                                manual_split: Optional[tuple] = None) -> tuple:
         """
         Function splits data into training, testing and validation set using random sampling. Note that this function
         can be overwritten in the concrete dataset selection.
-        :param X_DataArray: input data array of shape (event, sample, feature)
-        :param y_DataArray: output data array of shape (event)
+        :param X_data_array: input data array of shape (event, sample, feature)
+        :param y_data_array: output data array of shape (event)
         :param splits: tuple specifying splitting fractions (training, validation, test)
         :param manual_split: tuple of lists specifying which runs to put in different sets (train, valid, test).
-        :return: train, valid, test: Tuple with data of type named tuple
+        :return: Tuple with data of type named tuple
         """
 
         if splits is None:
@@ -122,9 +115,9 @@ class XBOX2TrendBD20msSelect(DatasetCreator):
             raise ValueError('Splits must sum to 1')
 
         if manual_split is None:
-            idx = np.arange(len(X_DataArray["event"]))
+            idx = np.arange(len(X_data_array["event"]))
             X_train, X_tmp, y_train, y_tmp, idx_train, idx_tmp = \
-                train_test_split(X_DataArray, y_DataArray, idx, train_size=splits[0])
+                train_test_split(X_data_array, y_data_array, idx, train_size=splits[0])
             X_valid, X_test, y_valid, y_test, idx_valid, idx_test = \
                 train_test_split(X_tmp, y_tmp, idx_tmp, train_size=splits[1] / (1 - (splits[0])))
         else:
@@ -132,17 +125,17 @@ class XBOX2TrendBD20msSelect(DatasetCreator):
             valid_runs = manual_split[1]
             test_runs = manual_split[2]
 
-            idx = np.arange(len(X_DataArray["event"]))
+            idx = np.arange(len(X_data_array["event"]))
 
-            X_train = X_DataArray[X_DataArray["run_no"].isin(train_runs)]
-            y_train = y_DataArray[y_DataArray["run_no"].isin(train_runs)]
-            idx_train = idx[X_DataArray["run_no"].isin(train_runs)]
-            X_valid = X_DataArray[X_DataArray["run_no"].isin(valid_runs)]
-            y_valid = y_DataArray[y_DataArray["run_no"].isin(valid_runs)]
-            idx_valid = idx[X_DataArray["run_no"].isin(valid_runs)]
-            X_test = X_DataArray[X_DataArray["run_no"].isin(test_runs)]
-            y_test = y_DataArray[y_DataArray["run_no"].isin(test_runs)]
-            idx_test = idx[X_DataArray["run_no"].isin(test_runs)]
+            X_train = X_data_array[X_data_array["run_no"].isin(train_runs)]
+            y_train = y_data_array[y_data_array["run_no"].isin(train_runs)]
+            idx_train = idx[X_data_array["run_no"].isin(train_runs)]
+            X_valid = X_data_array[X_data_array["run_no"].isin(valid_runs)]
+            y_valid = y_data_array[y_data_array["run_no"].isin(valid_runs)]
+            idx_valid = idx[X_data_array["run_no"].isin(valid_runs)]
+            X_test = X_data_array[X_data_array["run_no"].isin(test_runs)]
+            y_test = y_data_array[y_data_array["run_no"].isin(test_runs)]
+            idx_test = idx[X_data_array["run_no"].isin(test_runs)]
 
         train = data(X_train, y_train, idx_train)
         valid = data(X_valid, y_valid, idx_valid)
@@ -162,7 +155,8 @@ class XBOX2TrendBD20msSelect(DatasetCreator):
         :param manual_scale: list that specifies groups which are scaled separately
         :return: train, valid, test: Tuple with data of type named tuple
         """
-        if manual_scale is None:  # standard scale all using mean and std of train set
+        if manual_scale is None:
+            # standard scale training, valid and test separately. Scaling is done for using mean of training set.
             mean = np.mean(train.X, axis=0)
             std = np.std(train.X, axis=0)
 
