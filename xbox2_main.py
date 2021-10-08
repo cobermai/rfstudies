@@ -10,8 +10,6 @@ from src.model.classifier import Classifier
 from src.transformation import transform
 from src.utils.dataset_creator import load_dataset
 from src.utils import hdf_tools
-from src.datasets.ECG200 import ECG200
-# from src.xbox2_specific.datasets.simple_select import SimpleSelect
 from src.xbox2_specific.datasets.XBOX2_event_bd20ms import XBOX2EventBD20msSelect
 from src.xbox2_specific.datasets.XBOX2_trend_bd20ms import XBOX2TrendBD20msSelect
 from src.model.explainer import explain_samples
@@ -94,10 +92,9 @@ if __name__ == '__main__':
     if args_in.calculate_features:
         feature_handling(work_dir=args_in.data_path)
 
-    train, valid, test = load_dataset(creator=ECG200(),
+    train, valid, test = load_dataset(creator=XBOX2EventBD20msSelect(),
                                       data_path=args_in.data_path,
-                                      manual_split=None,
-                                      manual_scale=None
+                                      splits=(0.7, 0.2, 0.1)
                                       )
     clf = modeling(train_set=train, valid_set=valid, test_set=test,
                    param_dir=args_in.file_path / "src/model" / args_in.param_name, output_dir=args_in.output_path)
