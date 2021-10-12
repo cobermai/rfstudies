@@ -1,4 +1,4 @@
-"""example code how to select from context data and prepare data for machine learning. """
+"""Selection of data for ECG200 dataset. """
 from pathlib import Path
 from collections import namedtuple
 from typing import Optional, NamedTuple
@@ -29,13 +29,28 @@ class ECG200(DatasetCreator):
         data_train = arff.loadarff(data_path / "ECG200_TRAIN.arff")
         data_test = arff.loadarff(data_path / "ECG200_TEST.arff")
 
-        data_set = xr.Dataset("train", data_train[0],
-                              "train", data_test[0])
+        data_train_list = data_train[0]
+        data_train_array = np.empty(shape=(len(data_train_list), (len(data_train_list[0]))))
+        for ind, signal in enumerate(data_train_list):
+            data_train_array[ind, :] = list(signal)
+        ind_train = list(range(len(data_train_list)))
 
-        data_array = data_set
-        # df_test = xr.Dataset(data_test[0]).add_suffix('_test')
+        data_test_list = data_test[0]
+        data_test_array = np.empty(shape=(len(data_test_list), (len(data_test_list[0]))))
+        for ind, signal in enumerate(data_test_list):
+            data_test_array[ind, :] = list(signal)
+        ind_test = list(range(ind_train[-1] + 1, ind_train[-1] + 1 + len(data_train_list)))
 
-        # data_array = pd.concat([df_train, df_test], axis=1)
+        data = np.concatenate([data_train_array, data_test_array])
+
+        is_train = np.ones(shape=(len(data)), dtype=bool)
+        is_train[ind_test] = False
+
+        data_array = xr.DataArray(data=data,
+                                  dims=["event", "sample"])
+
+        data_array = data_array.assign_coords(is_train=("event", is_train))
+
         return data_array
 
     @staticmethod
@@ -45,9 +60,8 @@ class ECG200(DatasetCreator):
         :param data_array: xarray DataArray with data
         :return: xarray DataArray with features of selected events
         """
-        X = data_array.filter(regex="att").values
-        X = X[..., np.newaxis]
-        return X
+        X_data_array = data_array[:, 0:96]
+        return X_data_array
 
     @staticmethod
     def select_labels(data_array: xr.DataArray) -> xr.DataArray:
@@ -56,7 +70,8 @@ class ECG200(DatasetCreator):
         :param data_array: xarray data array of data from selected events
         :return: labels of selected events
         """
-        return data_array.filter(regex="target").values
+        y_data_array = data_array[:, -1]
+        return y_data_array
 
     @staticmethod
     def train_valid_test_split(X_data_array: xr.DataArray, y_data_array: xr.DataArray,
@@ -71,14 +86,18 @@ class ECG200(DatasetCreator):
         :param manual_split: tuple of lists specifying which runs to put in different sets (train, valid, test).
         :return: Tuple with data of type named tuple
         """
-        idx = np.arange(len(X_data_array[:, 0:96]))
+        idx = np.arange(len(X_data_array))
         X_train, X_valid, y_train, y_valid, idx_train, idx_valid = \
-            train_test_split(X_data_array[:, 0:96], y_data_array[:, 0], idx, train_size=0.9)
+            train_test_split(X_data_array[X_data_array["is_train"] == True],
+                             y_data_array[y_data_array["is_train"] == True],
+                             idx[X_data_array["is_train"] == True],
+                             train_size=0.9)
 
-        data = namedtuple("data", ["X", "y", "idx"])
         train = data(X_train, y_train, idx_train)
         valid = data(X_valid, y_valid, idx_valid)
-        test = data(X_data_array[:, 96:], y_data_array[:, 1], idx)
+        test = data(X_data_array[X_data_array["is_train"] == False],
+                    y_data_array[y_data_array["is_train"] == False],
+                    idx[X_data_array["is_train"] == True])
 
         return train, valid, test
 
@@ -94,13 +113,17 @@ class ECG200(DatasetCreator):
         :param manual_scale: list that specifies groups which are scaled separately
         :return: train, valid, test: Tuple with data of type named tuple
         """
-        mean = train.X.mean()
-        std = train.X.std()
-
-        train = train._replace(X=((train.X - mean) / std))
-        valid = valid._replace(X=((valid.X - mean) / std))
-        test = test._replace(X=((test.X - mean) / std))
-
+        mean = train.X.values.mean()
+        std = train.X.values.std()
+        X_train = (train.X.values - mean) / std
+        X_train = X_train[..., np.newaxis]
+        train = train._replace(X=X_train)
+        X_valid = (valid.X.values - mean) / std
+        X_valid = X_valid[..., np.newaxis]
+        valid = valid._replace(X=X_valid)
+        X_test = (test.X.values - mean) / std
+        X_test = X_test[..., np.newaxis]
+        test = test._replace(X=X_test)
         return train, valid, test
 
     @staticmethod
@@ -113,9 +136,9 @@ class ECG200(DatasetCreator):
         :param test: data for testing with type named tuple which has attributes X, y and idx
         :return: train, valid, test: Tuple containing data with type named tuple which has attributes X, y and idx
         """
-        enc = OneHotEncoder(categories='auto').fit(train.y.reshape(-1, 1))
-        train = train._replace(y=enc.transform(train.y.reshape(-1, 1)).toarray())
-        valid = valid._replace(y=enc.transform(valid.y.reshape(-1, 1)).toarray())
-        test = test._replace(y=enc.transform(test.y.reshape(-1, 1)).toarray())
+        enc = OneHotEncoder(categories='auto').fit(train.y.values.reshape(-1, 1))
+        train = train._replace(y=enc.transform(train.y.values.reshape(-1, 1)).toarray())
+        valid = valid._replace(y=enc.transform(valid.y.values.reshape(-1, 1)).toarray())
+        test = test._replace(y=enc.transform(test.y.values.reshape(-1, 1)).toarray())
 
         return train, valid, test

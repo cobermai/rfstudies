@@ -23,7 +23,7 @@ def parse_input_arguments(args):
     """
     parser = argparse.ArgumentParser(description='Input parameters')
     parser.add_argument('--file_path', required=False, type=Path,
-                        help='path of xbox2_main.py file', default=Path().absolute())
+                        help='path of ECG2000_main.py file', default=Path().absolute())
     parser.add_argument('--data_path', required=False, type=Path,
                         help='path of data', default=Path().absolute() / "src/datasets/ECG200")
     parser.add_argument('--output_path', required=False, type=Path, help='path of data',
