@@ -107,8 +107,8 @@ class XBOX2TrendPrimoBD20msSelect(DatasetCreator):
         :param data_array: xarray DataArray with data
         :return: xarray DataArray with features of selected events
         """
-        X_data_array = data_array.drop_vars('is_bd_in_20ms')
-        X_data_array = X_data_array[not X_data_array["is_followup"] == True]
+        X_data_array = data_array[(data_array["is_followup"] == False) or (data_array['is_bd_in_20ms'] == False)]
+        X_data_array = X_data_array.drop_vars('is_bd_in_20ms')
         return X_data_array
 
     @staticmethod
@@ -120,7 +120,7 @@ class XBOX2TrendPrimoBD20msSelect(DatasetCreator):
         """
         label_name = "is_bd_in_20ms"
         y_data_array = data_array[label_name]
-        y_data_array = y_data_array[not y_data_array["is_followup"] == True]
+        y_data_array = y_data_array[(y_data_array["is_followup"] == False) or (y_data_array["is_bd_in_20ms"] == False)]
         return y_data_array
 
     @staticmethod

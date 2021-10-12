@@ -60,8 +60,9 @@ class XBOX2TrendFollowupBD20msSelect(DatasetCreator):
             run_no = run_no[unique_selection]
             is_followup = np.zeros_like(is_bd_in_20ms)
             for index in range(1, len(is_bd_in_20ms)):
+                ind_last_bd = 0
                 if (is_bd_in_20ms[index] == True) and (np.any(is_bd_in_20ms[:index - 1] == True)):
-                    ind_last_bd = np.max(np.where(is_bd_in_20ms[:index - 1] == True))
+                    ind_last_bd = np.max(np.where(is_bd_in_20ms[ind_last_bd:index - 1] == True))
                     if (timestamp[index] - timestamp[ind_last_bd]) < np.timedelta64(60, 's'):
                         is_followup[index] = True
 
@@ -104,8 +105,8 @@ class XBOX2TrendFollowupBD20msSelect(DatasetCreator):
         :param data_array: xarray DataArray with data
         :return: xarray DataArray with features of selected events
         """
-        X_data_array = data_array.drop_vars('is_bd_in_20ms')
-        X_data_array = X_data_array[not X_data_array["is_followup"] == False]
+        X_data_array = data_array[(data_array["is_followup"] == True) or (data_array['is_bd_in_20ms'] == False)]
+        X_data_array = X_data_array.drop_vars('is_bd_in_20ms')
         return X_data_array
 
     @staticmethod
@@ -117,7 +118,7 @@ class XBOX2TrendFollowupBD20msSelect(DatasetCreator):
         """
         label_name = "is_bd_in_20ms"
         y_data_array = data_array[label_name]
-        y_data_array = y_data_array[not y_data_array["is_followup"] == False]
+        y_data_array = y_data_array[(y_data_array["is_followup"] == True) or (y_data_array["is_bd_in_20ms"] == False)]
         return y_data_array
 
     @staticmethod
