@@ -20,7 +20,7 @@ class XBOX2TrendBD20msSelect(DatasetCreator):
     """
 
     @staticmethod
-    def select_events(data_path: Path) -> list[bool]:
+    def select_events(data_path: Path) -> list:
         """
         selection of events in data
         :param data_path: path to context data file
@@ -47,18 +47,22 @@ class XBOX2TrendBD20msSelect(DatasetCreator):
         label_name = "is_bd_in_20ms"
 
         with h5py.File(data_path / "context.hdf") as file:
-            # Get label and meta data
-            is_bd_in_20ms = dataset_utils.read_hdf_dataset(file, label_name)[selection]
-            timestamp = dataset_utils.read_hdf_dataset(file, "Timestamp")[selection]
-            run_no = dataset_utils.read_hdf_dataset(file, "run_no")[selection]
             # Get real timestamp
             timestamp_trend_selection = dataset_utils.read_hdf_dataset(file, "PrevTrendData/Timestamp")[selection]
+            # remove duplicate timestamps
+            timestamp_trend_selection, unique_selection = np.unique(timestamp_trend_selection, return_index=True)
+            # Get label and meta data
+            is_bd_in_20ms = dataset_utils.read_hdf_dataset(file, label_name)[selection]
+            is_bd_in_20ms = is_bd_in_20ms[unique_selection]
+            timestamp = dataset_utils.read_hdf_dataset(file, "Timestamp")[selection]
+            timestamp = timestamp[unique_selection]
+            run_no = dataset_utils.read_hdf_dataset(file, "run_no")[selection]
+            run_no = run_no[unique_selection]
 
         # Get selected features
         with h5py.File(data_path / "TrendDataFull.hdf") as file:
             # Read trend data timestamps and compare to selected
-            trend_timestamp, count = np.unique(file["Timestamp"][:], return_counts=True)
-            print(count)
+            trend_timestamp = file["Timestamp"][:]
             trend_selection = np.in1d(trend_timestamp, timestamp_trend_selection)
 
             # Create filter for selecting two previous trend data
