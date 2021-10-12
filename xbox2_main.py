@@ -92,9 +92,14 @@ if __name__ == '__main__':
     if args_in.calculate_features:
         feature_handling(work_dir=args_in.data_path)
 
-    train, valid, test = load_dataset(creator=XBOX2EventBD20msSelect(),
+    train_runs = [1, 2, 4, 5, 6, 8, 9]
+    valid_runs = [1, 7]
+    test_runs = [3]
+    train, valid, test = load_dataset(creator=XBOX2TrendBD20msSelect(),
                                       data_path=args_in.data_path,
-                                      splits=(0.7, 0.2, 0.1)
+                                      splits=(0.7, 0.2, 0.1),
+                                      manual_split=(train_runs, valid_runs, test_runs),
+                                      manual_scale=[1, 2, 3, 4, 5, 6, 7, 8, 9]
                                       )
     clf = modeling(train_set=train, valid_set=valid, test_set=test,
                    param_dir=args_in.file_path / "src/model" / args_in.param_name, output_dir=args_in.output_path)

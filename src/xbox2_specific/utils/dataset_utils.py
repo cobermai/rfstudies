@@ -125,3 +125,16 @@ def da_to_numpy_for_ml(data_array: xr.DataArray) -> np.ndarray:
     out = data_array.values
     out = np.nan_to_num(out)
     return out
+
+
+def shift_values(arr, num, fill_value=np.nan):
+    result = np.empty_like(arr)
+    if num > 0:
+        result[:num] = fill_value
+        result[num:] = arr[:-num]
+    elif num < 0:
+        result[num:] = fill_value
+        result[:num] = arr[-num:]
+    else:
+        result[:] = arr
+    return result

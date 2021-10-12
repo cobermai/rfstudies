@@ -146,16 +146,15 @@ class XBOX2EventBD20msSelect(DatasetCreator):
         """
         if manual_scale is None:
             # standard scale training, valid and test separately. Scaling is done for each signal.
-            mean = np.mean(train.X, axis=2)
-            std = np.std(train.X, axis=2)
+            mean = np.mean(train.X, axis=1)
+            std = np.std(train.X, axis=1)
             train_X_scaled = dataset_utils.da_to_numpy_for_ml((train.X - mean) / std)
-            mean = np.mean(valid.X, axis=2)
-            std = np.std(valid.X, axis=2)
+            mean = np.mean(valid.X, axis=1)
+            std = np.std(valid.X, axis=1)
             valid_X_scaled = dataset_utils.da_to_numpy_for_ml((valid.X - mean) / std)
-            mean = np.mean(test.X, axis=2)
-            std = np.std(test.X, axis=2)
+            mean = np.mean(test.X, axis=1)
+            std = np.std(test.X, axis=1)
             test_X_scaled = dataset_utils.da_to_numpy_for_ml((test.X - mean) / std)
-
 
             train = train._replace(X=train_X_scaled)
             valid = valid._replace(X=valid_X_scaled)

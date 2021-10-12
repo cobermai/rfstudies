@@ -32,28 +32,45 @@ class XBOX2TrendBD20msSelect(DatasetCreator):
                                                           selection_list=bd_selection_list)
 
         # read features into data_array
-        feature_list = ["PrevTrendData/Loadside win", "PrevTrendData/Tubeside win",
-                        "PrevTrendData/Collector", "PrevTrendData/Gun", "PrevTrendData/IP before PC",
-                        "PrevTrendData/PC IP", "PrevTrendData/WG IP", "PrevTrendData/IP Load",
-                        "PrevTrendData/IP before structure", "PrevTrendData/US Beam Axis IP",
-                        "PrevTrendData/Klystron Flange Temp", "PrevTrendData/Load Temp",
-                        "PrevTrendData/PC Left Cavity Temp", "PrevTrendData/PC Right Cavity Temp",
-                        "PrevTrendData/Bunker WG Temp", "PrevTrendData/Structure Input Temp",
-                        "PrevTrendData/Chiller 1", "PrevTrendData/Chiller 2", "PrevTrendData/Chiller 3",
-                        "PrevTrendData/PKI FT avg", "PrevTrendData/PSI FT avg", "PrevTrendData/PSR FT avg",
-                        "PrevTrendData/PSI max", "PrevTrendData/PSR max", "PrevTrendData/PEI max",
-                        "PrevTrendData/DC Down min", "PrevTrendData/DC Up min",
-                        "PrevTrendData/PSI Pulse Width"]
+        feature_list = ["Loadside win", "Tubeside win",
+                        "Collector", "Gun", "IP before PC",
+                        "PC IP", "WG IP", "IP Load",
+                        "IP before structure", "US Beam Axis IP",
+                        "Klystron Flange Temp", "Load Temp",
+                        "PC Left Cavity Temp", "PC Right Cavity Temp",
+                        "Bunker WG Temp", "Structure Input Temp",
+                        "Chiller 1", "Chiller 2", "Chiller 3",
+                        "PKI FT avg", "PSI FT avg", "PSR FT avg",
+                        "PSI max", "PSR max", "PEI max",
+                        "DC Down min", "DC Up min",
+                        "PSI Pulse Width"]
         label_name = "is_bd_in_20ms"
 
-        # Get selected features and label
         with h5py.File(data_path / "context.hdf") as file:
-            data = np.empty(shape=(len(np.arange(sum(selection))), 1, len(feature_list)))
+            # Get label and meta data
+            is_bd_in_20ms = dataset_utils.read_hdf_dataset(file, label_name)[selection]
+            timestamp = dataset_utils.read_hdf_dataset(file, "Timestamp")[selection]
+            run_no = dataset_utils.read_hdf_dataset(file, "run_no")[selection]
+            # Get real timestamp
+            timestamp_trend_selection = dataset_utils.read_hdf_dataset(file, "PrevTrendData/Timestamp")[selection]
+
+        # Get selected features
+        with h5py.File(data_path / "TrendDataFull.hdf") as file:
+            # Read trend data timestamps and compare to selected
+            trend_timestamp, count = np.unique(file["Timestamp"][:], return_counts=True)
+            print(count)
+            trend_selection = np.in1d(trend_timestamp, timestamp_trend_selection)
+
+            # Create filter for selecting two previous trend data
+            trend_selection_one_before = dataset_utils.shift_values(trend_selection, 1, fill_value=False)
+            trend_selection_two_before = dataset_utils.shift_values(trend_selection, 2, fill_value=False)
+
+            # Read selected features
+            data = np.empty(shape=(sum(trend_selection), 3, len(feature_list)))
             for feature_ind, feature in enumerate(feature_list):
-                data[:, 0, feature_ind] = dataset_utils.read_hdf_dataset(file, feature)[selection]
-                is_bd_in_20ms = dataset_utils.read_hdf_dataset(file, label_name)[selection]
-                timestamp = dataset_utils.read_hdf_dataset(file, "Timestamp")[selection]
-                run_no = dataset_utils.read_hdf_dataset(file, "run_no")[selection]
+                data[:, 0, feature_ind] = dataset_utils.read_hdf_dataset(file, feature)[trend_selection]
+                data[:, 1, feature_ind] = dataset_utils.read_hdf_dataset(file, feature)[trend_selection_one_before]
+                data[:, 2, feature_ind] = dataset_utils.read_hdf_dataset(file, feature)[trend_selection_two_before]
 
         # Create xarray DataArray
         dim_names = ["event", "sample", "feature"]

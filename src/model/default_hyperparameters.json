@@ -5,7 +5,7 @@
     "loss": "categorical_crossentropy",
     "optimizer": "adam",
     "epochs": 2,
-    "batch_size":100,
+    "batch_size":16,
     "learning_rate": 1e-3,
     "reduce_lr_factor": 0.5,
     "reduce_lr_patience": 50,
