@@ -13,7 +13,7 @@ from src.xbox2_specific.utils import dataset_utils
 data = namedtuple("data", ["X", "y", "idx"])
 
 
-class XBOX2TrendBD20msSelect(DatasetCreator):
+class XBOX2TrendFollowupBD20msSelect(DatasetCreator):
     """
     Subclass of DatasetCreator to specify dataset selection. None of the abstract functions from abstract class can
     be overwritten.
@@ -58,6 +58,12 @@ class XBOX2TrendBD20msSelect(DatasetCreator):
             timestamp = timestamp[unique_selection]
             run_no = dataset_utils.read_hdf_dataset(file, "run_no")[selection]
             run_no = run_no[unique_selection]
+            is_followup = np.zeros_like(is_bd_in_20ms)
+            for index in range(1, len(is_bd_in_20ms)):
+                if (is_bd_in_20ms[index] == True) and (np.any(is_bd_in_20ms[:index - 1] == True)):
+                    ind_last_bd = np.max(np.where(is_bd_in_20ms[:index - 1] == True))
+                    if (timestamp[index] - timestamp[ind_last_bd]) < np.timedelta64(60, 's'):
+                        is_followup[index] = True
 
         # Get selected features
         with h5py.File(data_path / "TrendDataFull.hdf") as file:
@@ -87,6 +93,8 @@ class XBOX2TrendBD20msSelect(DatasetCreator):
         # add meta data
         data_array = data_array.assign_coords(run_no=("event", run_no))
         data_array = data_array.assign_coords(timestamp=("event", timestamp))
+        data_array = data_array.assign_coords(is_followup=("event", is_followup))
+
         return data_array
 
     @staticmethod
@@ -97,6 +105,7 @@ class XBOX2TrendBD20msSelect(DatasetCreator):
         :return: xarray DataArray with features of selected events
         """
         X_data_array = data_array.drop_vars('is_bd_in_20ms')
+        X_data_array = X_data_array[not X_data_array["is_followup"] == False]
         return X_data_array
 
     @staticmethod
@@ -108,6 +117,7 @@ class XBOX2TrendBD20msSelect(DatasetCreator):
         """
         label_name = "is_bd_in_20ms"
         y_data_array = data_array[label_name]
+        y_data_array = y_data_array[not y_data_array["is_followup"] == False]
         return y_data_array
 
     @staticmethod

@@ -21,6 +21,20 @@ def read_hdf_dataset(file: h5py.File, key: str):
     return dataset[:]
 
 
+def read_hdf_dataset_selection(file: h5py.File, key: str, selection: bool):
+    """
+    Read dataset from hdf file
+    :param file: h5py File object with read access
+    :param key: string specifying key for dataset to read
+    :param selection: boolean array for specifying which elements of hdf dataset to read
+    :return: array containing contents of h5py dataset
+    """
+    dataset = file[key]
+    if not isinstance(dataset, h5py.Dataset):
+        raise ValueError("Specified key does not yield a hdf dataset")
+    return dataset[selection]
+
+
 def select_trend_data_events(event_timestamps: np.ndarray,
                              trend_timestamps: np.ndarray,
                              time_threshold: float) -> bool:

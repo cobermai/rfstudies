@@ -10,8 +10,12 @@ from src.model.classifier import Classifier
 from src.transformation import transform
 from src.utils.dataset_creator import load_dataset
 from src.utils import hdf_tools
-from src.xbox2_specific.datasets.XBOX2_event_bd20ms import XBOX2EventBD20msSelect
-from src.xbox2_specific.datasets.XBOX2_trend_bd20ms import XBOX2TrendBD20msSelect
+from src.xbox2_specific.datasets.XBOX2_event_all_bd_20ms import XBOX2EventAllBD20msSelect
+from src.xbox2_specific.datasets.XBOX2_event_primo_bd_20ms import XBOX2EventPrimoBD20msSelect
+from src.xbox2_specific.datasets.XBOX2_event_followup_bd_20ms import XBOX2EventFollowupBD20msSelect
+from src.xbox2_specific.datasets.XBOX2_trend_all_bd_20ms import XBOX2TrendAllBD20msSelect
+from src.xbox2_specific.datasets.XBOX2_trend_primo_bd_20ms import XBOX2TrendPrimoBD20msSelect
+from src.xbox2_specific.datasets.XBOX2_trend_followup_bd_20ms import XBOX2TrendFollowupBD20msSelect
 from src.model.explainer import explain_samples
 from src.model.sample_explainers.gradient_shap import ShapGradientExplainer
 
@@ -95,7 +99,7 @@ if __name__ == '__main__':
     train_runs = [1, 2, 4, 5, 6, 8, 9]
     valid_runs = [1, 7]
     test_runs = [3]
-    train, valid, test = load_dataset(creator=XBOX2TrendBD20msSelect(),
+    train, valid, test = load_dataset(creator=XBOX2TrendFollowupBD20msSelect(),
                                       data_path=args_in.data_path,
                                       manual_split=(train_runs, valid_runs, test_runs),
                                       manual_scale=[1, 2, 3, 4, 5, 6, 7, 8, 9]

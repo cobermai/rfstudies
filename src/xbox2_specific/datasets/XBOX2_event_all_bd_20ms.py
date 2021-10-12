@@ -13,7 +13,7 @@ from src.xbox2_specific.utils import dataset_utils
 data = namedtuple("data", ["X", "y", "idx"])
 
 
-class XBOX2EventBD20msSelect(DatasetCreator):
+class XBOX2EventAllBD20msSelect(DatasetCreator):
     """
     Subclass of DatasetCreator to specify dataset selection. None of the abstract functions from abstract class can
     be overwritten.
