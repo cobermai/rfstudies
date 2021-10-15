@@ -126,8 +126,4 @@ if __name__ == '__main__':
 
     y_pred = clf.model.predict(x=test.X)
 
-    #explanation(classifier=clf, train_set=train, valid_set=valid, test_set=test, output_dir=args_in.output_path)
-
-    ex_pred = ShapConceptExplainer()
-    ex_pred.explain(model=clf.model, train=train, valid=valid, test=test,output_dir=args_in.output_path)
-
+    explanation(classifier=clf, train_set=train, valid_set=valid, test_set=test, output_dir=args_in.output_path)

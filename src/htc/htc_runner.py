@@ -2,7 +2,13 @@ from datetime import datetime
 import logging
 import os
 from pathlib import Path
-
+import pandas as pd
+from src.xbox2_specific.datasets.XBOX2_event_all_bd_20ms import XBOX2EventAllBD20msSelect
+from src.xbox2_specific.datasets.XBOX2_event_primo_bd_20ms import XBOX2EventPrimoBD20msSelect
+from src.xbox2_specific.datasets.XBOX2_event_followup_bd_20ms import XBOX2EventFollowupBD20msSelect
+from src.xbox2_specific.datasets.XBOX2_trend_all_bd_20ms import XBOX2TrendAllBD20msSelect
+from src.xbox2_specific.datasets.XBOX2_trend_primo_bd_20ms import XBOX2TrendPrimoBD20msSelect
+from src.xbox2_specific.datasets.XBOX2_trend_followup_bd_20ms import XBOX2TrendFollowupBD20msSelect
 
 class HTCondorRunner:
     """
@@ -10,7 +16,7 @@ class HTCondorRunner:
     """
 
     @staticmethod
-    def run():
+    def run(hyperparameters, dataset, manual_split=None, manual_scale=None):
         """
         The runner of HTCondor is taking care of running jobs on HTCondor. This is done in 2 steps:
         1) creating the directory / input file / etc of each analysis one wants to perform
@@ -39,7 +45,12 @@ class HTCondorRunner:
                     file.write(f"virtualenv venv\n")
                     file.write(f"source {work_dir}/venv/bin/activate\n")
                     file.write(f"pip3 install -r requirements.txt\n")
-                file.write(f"python3 {work_dir / main_name} --file_path={work_dir} --output_path={output_dir}")
+                file.write(f"python3 {work_dir / main_name} "
+                           f"--file_path={work_dir} "
+                           f"--hyperparam={hyperparameters}"
+                           f"--dataset={dataset}"
+                           f"--manual_split={manual_split}"
+                           f"--manual_scale={manual_scale}")
             except IOError as e:
                 print(f"I/O error({e.errno}): {e.strerror}")
         os.system(f"chmod +x {master_bash_filename}")
@@ -55,7 +66,7 @@ class HTCondorRunner:
                                   f"log = {output_dir / 'htc_log.txt'}\n"
                                   "RequestCpus = 2\n"
                                   "request_GPUs = 1\n"
-                                  "+JobFlavour = \"testmatch\"\n"
+                                  "+JobFlavour = \"longlunch\"\n"
                                   "+AccountingGroup = \"group_u_TE.mpe\"\n"
                                   "requirements = regexp(\"V100\", TARGET.CUDADeviceName)\n"
                                   f"queue ")
@@ -68,9 +79,5 @@ class HTCondorRunner:
         logging.debug(f"Executing HTCondor command {command}")
         os.system(command)
 
-    def sensitivity(self):
-        self.run()
-
-
 if __name__ == '__main__':
-    HTCondorRunner().sensitivity()
+    HTCondorRunner().run()

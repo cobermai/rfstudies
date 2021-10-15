@@ -37,12 +37,20 @@ def parse_input_arguments(args):
                         default=Path().absolute() / "src/output" / datetime.now().strftime("%Y-%m-%dT%H.%M.%S"))
     parser.add_argument('--dataset_name', required=False, type=str,
                         help='name of data set', default="ECG200")
-    parser.add_argument('--param_name', required=False, type=str,
-                        help='name of hyperparameter file', default="default_hyperparameters.json")
     parser.add_argument('--transform_to_hdf5', required=False, type=bool,
                         help="retransform from original files to hdf5 (True/False)p", default=False)
     parser.add_argument('--calculate_features', required=False, type=bool,
                         help="recalculate features (True/False)", default=False)
+    parser.add_argument('--explain_predictions', required=False, type=bool,
+                        help="explain predictions(True/False)", default=False)
+    hp_file = open(Path().absolute() / "src/model/default_hyperparameters.json", 'r')
+    hp_dict = json.load(hp_file)
+    parser.add_argument('--hyperparam', required=False, type=dict, help='dict of hyperparameters', default=hp_dict)
+    parser.add_argument('--dataset', required=False, type=object, help='class object to create dataset',
+                        default=XBOX2TrendFollowupBD20msSelect())
+    parser.add_argument('--manual_split', required=False, type=tuple, help='tuple of manual split index', default=None)
+    parser.add_argument('--manual_scale', required=False, type=object, help='list of manual scale index', default=None)
+
     return parser.parse_args(args)
 
 
@@ -73,11 +81,8 @@ def feature_handling(work_dir: Path):
     creator.manage_features()
 
 
-def modeling(train_set, valid_set, test_set, param_dir: Path, output_dir: Path, fit_classifier: bool = True):
+def modeling(train_set, valid_set, test_set, hp_dict: dict, output_dir: Path, fit_classifier: bool = True):
     """MODELING"""
-    hp_file = open(param_dir, 'r')
-    hp_dict = json.load(hp_file)
-
     clf = Classifier(input_shape=train_set.X.shape, output_directory=output_dir, **hp_dict)
     if fit_classifier:
         clf.fit_classifier(train_set, valid_set)
@@ -105,8 +110,9 @@ if __name__ == '__main__':
                                       manual_scale=[1, 2, 3, 4, 5, 6, 7, 8, 9]
                                       )
     clf = modeling(train_set=train, valid_set=valid, test_set=test,
-                   param_dir=args_in.file_path / "src/model" / args_in.param_name, output_dir=args_in.output_path)
+                   hp_dict=args_in.hyperparam, output_dir=args_in.output_path)
 
-    explanation = explain_samples(explainer=ShapGradientExplainer(), model=clf.model,
-                                  X_reference=train.X, X_to_explain=test.X[:1, :, :])
-    pd.DataFrame(explanation[0][0]).to_csv(args_in.output_path / "explanations.csv")
+    if args_in.explain_predictions:
+        explanation = explain_samples(explainer=ShapGradientExplainer(), model=clf.model,
+                                      X_reference=train.X, X_to_explain=test.X[:1, :, :])
+        pd.DataFrame(explanation[0][0]).to_csv(args_in.output_path / "explanations.csv")
