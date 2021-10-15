@@ -38,9 +38,9 @@ class XBOX2EventPrimoBD20msSelect(DatasetCreator):
                         "PKI Amplitude",
                         "DC Up",
                         "DC Down"]
-        data_array = dataset_utils.hdf_ext_link_to_da_selection(file_path=data_path / "EventDataExtLinks.hdf",
-                                                                selection=selection,
-                                                                feature_list=feature_list)
+        data_array = dataset_utils.event_ext_link_hdf_to_da_selection(file_path=data_path / "EventDataExtLinks.hdf",
+                                                                      selection=selection,
+                                                                      feature_list=feature_list)
 
         # read label and metadata
         label_name = "is_bd_in_20ms"

@@ -90,7 +90,7 @@ def select_events_from_list(context_data_file_path: Path, selection_list: typing
     return selection
 
 
-def hdf_ext_link_to_da_selection(file_path, selection, feature_list) -> xr.DataArray:
+def event_ext_link_hdf_to_da_selection(file_path, selection, feature_list) -> xr.DataArray:
     """
     Function that reads features from external link hdf file and returns data as xarray DataArray
     :param file_path: path to data files
