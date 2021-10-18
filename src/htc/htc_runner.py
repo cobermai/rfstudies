@@ -9,7 +9,6 @@ from datetime import datetime
 import logging
 import os
 from pathlib import Path
-from src.xbox2_specific.datasets.XBOX2_trend_followup_bd_20ms import XBOX2TrendFollowupBD20msSelect
 
 hyperparameters = {
     "classifier_name": "fcn",
@@ -31,7 +30,7 @@ class HTCondorRunner:
     """
 
     @staticmethod
-    def run(hyperparameters, dataset, manual_split=None, manual_scale=None):
+    def run(hyperparameters, dataset=None, manual_split=None, manual_scale=None):
         """
         The runner of HTCondor is taking care of running jobs on HTCondor. This is done in 2 steps:
         1) creating the directory / input file / etc of each analysis one wants to perform
@@ -63,9 +62,10 @@ class HTCondorRunner:
                 file.write(f"python3 {work_dir / main_name} "
                            f"--file_path={work_dir} "
                            f"--hyperparam={hyperparameters}"
-                           f"--dataset={dataset}"
                            f"--manual_split={manual_split}"
                            f"--manual_scale={manual_scale}")
+                if dataset:
+                    file.write(f"--dataset={dataset}")
             except IOError as e:
                 print(f"I/O error({e.errno}): {e.strerror}")
         os.system(f"chmod +x {master_bash_filename}")
@@ -96,6 +96,5 @@ class HTCondorRunner:
 
 if __name__ == '__main__':
     HTCondorRunner().run(hyperparameters=hyperparameters,
-                         dataset=XBOX2TrendFollowupBD20msSelect(),
                          manual_split=([1, 7, 2, 4, 9, 5], [6, 8], [3]),
                          manual_scale=[1, 2, 3, 4, 5, 6, 7, 8, 9])
