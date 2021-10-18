@@ -1,7 +1,29 @@
+import sys
+from pathlib import Path
+import os
+api_dir = str(Path(os.path.split(os.path.split(os.getcwd())[0])[0]))
+if api_dir not in sys.path:
+    sys.path.insert(0, api_dir)
+import json
 from datetime import datetime
 import logging
 import os
 from pathlib import Path
+from src.xbox2_specific.datasets.XBOX2_trend_followup_bd_20ms import XBOX2TrendFollowupBD20msSelect
+
+hyperparameters = {
+    "classifier_name": "fcn",
+    "num_classes": 2,
+    "monitor": "loss",
+    "loss": "categorical_crossentropy",
+    "optimizer": "adam",
+    "epochs": 500,
+    "batch_size": 16,
+    "learning_rate": 1e-3,
+    "reduce_lr_factor": 0.5,
+    "reduce_lr_patience": 50,
+    "min_lr": 0.0001
+}
 
 class HTCondorRunner:
     """
@@ -73,4 +95,7 @@ class HTCondorRunner:
         os.system(command)
 
 if __name__ == '__main__':
-    HTCondorRunner().run()
+    HTCondorRunner().run(hyperparameters=hyperparameters,
+                         dataset=XBOX2TrendFollowupBD20msSelect(),
+                         manual_split=([1, 7, 2, 4, 9, 5], [6, 8], [3]),
+                         manual_scale=[1, 2, 3, 4, 5, 6, 7, 8, 9])
