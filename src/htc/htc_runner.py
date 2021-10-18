@@ -1,8 +1,27 @@
+import sys
+from pathlib import Path
+import os
+api_dir = str(Path(os.path.split(os.path.split(os.getcwd())[0])[0]))
+if api_dir not in sys.path:
+    sys.path.insert(0, api_dir)
 from datetime import datetime
 import logging
 import os
 from pathlib import Path
 
+hyperparameters = {
+    "classifier_name": "fcn",
+    "num_classes": 2,
+    "monitor": "loss",
+    "loss": "categorical_crossentropy",
+    "optimizer": "adam",
+    "epochs": 500,
+    "batch_size": 16,
+    "learning_rate": 1e-3,
+    "reduce_lr_factor": 0.5,
+    "reduce_lr_patience": 50,
+    "min_lr": 0.0001
+}
 
 class HTCondorRunner:
     """
@@ -10,7 +29,7 @@ class HTCondorRunner:
     """
 
     @staticmethod
-    def run():
+    def run(hyperparameters, dataset=None, manual_split=None, manual_scale=None):
         """
         The runner of HTCondor is taking care of running jobs on HTCondor. This is done in 2 steps:
         1) creating the directory / input file / etc of each analysis one wants to perform
@@ -39,7 +58,13 @@ class HTCondorRunner:
                     file.write(f"virtualenv venv\n")
                     file.write(f"source {work_dir}/venv/bin/activate\n")
                     file.write(f"pip3 install -r requirements.txt\n")
-                file.write(f"python3 {work_dir / main_name} --file_path={work_dir} --output_path={output_dir}")
+                file.write(f"python3 {work_dir / main_name} "
+                           f"--file_path={work_dir} "
+                           f"--hyperparam={hyperparameters}"
+                           f"--manual_split={manual_split}"
+                           f"--manual_scale={manual_scale}")
+                if dataset:
+                    file.write(f"--dataset={dataset}")
             except IOError as e:
                 print(f"I/O error({e.errno}): {e.strerror}")
         os.system(f"chmod +x {master_bash_filename}")
@@ -55,7 +80,7 @@ class HTCondorRunner:
                                   f"log = {output_dir / 'htc_log.txt'}\n"
                                   "RequestCpus = 2\n"
                                   "request_GPUs = 1\n"
-                                  "+JobFlavour = \"testmatch\"\n"
+                                  "+JobFlavour = \"longlunch\"\n"
                                   "+AccountingGroup = \"group_u_TE.mpe\"\n"
                                   "requirements = regexp(\"V100\", TARGET.CUDADeviceName)\n"
                                   f"queue ")
@@ -68,9 +93,7 @@ class HTCondorRunner:
         logging.debug(f"Executing HTCondor command {command}")
         os.system(command)
 
-    def sensitivity(self):
-        self.run()
-
-
 if __name__ == '__main__':
-    HTCondorRunner().sensitivity()
+    HTCondorRunner().run(hyperparameters=hyperparameters,
+                         manual_split=([1, 7, 2, 4, 9, 5], [6, 8], [3]),
+                         manual_scale=[1, 2, 3, 4, 5, 6, 7, 8, 9])
