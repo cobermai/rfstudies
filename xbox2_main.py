@@ -104,7 +104,7 @@ if __name__ == '__main__':
     train_runs = [1, 2, 4, 5, 6, 8, 9]
     valid_runs = [1, 7]
     test_runs = [3]
-    train, valid, test = load_dataset(creator=XBOX2TrendFollowupBD20msSelect(),
+    train, valid, test = load_dataset(creator=args_in.dataset,
                                       data_path=args_in.data_path,
                                       manual_split=(train_runs, valid_runs, test_runs),
                                       manual_scale=[1, 2, 3, 4, 5, 6, 7, 8, 9]
