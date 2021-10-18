@@ -2,6 +2,7 @@
 model setup according to https://www.tensorflow.org/guide/keras/custom_layers_and_models
 """
 from pathlib import Path
+import numpy as np
 from tensorflow import keras
 from tensorflow.keras import Input
 from src.model.classifiers import fcn
@@ -111,6 +112,23 @@ class Classifier:
 
         return model
 
+    @staticmethod
+    def get_class_weight(y):
+        """
+        Function returns class weight for class imbalanced datasets.
+        Scaling by total/2 helps keep the loss to a similar magnitude.
+        The sum of the weights of all examples stays the same.
+        :param y: one hot encoded labels of train set
+        return: dict of class weight for each label
+        """
+        neg = sum(np.argmax(y) == 0)
+        pos = sum(np.argmax(y) == 1)
+        weight_for_0 = (1 / neg) * ((neg+pos) / 2.0)
+        weight_for_1 = (1 / pos) * ((neg+pos) / 2.0)
+
+        class_weight = {0: weight_for_0, 1: weight_for_1}
+        return class_weight
+
     def fit_classifier(self, train, valid, **kwargs):
         """
         Trains classifier model on input data
@@ -138,4 +156,5 @@ class Classifier:
             verbose=1,
             validation_data=(valid.X, valid.y),
             callbacks=[reduce_lr, model_checkpoint],
+            class_weight=self.get_class_weight(train.y),
             **kwargs)
