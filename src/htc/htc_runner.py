@@ -4,7 +4,6 @@ import os
 api_dir = str(Path(os.path.split(os.path.split(os.getcwd())[0])[0]))
 if api_dir not in sys.path:
     sys.path.insert(0, api_dir)
-import json
 from datetime import datetime
 import logging
 import os
