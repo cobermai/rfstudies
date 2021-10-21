@@ -1,7 +1,8 @@
 """Selection of data for ECG200 dataset. """
-from pathlib import Path
 from collections import namedtuple
+from io import StringIO
 from typing import Optional, NamedTuple
+from pathlib import Path
 import numpy as np
 import xarray as xr
 from scipy.io import arff
@@ -25,9 +26,15 @@ class ECG200(DatasetCreator):
         :param data_path: path to context data file
         :return: data array with data of selected events
         """
+        def read_arff(file_path: Path, encoding: str):
+            f = open(file_path, 'rt', encoding=encoding)
+            data = f.read()
+            f.close()
+            stream = StringIO(data)
+            return arff.loadarff(stream)
 
-        data_train = arff.loadarff(data_path / "ECG200_TRAIN.arff")
-        data_test = arff.loadarff(data_path / "ECG200_TEST.arff")
+        data_train = read_arff(data_path / "ECG200_TRAIN.arff", encoding="utf-8")
+        data_test = read_arff(data_path / "ECG200_TEST.arff", encoding="utf-8")
 
         data_train_list = data_train[0]
         data_train_array = np.empty(shape=(len(data_train_list), (len(data_train_list[0]))))
