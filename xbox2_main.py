@@ -101,7 +101,7 @@ if __name__ == '__main__':
     if args_in.calculate_features:
         feature_handling(work_dir=args_in.data_path)
 
-    train_runs = [1, 2, 4, 5, 6, 8, 9]
+    train_runs = [2, 4, 5, 6, 8, 9]
     valid_runs = [1, 7]
     test_runs = [3]
     train, valid, test = load_dataset(creator=args_in.dataset,
