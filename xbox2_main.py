@@ -1,5 +1,6 @@
 """example code how to select from context data and prepare data for machine learning. """
 import argparse
+import ast
 from datetime import datetime
 import json
 from pathlib import Path
@@ -45,11 +46,11 @@ def parse_input_arguments(args):
                         help="explain predictions(True/False)", default=False)
     hp_file = open(Path().absolute() / "src/model/default_hyperparameters.json", 'r')
     hp_dict = json.load(hp_file)
-    parser.add_argument('--hyperparam', required=False, type=dict, help='dict of hyperparameters', default=hp_dict)
+    parser.add_argument('--hyperparam', required=False, type=json.loads, help='dict of hyperparameters', default=hp_dict)
     parser.add_argument('--dataset', required=False, type=object, help='class object to create dataset',
                         default=XBOX2TrendFollowupBD20msSelect())
-    parser.add_argument('--manual_split', required=False, type=tuple, help='tuple of manual split index', default=None)
-    parser.add_argument('--manual_scale', required=False, type=object, help='list of manual scale index', default=None)
+    parser.add_argument('--manual_split', required=False, type=ast.literal_eval, help='tuple of manual split index', default=None)
+    parser.add_argument('--manual_scale', required=False, type=json.loads, help='list of manual scale index', default=None)
 
     return parser.parse_args(args)
 
@@ -106,7 +107,7 @@ if __name__ == '__main__':
     test_runs = [3]
     train, valid, test = load_dataset(creator=args_in.dataset,
                                       data_path=args_in.data_path,
-                                      manual_split=(train_runs, valid_runs, test_runs),
+                                      manual_split=[train_runs, valid_runs, test_runs],
                                       manual_scale=[1, 2, 3, 4, 5, 6, 7, 8, 9]
                                       )
     clf = modeling(train_set=train, valid_set=valid, test_set=test,
