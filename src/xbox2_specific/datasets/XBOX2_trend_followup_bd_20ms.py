@@ -58,13 +58,7 @@ class XBOX2TrendFollowupBD20msSelect(DatasetCreator):
             timestamp = timestamp[unique_selection]
             run_no = dataset_utils.read_hdf_dataset(file, "run_no")[selection]
             run_no = run_no[unique_selection]
-            is_followup = np.zeros_like(is_bd_in_20ms)
-            for index in range(1, len(is_bd_in_20ms)):
-                ind_last_bd = 0
-                if (is_bd_in_20ms[index] == True) and (np.any(is_bd_in_20ms[:index - 1] == True)):
-                    ind_last_bd = np.max(np.where(is_bd_in_20ms[ind_last_bd:index - 1] == True))
-                    if (timestamp[index] - timestamp[ind_last_bd]) < np.timedelta64(60, 's'):
-                        is_followup[index] = True
+            is_followup = dataset_utils.determine_followup(is_bd_in_20ms, timestamp, threshold=60)
 
         # Get selected features
         with h5py.File(data_path / "TrendDataFull.hdf") as file:

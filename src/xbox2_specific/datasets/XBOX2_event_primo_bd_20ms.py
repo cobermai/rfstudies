@@ -48,15 +48,11 @@ class XBOX2EventPrimoBD20msSelect(DatasetCreator):
             is_bd_in_20ms = dataset_utils.read_hdf_dataset(file, label_name)[selection]
             timestamp = dataset_utils.read_hdf_dataset(file, "Timestamp")[selection]
             run_no = dataset_utils.read_hdf_dataset(file, "run_no")[selection]
-            is_followup = np.zeros_like(is_bd_in_20ms)
-            for index in range(1, len(is_bd_in_20ms)):
-                if (is_bd_in_20ms[index] == True) and (np.any(is_bd_in_20ms[:index - 1] == True)):
-                    ind_last_bd = np.max(np.where(is_bd_in_20ms[:index - 1] == True))
-                    if (timestamp[index] - timestamp[ind_last_bd]) < np.timedelta64(60, 's'):
-                        is_followup[index] = True
+            is_followup = dataset_utils.determine_followup(is_bd_in_20ms, timestamp, threshold=60)
 
         # add label to data_array
         data_array = data_array.assign_coords(is_bd_in_20ms=("event", is_bd_in_20ms))
+
         # add meta data
         data_array = data_array.assign_coords(run_no=("event", run_no))
         data_array = data_array.assign_coords(timestamp=("event", timestamp))
@@ -71,7 +67,7 @@ class XBOX2EventPrimoBD20msSelect(DatasetCreator):
         :param data_array: xarray DataArray with data
         :return: xarray DataArray with features of selected events
         """
-        X_data_array = data_array[(data_array["is_followup"] == False) | (data_array['is_bd_in_20ms'] == False)]
+        X_data_array = data_array[data_array["is_followup"] == False]
         X_data_array = X_data_array.drop_vars('is_bd_in_20ms')
         return X_data_array
 
@@ -84,7 +80,7 @@ class XBOX2EventPrimoBD20msSelect(DatasetCreator):
         """
         label_name = "is_bd_in_20ms"
         y_data_array = data_array[label_name]
-        y_data_array = y_data_array[(y_data_array["is_followup"] == False) | (y_data_array["is_bd_in_20ms"] == False)]
+        y_data_array = y_data_array[y_data_array["is_followup"] == False]
         return y_data_array
 
     @staticmethod
@@ -101,18 +97,18 @@ class XBOX2EventPrimoBD20msSelect(DatasetCreator):
         :return: Tuple with data of type named tuple
         """
 
-        if splits is None:
-            splits = (0.7, 0.2, 0.1)
-        if (splits[0] >= 1) or (splits[0] < 0):
-            raise ValueError('Training fraction cannot be >= 1 or negative')
-        if (splits[1] >= 1) or (splits[1] < 0):
-            raise ValueError('Validation fraction cannot be >= 1 or negative')
-        if (splits[2] >= 1) or (splits[2] < 0):
-            raise ValueError('Test fraction cannot be >= 1 or negative')
-        if not np.allclose(splits[0] + splits[1] + splits[2], 1):
-            raise ValueError('Splits must sum to 1')
-
         if manual_split is None:
+            if splits is None:
+                splits = (0.7, 0.2, 0.1)
+            if (splits[0] >= 1) or (splits[0] < 0):
+                raise ValueError('Training fraction cannot be >= 1 or negative')
+            if (splits[1] >= 1) or (splits[1] < 0):
+                raise ValueError('Validation fraction cannot be >= 1 or negative')
+            if (splits[2] >= 1) or (splits[2] < 0):
+                raise ValueError('Test fraction cannot be >= 1 or negative')
+            if not np.allclose(splits[0] + splits[1] + splits[2], 1):
+                raise ValueError('Splits must sum to 1')
+
             idx = np.arange(len(X_data_array["event"]))
             X_train, X_tmp, y_train, y_tmp, idx_train, idx_tmp = \
                 train_test_split(X_data_array, y_data_array, idx, train_size=splits[0])

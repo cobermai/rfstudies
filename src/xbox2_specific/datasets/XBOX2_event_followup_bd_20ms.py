@@ -48,12 +48,7 @@ class XBOX2EventFollowupBD20msSelect(DatasetCreator):
             is_bd_in_20ms = dataset_utils.read_hdf_dataset(file, label_name)[selection]
             timestamp = dataset_utils.read_hdf_dataset(file, "Timestamp")[selection]
             run_no = dataset_utils.read_hdf_dataset(file, "run_no")[selection]
-            is_followup = np.zeros_like(is_bd_in_20ms)
-            for index in range(1, len(is_bd_in_20ms)):
-                if (is_bd_in_20ms[index] == True) and (np.any(is_bd_in_20ms[:index - 1] == True)):
-                    ind_last_bd = np.max(np.where(is_bd_in_20ms[:index - 1] == True))
-                    if (timestamp[index] - timestamp[ind_last_bd]) < np.timedelta64(60, 's'):
-                        is_followup[index] = True
+            is_followup = dataset_utils.determine_followup(is_bd_in_20ms, timestamp, threshold=60)
 
         # add label to data_array
         data_array = data_array.assign_coords(is_bd_in_20ms=("event", is_bd_in_20ms))
