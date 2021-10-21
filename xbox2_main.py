@@ -31,12 +31,10 @@ def parse_input_arguments(args):
     parser.add_argument('--data_path', required=False, type=Path,
                         help='path of data',
                         default=Path(
-                            "/eos/project/m/ml-for-alarm-system/private/CLIC_data_transfert/Xbox2_hdf/")
+                            "/eos/project/m/ml-for-alarm-system/private/CLIC_data_transfert/Xbox2_hdf_new2/")
                         )
     parser.add_argument('--output_path', required=False, type=Path, help='path of data',
                         default=Path().absolute() / "src/output" / datetime.now().strftime("%Y-%m-%dT%H.%M.%S"))
-    parser.add_argument('--dataset_name', required=False, type=str,
-                        help='name of data set', default="ECG200")
     parser.add_argument('--transform_to_hdf5', required=False, type=bool,
                         help="retransform from original files to hdf5 (True/False)p", default=False)
     parser.add_argument('--calculate_features', required=False, type=bool,
@@ -47,7 +45,7 @@ def parse_input_arguments(args):
     hp_dict = json.load(hp_file)
     parser.add_argument('--hyperparam', required=False, type=dict, help='dict of hyperparameters', default=hp_dict)
     parser.add_argument('--dataset', required=False, type=object, help='class object to create dataset',
-                        default=XBOX2TrendFollowupBD20msSelect())
+                        default=XBOX2EventPrimoBD20msSelect())
     parser.add_argument('--manual_split', required=False, type=tuple, help='tuple of manual split index', default=None)
     parser.add_argument('--manual_scale', required=False, type=object, help='list of manual scale index', default=None)
 
@@ -107,7 +105,7 @@ if __name__ == '__main__':
     train, valid, test = load_dataset(creator=args_in.dataset,
                                       data_path=args_in.data_path,
                                       manual_split=(train_runs, valid_runs, test_runs),
-                                      manual_scale=[1, 2, 3, 4, 5, 6, 7, 8, 9]
+                                      manual_scale=None
                                       )
     clf = modeling(train_set=train, valid_set=valid, test_set=test,
                    hp_dict=args_in.hyperparam, output_dir=args_in.output_path)
