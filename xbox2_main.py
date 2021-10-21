@@ -32,7 +32,7 @@ def parse_input_arguments(args):
     parser.add_argument('--data_path', required=False, type=Path,
                         help='path of data',
                         default=Path(
-                            "/eos/project/m/ml-for-alarm-system/private/CLIC_data_transfert/Xbox2_hdf/")
+                            "/eos/project/m/ml-for-alarm-system/private/CLIC_data_transfert/Xbox2_hdf_new2/")
                         )
     parser.add_argument('--output_path', required=False, type=Path, help='path of data',
                         default=Path().absolute() / "src/output" / datetime.now().strftime("%Y-%m-%dT%H.%M.%S"))
@@ -107,8 +107,8 @@ if __name__ == '__main__':
     test_runs = [3]
     train, valid, test = load_dataset(creator=args_in.dataset,
                                       data_path=args_in.data_path,
-                                      manual_split=[train_runs, valid_runs, test_runs],
-                                      manual_scale=[1, 2, 3, 4, 5, 6, 7, 8, 9]
+                                      manual_split=(train_runs, valid_runs, test_runs),
+                                      manual_scale=None
                                       )
     clf = modeling(train_set=train, valid_set=valid, test_set=test,
                    hp_dict=args_in.hyperparam, output_dir=args_in.output_path)
