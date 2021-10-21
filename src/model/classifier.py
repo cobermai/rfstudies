@@ -5,6 +5,7 @@ from pathlib import Path
 import numpy as np
 from tensorflow import keras
 from tensorflow.keras import Input
+from sklearn.utils import class_weight
 from src.model.classifiers import fcn
 from src.model.classifiers import fcn_2dropout
 from src.model.classifiers import inception
@@ -113,21 +114,19 @@ class Classifier:
         return model
 
     @staticmethod
-    def get_class_weight(y):
+    def get_class_weight(y: np.ndarray) -> dict:
         """
         Function returns class weight for class imbalanced datasets.
-        Scaling by total/2 helps keep the loss to a similar magnitude.
         The sum of the weights of all examples stays the same.
         :param y: one hot encoded labels of train set
-        return: dict of class weight for each label
+        return: dict with class weight for each label
         """
-        neg = sum(np.argmax(y) == 0)
-        pos = sum(np.argmax(y) == 1)
-        weight_for_0 = (1 / neg) * ((neg+pos) / 2.0)
-        weight_for_1 = (1 / pos) * ((neg+pos) / 2.0)
-
-        class_weight = {0: weight_for_0, 1: weight_for_1}
-        return class_weight
+        y_integers = np.argmax(y, axis=1)
+        class_weights = class_weight.compute_class_weight(class_weight='balanced',
+                                                          classes=np.unique(y_integers),
+                                                          y=y_integers)
+        class_weights_dict = dict(enumerate(class_weights))
+        return class_weights_dict
 
     def fit_classifier(self, train, valid, **kwargs):
         """
