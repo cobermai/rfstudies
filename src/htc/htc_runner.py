@@ -60,11 +60,11 @@ class HTCondorRunner:
                     file.write(f"pip3 install -r requirements.txt\n")
                 file.write(f"python3 {work_dir / main_name} "
                            f"--file_path={work_dir} "
-                           f"--hyperparam={hyperparameters}"
-                           f"--manual_split={manual_split}"
-                           f"--manual_scale={manual_scale}")
+                           f"--hyperparam={hyperparameters} "
+                           f"--manual_split={manual_split} "
+                           f"--manual_scale={manual_scale} ")
                 if dataset:
-                    file.write(f"--dataset={dataset}")
+                    file.write(f"--dataset={dataset} ")
             except IOError as e:
                 print(f"I/O error({e.errno}): {e.strerror}")
         os.system(f"chmod +x {master_bash_filename}")
