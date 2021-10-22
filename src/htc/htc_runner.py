@@ -94,6 +94,6 @@ class HTCondorRunner:
         os.system(command)
 
 if __name__ == '__main__':
-    HTCondorRunner().run(hyperparameters=hyperparameters,
-                         manual_split=([1, 7, 2, 4, 9, 5], [6, 8], [3]),
-                         manual_scale=[1, 2, 3, 4, 5, 6, 7, 8, 9])
+    HTCondorRunner().run(hyperparameters=str(hyperparameters),
+                         manual_split="([1, 7, 2, 4, 9, 5], [6, 8], [3])",
+                         manual_scale="[1, 2, 3, 4, 5, 6, 7, 8, 9]")
