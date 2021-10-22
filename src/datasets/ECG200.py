@@ -104,7 +104,7 @@ class ECG200(DatasetCreator):
         valid = data(X_valid, y_valid, idx_valid)
         test = data(X_data_array[X_data_array["is_train"] == False],
                     y_data_array[y_data_array["is_train"] == False],
-                    idx[X_data_array["is_train"] == True])
+                    idx[X_data_array["is_train"] == False])
 
         return train, valid, test
 
