@@ -51,3 +51,13 @@ def _log_type_creator(type_of_interest: str) -> typing.Callable:
         return is_defined_type
 
     return is_type
+
+
+def _get_timestamp(attrs: h5py.AttributeManager):
+    """
+    returns the Timestamp from group properties/attribute in numpy datetime format
+    :param attrs: the h5py.AttributeManager of an hdf.Group object
+    :return: numpy datetime format of the timestamp
+    """
+    datetime_str = attrs["Timestamp"][:-1]
+    return np.datetime64(datetime_str).astype(h5py.opaque_dtype('M8[us]'))
