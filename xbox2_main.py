@@ -50,7 +50,7 @@ def parse_input_arguments(args):
     parser.add_argument('--dataset', required=False, type=object, help='class object to create dataset',
                         default=XBOX2TrendFollowupBD20msSelect())
     parser.add_argument('--manual_split', required=False, type=ast.literal_eval,
-                        help='tuple of manual split index', default=([1, 7, 2, 4, 9, 5],[6, 8],[3]))
+                        help='tuple of manual split index', default=([1, 7, 2, 4, 9, 5], [6, 8], [3]))
     parser.add_argument('--manual_scale', required=False, type=json.loads, help='list of manual scale index',
                         default=None)
     return parser.parse_args(args)
