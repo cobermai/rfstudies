@@ -15,7 +15,7 @@ def get_event_data_features(length) -> typing.Generator:
                                output_dtype=float,
                                hdf_path=chn,
                                working_on_dataset=chn,
-                               info="The pulse length is the pulse duration in mirco seconds. The pulse is defined as "
+                               info="The pulse length is the pulse duration in micro seconds. The pulse is defined as "
                                     "the region where the amplitude is higher than the threshold "
                                     "(=half of maximal value)")
         yield EventDataFeature(name="pulse_amplitude",
@@ -24,7 +24,7 @@ def get_event_data_features(length) -> typing.Generator:
                                length=length,
                                output_dtype=float,
                                hdf_path=chn,
-                               info="The Pulse Amplitude is the mean value of the pulse. The pulse is defined as the "
+                               info="The Pulse Amplitude is the median value of the pulse. The pulse is defined as the "
                                     "region where the amplitude is higher than the threshold (=half of maximal value)")
 
     for chn in ['DC Up', 'DC Down']:
@@ -44,15 +44,24 @@ def get_event_data_features(length) -> typing.Generator:
                                info="calculates the 9th deciles of the data")
 
     yield EventDataFeature(name="dc_up_threshold_reached",
-                           func=_dc_up_threshold_func,
+                           func=_dc_threshold_func,
                            working_on_dataset="DC Up",
                            length=length,
                            output_dtype=bool,
                            hdf_path="/",
-                           info="Decides if event is a breakdown with a threshold of -0.01 on the DC Up signal."
+                           info="Decides if event is a breakdown with a threshold of -0.05 on the DC Up signal."
                                 "So if the min of DC Up is < (threshold assigned by experts) it is labeled as a "
                                 "breakdown.")
 
+    yield EventDataFeature(name="dc_down_threshold_reached",
+                           func=_dc_threshold_func,
+                           working_on_dataset="DC Down",
+                           length=length,
+                           output_dtype=bool,
+                           hdf_path="/",
+                           info="Decides if event is a breakdown with a threshold of -0.05 on the DC Down signal."
+                                "So if the min of DC Down is < (threshold assigned by experts) it is labeled as a "
+                                "breakdown.")
 
 def _get_data_above_half_max(data: np.ndarray):
     """returns data that has a value higher than half of the maximal value."""
@@ -60,11 +69,11 @@ def _get_data_above_half_max(data: np.ndarray):
     return data[data > threshold]
 
 
-def _dc_up_threshold_func(data: np.ndarray) -> bool:
+def _dc_threshold_func(data: np.ndarray) -> bool:
     """checks if any of the signals is below the threshold.
     :param data: a vector of values of the group working_on_dataset (see EventDataFeature.working_on_dataset)"""
-    threshold = -0.05  # Threshold defined by RF Cavity Experts
-    return bool(np.any(data < threshold))
+    dc_threshold = -0.05  # Threshold defined by RF Cavity Experts
+    return bool(np.any(data < dc_threshold))
 
 
 def _pulse_length(data: np.ndarray) -> float:
@@ -84,10 +93,10 @@ def _pulse_length(data: np.ndarray) -> float:
 
 
 def _pulse_amplitude(data: np.ndarray) -> float:
-    """calculates the mean value where the amplitude is higher than the threshold (=half of the maximal value).
+    """calculates the median value where the amplitude is higher than the threshold (=half of the maximal value).
     :param data: a vector of values of the group working_on_dataset (see EventDataFeature.working_on_dataset)
     """
-    return _get_data_above_half_max(data).mean()
+    return _get_data_above_half_max(data).median()
 
 
 def _apply_func_creator(func: typing.Callable) -> typing.Callable:

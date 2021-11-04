@@ -20,7 +20,6 @@ from src.xbox2_specific.feature_definition.event import get_event_data_features
 from src.xbox2_specific.feature_definition.trend import get_trend_data_features
 from src.xbox2_specific.feature_definition.tsfresh import get_tsfresh
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -108,10 +107,12 @@ class XBox2ContextDataCreator(ContextDataCreator):
             clic_label = file["/clic_label"]
 
             dc_up_threshold_label = file["dc_up_threshold_reached"][:]
+            dc_down_threshold_label = file["dc_down_threshold_reached"][:]
+            dc_threshold_reached = dc_up_threshold_label[:] | dc_down_threshold_label[:]
             is_bd = clic_label["is_bd_in_40ms"][:-2] & \
                     clic_label["is_bd_in_20ms"][1:-1] & \
                     clic_label["is_bd"][2:] & \
-                    dc_up_threshold_label[2:]
+                    dc_threshold_reached[2:]
             is_bd = np.append([False, False], is_bd)
 
             file.create_dataset(name="is_bd", data=is_bd)
