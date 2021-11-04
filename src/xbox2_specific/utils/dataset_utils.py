@@ -21,7 +21,7 @@ def read_hdf_dataset(file: h5py.File, key: str):
     return dataset[:]
 
 
-def read_hdf_dataset_selection(file: h5py.File, key: str, selection: bool):
+def read_hdf_dataset_selection(file: h5py.File, key: str, selection: typing.List[bool]):
     """
     Read dataset from hdf file
     :param file: h5py File object with read access
@@ -76,6 +76,13 @@ def select_events_from_list(context_data_file_path: Path, selection_list: typing
 
         selection = bd_selection & stable_run  # selected breakdowns
 
+        # make sure no potential breakdowns are selected
+        # dc_up_threshold_reached = read_hdf_dataset(file, "dc_up_threshold_reached")
+        # dc_down_threshold_reached = read_hdf_dataset(file, "dc_down_threshold_reached")
+        # dc_up_threshold_reached_one_before = shift_values(dc_up_threshold_reached, 2, fill_value=False)
+        # dc_down_threshold_reached_one_before = shift_values(dc_down_threshold_reached, 2, fill_value=False)
+        # selection = selection & (~dc_up_threshold_reached_one_before | ~dc_down_threshold_reached_one_before)
+
         # load timestamps for filtering healthy events
         event_timestamps = read_hdf_dataset(file, "Timestamp")
         trend_timestamp = read_hdf_dataset(file, "PrevTrendData/Timestamp")
@@ -87,10 +94,20 @@ def select_events_from_list(context_data_file_path: Path, selection_list: typing
         # also select 2.5% of the healthy pulses randomly
         selection[is_healthy] = np.random.choice(a=[True, False], size=(sum(is_healthy),), p=[0.025, 0.975])
 
+        # filter data on
+        scaling_coeff1 = -1317300
+        scaling_coeff2 = 7.8582e7
+        PSI_amplitude_event = read_hdf_dataset(file, "PSI Amplitude/pulse_amplitude")
+        PSI_amplitude_event_recomputed = (scaling_coeff1 * PSI_amplitude_event) + \
+                                         (scaling_coeff2 * (PSI_amplitude_event ** 2))
+        PSI_filter_threshold = 650000  # defined by Lee 08.06.2020
+        PSI_amplitude_filter = PSI_amplitude_event_recomputed > PSI_filter_threshold
+        selection = selection & PSI_amplitude_filter
+
     return selection
 
 
-def event_ext_link_hdf_to_da_selection(file_path, selection, feature_list) -> xr.DataArray:
+def event_ext_link_hdf_to_da_timestamp(file_path, timestamps, feature_list) -> xr.DataArray:
     """
     Function that reads features from external link hdf file and returns data as xarray DataArray
     :param file_path: path to data files
@@ -100,25 +117,32 @@ def event_ext_link_hdf_to_da_selection(file_path, selection, feature_list) -> xr
     with h5py.File(file_path, "r") as file:
         # find name of groups to be read
         groups_list = list(file.keys())
-        list_of_events = list(compress(groups_list, selection))
+        # list_of_events = list(compress(groups_list, selection))
 
         # buffer for data
-        data = np.empty(shape=(len(list_of_events), 1600, len(feature_list)))
-        for event_ind, event in enumerate(list_of_events):
-            # read features
-            for feature_ind, feature in enumerate(feature_list):
-                data_feature = file[event][feature][:]
-                ts_length = len(data_feature)
-                # Interpolate if time series is not 3200 points
-                if ts_length < 3200:
-                    x_low = np.linspace(0, 1, num=ts_length, endpoint=True)
-                    x_high = np.linspace(0, 1, num=3200, endpoint=True)
-                    interpolate = interp1d(x_low, data_feature, kind='linear')
-                    data_feature = interpolate(x_high)
-                # Downsample by taking every 2nd sample
-                # TODO: better way to do this?
-                data_feature = data_feature[::2]
-                data[event_ind, :, feature_ind] = data_feature
+        data = np.empty(shape=(len(timestamps), 1600, len(feature_list)))
+        timestamps2 = []
+        for event_ind, event in enumerate(groups_list):
+            timestamp = np.datetime64(file[event].attrs["Timestamp"].decode('utf8'))
+            if timestamp in timestamps:
+                # read features
+                timestamps2.append(timestamp)
+                for feature_ind, feature in enumerate(feature_list):
+                    data_feature = file[event][feature][:]
+                    if ((feature=='DC Down') or (feature=='DC Up')) and np.any(data_feature < -0.05):
+                        print("breakdown!")
+                    data_feature = scale_signal(data_feature, feature)
+                    ts_length = len(data_feature)
+                    # Interpolate if time series is not 3200 points
+                    if ts_length < 3200:
+                        x_low = np.linspace(0, 1, num=ts_length, endpoint=True)
+                        x_high = np.linspace(0, 1, num=3200, endpoint=True)
+                        interpolate = interp1d(x_low, data_feature, kind='linear')
+                        data_feature = interpolate(x_high)
+                    # Downsample by taking every 2nd sample
+                    # TODO: better way to do this?
+                    data_feature = data_feature[::2]
+                    data[np.where(timestamp == timestamps), :, feature_ind] = data_feature
 
     # Create xarray DataArray
     dim_names = ["event", "sample", "feature"]
@@ -127,18 +151,8 @@ def event_ext_link_hdf_to_da_selection(file_path, selection, feature_list) -> xr
                               dims=dim_names,
                               coords={"feature": feature_names}
                               )
+    data_array = data_array.assign_coords(timestamp_event=("event", np.array(timestamps2)))
     return data_array
-
-
-def da_to_numpy_for_ml(data_array: xr.DataArray) -> np.ndarray:
-    """
-    Function that takes raw values of xarray, replaces NaN with zero and infinity with large finite numbers
-    :param data_array: xarray DataArray
-    :return: numpy array ready for machine learning algorithms
-    """
-    out = data_array.values
-    out = np.nan_to_num(out)
-    return out
 
 
 def shift_values(arr, num, fill_value=np.nan):
@@ -172,3 +186,38 @@ def determine_followup(bd_label: np.ndarray, timestamp: np.ndarray, threshold: t
                 is_followup[index] = True
             ind_last_bd_in_20ms = index
     return is_followup
+
+
+def da_to_numpy_for_ml(data_array: xr.DataArray) -> np.ndarray:
+    """
+    Function that takes raw values of xarray, replaces NaN with zero and infinity with large finite numbers
+    :param data_array: xarray DataArray
+    :return: numpy array ready for machine learning algorithms
+    """
+    out = data_array.values
+    out = np.nan_to_num(out)
+    return out
+
+
+def scale_signal(signal, feature_name):
+    if feature_name == "PEI Amplitude":
+        coeff0 = 0
+        coeff1 = -378810
+        coeff2 = 4.4043e7
+        return coeff0 + (coeff1 * signal) + (coeff2 * (signal ** 2))
+    elif feature_name == "PSI Amplitude":
+        coeff0 = 0
+        coeff1 = -1317300
+        coeff2 = 7.8582e7
+        return coeff0 + (coeff1*signal) + (coeff2*(signal**2))
+    elif feature_name == "PSR Amplitude":
+        return signal  # no scaling
+    elif feature_name == "PKI Amplitude":
+        coeff0 = 0
+        coeff1 = -1240300
+        coeff2 = 5.2222e7
+        return coeff0 + (coeff1 * signal) + (coeff2 * (signal ** 2))
+    elif feature_name == "DC Up":
+        return signal  # no scaling
+    elif feature_name == "DC Down":
+        return signal  # no scaling

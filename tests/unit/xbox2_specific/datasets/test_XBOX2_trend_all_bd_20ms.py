@@ -1,10 +1,10 @@
 from collections import namedtuple
 import h5py
 import numpy as np
-import pandas as pd
+import xarray as xr
 import pytest
 from src.utils import dataset_creator
-from src.xbox2_specific.datasets import XBOX2_trend_bd20ms
+from src.xbox2_specific.datasets import XBOX2_trend_all_bd_20ms
 
 data = namedtuple("data", ["X", "y", "idx"])
 
@@ -23,11 +23,11 @@ def test__one_hot(y, y_one_hot_expected):
     Test one_hot function of dataset_creator
     """
     # ARRANGE
-    selector = XBOX2_trend_bd20ms.XBOX2TrendBD20msSelect()
-    df = pd.DataFrame({"label": y})
-    train = data(None, df, None)
-    valid = data(None, df, None)
-    test = data(None, df, None)
+    selector = XBOX2_trend_all_bd_20ms.XBOX2TrendAllBD20msSelect()
+    labels_test = xr.DataArray(data=y, dims=["is_bd_in_20ms"])
+    train = data(None, labels_test, None)
+    valid = data(None, labels_test, None)
+    test = data(None, labels_test, None)
 
     # ACT
     train_out, valid_out, test_out = selector.one_hot_encode(train, valid, test)
@@ -44,7 +44,7 @@ def test__scale_data():
     Test scale_data() function
     """
     # ARRANGE
-    selector = XBOX2_trend_bd20ms.XBOX2TrendBD20msSelect()
+    selector = XBOX2_trend_all_bd_20ms.XBOX2TrendAllBD20msSelect()
     X = np.array([[[0, 0, 0], [1, 1, 1]]])
     X_expected = np.array([[[-1, -1, -1], [1, 1, 1]]])
 
@@ -66,7 +66,7 @@ def test__select_events(tmpdir, dummy_features, selection_filter_expected):
     Test create_breakdown_selection_filter() function
     """
     # ARRANGE
-    selector = XBOX2_trend_bd20ms.XBOX2TrendBD20msSelect()
+    selector = XBOX2_trend_all_bd_20ms.XBOX2TrendAllBD20msSelect()
     path = tmpdir.join("dummy.hdf")
     context_dummy = h5py.File(path, 'w')
     dummy_event_timestamps = np.array([np.datetime64('2021-08-18T17:59:00'),
@@ -104,7 +104,7 @@ def test__select_features(dummy_data):
     Test select_features() function
     """
     # ARRANGE
-    selector = XBOX2_trend_bd20ms.XBOX2TrendBD20msSelect()
+    selector = XBOX2_trend_all_bd_20ms.XBOX2TrendAllBD20msSelect()
     d = {'Timestamp': [1, 2],
          'PrevTrendData__Timestamp': [3, 4],
          'is_bd': [5, 6],
@@ -147,7 +147,7 @@ def test__select_labels(data):
     Test load_X_data() function
     """
     # ARRANGE
-    selector = XBOX2_trend_bd20ms.XBOX2TrendBD20msSelect()
+    selector = XBOX2_trend_all_bd_20ms.XBOX2TrendAllBD20msSelect()
     d = {'is_healthy': data}
     df = pd.DataFrame(data=d)
     y_expected = df['is_healthy'].to_numpy(dtype=float)
@@ -166,7 +166,7 @@ def test__load_dataset(tmpdir):
     Test load_dataset() function
     """
     # ARRANGE
-    selector = XBOX2_trend_bd20ms.XBOX2TrendBD20msSelect()
+    selector = XBOX2_trend_all_bd_20ms.XBOX2TrendAllBD20msSelect()
     path = tmpdir.join("context.hdf")
     context_dummy = h5py.File(path, 'w')
     dummy_is_bd_in_40ms_labels = np.ones((10,), dtype=bool)
