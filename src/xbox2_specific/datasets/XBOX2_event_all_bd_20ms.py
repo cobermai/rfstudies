@@ -38,8 +38,10 @@ class XBOX2EventAllBD20msSelect(DatasetCreator):
                         "PKI Amplitude",
                         "DC Up",
                         "DC Down"]
-        data_array = dataset_utils.event_ext_link_hdf_to_da_selection(file_path=data_path / "EventDataExtLinks.hdf",
-                                                                      selection=selection,
+        with h5py.File(data_path / "context.hdf", 'r') as file:
+            timestamps = file['Timestamp'][selection]
+        data_array = dataset_utils.event_ext_link_hdf_to_da_timestamp(file_path=data_path / "EventDataExtLinks.hdf",
+                                                                      timestamps=timestamps,
                                                                       feature_list=feature_list)
 
         # read label and metadata

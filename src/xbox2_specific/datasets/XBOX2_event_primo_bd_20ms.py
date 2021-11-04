@@ -1,6 +1,7 @@
 """Selecting from context data and prepare dataset XBOX2_event_bd20ms for machine learning. """
 from collections import namedtuple
 from pathlib import Path
+import time
 from typing import Optional
 import numpy as np
 import xarray as xr
@@ -38,8 +39,10 @@ class XBOX2EventPrimoBD20msSelect(DatasetCreator):
                         "PKI Amplitude",
                         "DC Up",
                         "DC Down"]
-        data_array = dataset_utils.event_ext_link_hdf_to_da_selection(file_path=data_path / "EventDataExtLinks.hdf",
-                                                                      selection=selection,
+        with h5py.File(data_path / "context.hdf", 'r') as file:
+            timestamps = file['Timestamp'][selection]
+        data_array = dataset_utils.event_ext_link_hdf_to_da_timestamp(file_path=data_path / "EventDataExtLinks.hdf",
+                                                                      timestamps=timestamps,
                                                                       feature_list=feature_list)
 
         # read label and metadata
