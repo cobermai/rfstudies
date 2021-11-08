@@ -4,6 +4,7 @@ from io import StringIO
 from typing import Optional, NamedTuple
 from pathlib import Path
 import numpy as np
+from tensorflow import one_hot
 import xarray as xr
 from scipy.io import arff
 from src.utils.dataset_creator import DatasetCreator
@@ -26,6 +27,7 @@ class ECG200(DatasetCreator):
         :param data_path: path to context data file
         :return: data array with data of selected events
         """
+
         def read_arff(file_path: Path, encoding: str):
             f = open(file_path, 'rt', encoding=encoding)
             data = f.read()
@@ -99,12 +101,17 @@ class ECG200(DatasetCreator):
                              y_data_array[y_data_array["is_train"] == True],
                              idx[X_data_array["is_train"] == True],
                              train_size=0.9)
+        X_train = X_train.expand_dims({"feature": 1}, axis=2)
+        X_valid = X_valid.expand_dims({"feature": 1}, axis=2)
+
+        X_test = X_data_array[X_data_array["is_train"] == False]
+        X_test = X_test.expand_dims({"feature": 1}, axis=2)
+        y_test = y_data_array[y_data_array["is_train"] == False]
+        idx_test = idx[X_data_array["is_train"] == False]
 
         train = data(X_train, y_train, idx_train)
         valid = data(X_valid, y_valid, idx_valid)
-        test = data(X_data_array[X_data_array["is_train"] == False],
-                    y_data_array[y_data_array["is_train"] == False],
-                    idx[X_data_array["is_train"] == False])
+        test = data(X_test, y_test, idx_test)
 
         return train, valid, test
 
@@ -120,32 +127,35 @@ class ECG200(DatasetCreator):
         :param manual_scale: list that specifies groups which are scaled separately
         :return: train, valid, test: Tuple with data of type named tuple
         """
-        mean = train.X.values.mean()
-        std = train.X.values.std()
-        X_train = (train.X.values - mean) / std
-        X_train = X_train[..., np.newaxis]
+        mean = train.X.mean()
+        std = train.X.std()
+        X_train = (train.X - mean) / std
         train = train._replace(X=X_train)
-        X_valid = (valid.X.values - mean) / std
-        X_valid = X_valid[..., np.newaxis]
+        X_valid = (valid.X - mean) / std
         valid = valid._replace(X=X_valid)
-        X_test = (test.X.values - mean) / std
-        X_test = X_test[..., np.newaxis]
+        X_test = (test.X - mean) / std
         test = test._replace(X=X_test)
         return train, valid, test
 
     @staticmethod
     def one_hot_encode(train: data, valid: data, test: data) -> tuple:
         """
-        Function transforms the labels from integers to one hot vectors.
-        Note that this function can be overwritten in the concrete dataset selection class.
+        Function transforms the labels to one hot vectors.
         :param train: data for training with type named tuple which has attributes X, y and idx
         :param valid: data for validation with type named tuple which has attributes X, y and idx
         :param test: data for testing with type named tuple which has attributes X, y and idx
         :return: train, valid, test: Tuple containing data with type named tuple which has attributes X, y and idx
         """
-        enc = OneHotEncoder(categories='auto').fit(train.y.values.reshape(-1, 1))
-        train = train._replace(y=enc.transform(train.y.values.reshape(-1, 1)).toarray())
-        valid = valid._replace(y=enc.transform(valid.y.values.reshape(-1, 1)).toarray())
-        test = test._replace(y=enc.transform(test.y.values.reshape(-1, 1)).toarray())
+        n_labels = len(np.unique(train.y))
+        train_y_one_hot = train.y.expand_dims({"dummy": n_labels}, axis=1)
+        train_y_one_hot.values = one_hot(train.y, n_labels)
+        valid_y_one_hot = valid.y.expand_dims({"dummy": n_labels}, axis=1)
+        valid_y_one_hot.values = one_hot(valid.y, n_labels)
+        test_y_one_hot = test.y.expand_dims({"dummy": n_labels}, axis=1)
+        test_y_one_hot.values = one_hot(test.y, n_labels)
+
+        train = train._replace(y=train_y_one_hot)
+        valid = valid._replace(y=valid_y_one_hot)
+        test = test._replace(y=test_y_one_hot)
 
         return train, valid, test

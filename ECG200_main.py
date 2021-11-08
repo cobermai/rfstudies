@@ -5,14 +5,17 @@ import json
 from pathlib import Path
 import sys
 import matplotlib as mpl
+import pandas as pd
 from src.handler import XBox2ContextDataCreator
 from src.model.classifier import Classifier
 from src.transformation import transform
 from src.utils.dataset_creator import load_dataset
+from src.utils.dataset_creator import da_to_numpy_for_ml
 from src.utils import hdf_tools
 from src.datasets.ECG200 import ECG200
 from src.model.explainer import explain_samples
 from src.model.sample_explainers.gradient_shap import ShapGradientExplainer
+
 
 def parse_input_arguments(args):
     """
@@ -73,8 +76,11 @@ def modeling(train_set, valid_set, test_set, param_dir: Path, output_dir: Path, 
     if fit_classifier:
         clf.fit_classifier(train_set, valid_set)
     clf.model.load_weights(output_dir / 'best_model.hdf5')
-    results = clf.model.evaluate(x=test_set.X, y=test_set.y)
-    #pd.DataFrame.from_dict(results, orient='index').T.to_csv(output_dir / "results.csv")
+    results = clf.model.evaluate(x=test_set.X, y=test_set.y, return_dict=True)
+    df_results = pd.DataFrame.from_dict(results, orient='index').T
+    df_hp = pd.DataFrame.from_dict(hp_dict, orient='index').T
+    df_results = pd.concat([df_results, df_hp], axis=1)
+    df_results.to_csv(output_dir / "results.csv", index=False)
     return clf
 
 
@@ -119,9 +125,13 @@ if __name__ == '__main__':
 
     train, valid, test = load_dataset(creator=ECG200(),
                                       data_path=args_in.data_path)
-    clf = modeling(train_set=train, valid_set=valid, test_set=test,
+    train_numpy, valid_numpy, test_numpy = da_to_numpy_for_ml(train=train, valid=valid, test=test)
+    clf = modeling(train_set=train_numpy, valid_set=valid_numpy, test_set=test_numpy,
                    param_dir=args_in.file_path / "src/model" / args_in.param_name, output_dir=args_in.output_path)
 
-    y_pred = clf.model.predict(x=test.X)
+    results = pd.read_csv(args_in.output_path / "results.csv")
+    results["dataset"] = args_in.dataset_name
+    results.to_csv("results.csv", index=False)
 
-    explanation(classifier=clf, train_set=train, valid_set=valid, test_set=test, output_dir=args_in.output_path)
+    y_pred = clf.model.predict(x=test.X)
+    explanation(classifier=clf, train_set=train_numpy, valid_set=valid_numpy, test_set=test_numpy, output_dir=args_in.output_path)
