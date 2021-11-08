@@ -133,5 +133,6 @@ if __name__ == '__main__':
     results["dataset"] = args_in.dataset_name
     results.to_csv("results.csv", index=False)
 
-    y_pred = clf.model.predict(x=test.X)
-    explanation(classifier=clf, train_set=train_numpy, valid_set=valid_numpy, test_set=test_numpy, output_dir=args_in.output_path)
+    y_pred = clf.model.predict(x=test_numpy.X)
+    explanation(classifier=clf, train_set=train_numpy, valid_set=valid_numpy, test_set=test_numpy,
+                output_dir=args_in.output_path)
