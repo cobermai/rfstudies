@@ -128,11 +128,20 @@ if __name__ == '__main__':
                                       manual_scale=[1, 2, 3, 4, 5, 6, 7, 8, 9])#args_in.manual_scale)
     train_numpy, valid_numpy, test_numpy = da_to_numpy_for_ml(train, valid, test)
     clf = modeling(train_set=train_numpy, valid_set=valid_numpy, test_set=test_numpy,
-                   hp_dict=args_in.hyperparameter_path, output_dir=args_in.output_path)
+                   hp_path=args_in.hyperparameter_path, output_dir=args_in.output_path)
+    results = pd.read_csv(args_in.output_path / "results.csv")
+    results["dataset"] = args_in.dataset_name
+    results["manual_split"] = 0
+    results["manual_split"] = results["manual_split"].astype(object)
+    results.at[0, "manual_split"] = args_in.manual_split
+    results["manual_scale"] = 0
+    results["manual_scale"] = results["manual_scale"].astype(object)
+    results.at[0, "manual_scale"] = args_in.manual_scale
+    results.to_csv("results.csv", index=False)
 
     if args_in.explain_predictions:
         explanation = explain_samples(explainer=ShapGradientExplainer(), model=clf.model,
-                                      X_reference=train.X, X_to_explain=test.X[:1, :, :])
+                                      X_reference=train_numpy.X, X_to_explain=test_numpy.X[:1, :, :])
         pd.DataFrame(explanation[0][0]).to_csv(args_in.output_path / "explanations.csv")
 
     keras.backend.clear_session()
