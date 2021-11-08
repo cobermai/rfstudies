@@ -92,8 +92,9 @@ def modeling(train_set, valid_set, test_set, hp_path: str, output_dir: Path, fit
     clf.model.load_weights(output_dir / 'best_model.hdf5')
     results = clf.model.evaluate(x=test_set.X, y=test_set.y, return_dict=True)
     df_results = pd.DataFrame.from_dict(results, orient='index').T
-    df_results["model"] = clf.classifier_name
-    df_results.to_csv(output_dir / "results.csv")
+    df_hp = pd.DataFrame.from_dict(hp_dict,  orient='index').T
+    df_results = pd.concat([df_results, df_hp], axis=1)
+    df_results.to_csv(output_dir / "results.csv", index=False)
     return clf
 
 
@@ -124,7 +125,7 @@ if __name__ == '__main__':
     train, valid, test = load_dataset(creator=dataset_creator,
                                       data_path=args_in.data_path,
                                       manual_split=args_in.manual_split,
-                                      manual_scale=args_in.manual_scale)
+                                      manual_scale=[1, 2, 3, 4, 5, 6, 7, 8, 9])#args_in.manual_scale)
     train_numpy, valid_numpy, test_numpy = da_to_numpy_for_ml(train, valid, test)
     clf = modeling(train_set=train_numpy, valid_set=valid_numpy, test_set=test_numpy,
                    hp_dict=args_in.hyperparameter_path, output_dir=args_in.output_path)
