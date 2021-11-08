@@ -33,7 +33,7 @@ class Classifier:
                  reduce_lr_patience: int,
                  min_lr: float,
                  build=True,
-                 output_model_structure=True
+                 output_model_structure=False
                  ):
         """
         Initializes the Classifier with specified settings
