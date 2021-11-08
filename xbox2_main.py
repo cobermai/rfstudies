@@ -5,11 +5,13 @@ from datetime import datetime
 import json
 from pathlib import Path
 import sys
+from tensorflow import keras
 import pandas as pd
 from src.handler import XBox2ContextDataCreator
 from src.model.classifier import Classifier
 from src.transformation import transform
 from src.utils.dataset_creator import load_dataset
+from src.utils.dataset_creator import da_to_numpy_for_ml
 from src.utils import hdf_tools
 from src.xbox2_specific.datasets.XBOX2_event_all_bd_20ms import XBOX2EventAllBD20msSelect
 from src.xbox2_specific.datasets.XBOX2_event_primo_bd_20ms import XBOX2EventPrimoBD20msSelect
@@ -48,7 +50,7 @@ def parse_input_arguments(args):
     parser.add_argument('--hyperparam', required=False, type=json.loads, help='dict of hyperparameters',
                         default=hp_dict)
     parser.add_argument('--dataset', required=False, type=object, help='class object to create dataset',
-                        default=XBOX2TrendFollowupBD20msSelect())
+                        default=XBOX2TrendAllBD20msSelect())
     parser.add_argument('--manual_split', required=False, type=ast.literal_eval,
                         help='tuple of manual split index', default=([1, 7, 2, 4, 9, 5], [6, 8], [3]))
     parser.add_argument('--manual_scale', required=False, type=json.loads, help='list of manual scale index',
@@ -90,7 +92,9 @@ def modeling(train_set, valid_set, test_set, hp_dict: dict, output_dir: Path, fi
         clf.fit_classifier(train_set, valid_set)
     clf.model.load_weights(output_dir / 'best_model.hdf5')
     results = clf.model.evaluate(x=test_set.X, y=test_set.y, return_dict=True)
-    pd.DataFrame.from_dict(results, orient='index').T.to_csv(output_dir / "results.csv")
+    df_results = pd.DataFrame.from_dict(results, orient='index').T
+    df_results["model"] = clf.classifier_name
+    df_results.to_csv(output_dir / "results.csv")
     return clf
 
 
@@ -107,10 +111,13 @@ if __name__ == '__main__':
                                       data_path=args_in.data_path,
                                       manual_split=args_in.manual_split,
                                       manual_scale=args_in.manual_scale)
-    clf = modeling(train_set=train, valid_set=valid, test_set=test,
+    train_numpy, valid_numpy, test_numpy = da_to_numpy_for_ml(train, valid, test)
+    clf = modeling(train_set=train_numpy, valid_set=valid_numpy, test_set=test_numpy,
                    hp_dict=args_in.hyperparam, output_dir=args_in.output_path)
 
     if args_in.explain_predictions:
         explanation = explain_samples(explainer=ShapGradientExplainer(), model=clf.model,
                                       X_reference=train.X, X_to_explain=test.X[:1, :, :])
         pd.DataFrame(explanation[0][0]).to_csv(args_in.output_path / "explanations.csv")
+
+    keras.backend.clear_session()
