@@ -67,6 +67,7 @@ class HTCondorRunner:
                     file.write(f"pip3 install -r requirements.txt\n")
                 file.write(f"python3 {work_dir / main_name} "
                            f"--file_path={work_dir} "
+                           f"--output_path={output_dir} "
                            f"--hyperparameter_path={output_dir / 'hyperparameters.json'} "
                            f"--manual_split=\"{manual_split}\" "
                            f"--manual_scale=\"{manual_scale}\" ")
