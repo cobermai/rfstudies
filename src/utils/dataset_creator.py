@@ -3,6 +3,7 @@ from collections import namedtuple
 from pathlib import Path
 import typing
 from typing import Optional
+import numpy as np
 import xarray as xr
 
 
@@ -97,3 +98,21 @@ def load_dataset(creator: DatasetCreator, data_path: Path,
     train, valid, test = creator.one_hot_encode(train, valid, test)
 
     return train, valid, test
+
+
+def da_to_numpy_for_ml(train, valid, test) -> tuple:
+    """
+    Function that takes raw values of xarray, replaces NaN with zero and infinity with large finite numbers
+    :param data_array: xarray DataArray
+    :return: numpy array ready for machine learning algorithms
+    """
+    train_X = np.nan_to_num(train.X.values)
+    train_y = np.nan_to_num(train.y.values)
+    valid_X = np.nan_to_num(valid.X.values)
+    valid_y = np.nan_to_num(valid.y.values)
+    test_X = np.nan_to_num(test.X.values)
+    test_y = np.nan_to_num(test.y.values)
+    train_np = data(train_X, train_y, train.idx)
+    valid_np = data(valid_X, valid_y, valid.idx)
+    test_np = data(test_X, test_y, test.idx)
+    return train_np, valid_np, test_np
