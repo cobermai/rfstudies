@@ -119,7 +119,7 @@ if __name__ == '__main__':
     elif args_in.dataset_name == "XBOX2TrendFollowupBD20msSelect":
         dataset_creator = XBOX2TrendFollowupBD20msSelect()
     else:
-        raise AssertionError("Datset name does not exist")
+        raise AssertionError("Dataset name does not exist")
 
     train, valid, test = load_dataset(creator=dataset_creator,
                                       data_path=args_in.data_path,
