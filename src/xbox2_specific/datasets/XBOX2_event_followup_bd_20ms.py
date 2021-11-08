@@ -211,12 +211,13 @@ class XBOX2EventFollowupBD20msSelect(DatasetCreator):
         :param test: data for testing with type named tuple which has attributes X, y and idx
         :return: train, valid, test: Tuple containing data with type named tuple which has attributes X, y and idx
         """
-        train_y_one_hot = train.y.expand_dims({"dummy": 2}, axis=1)
-        train_y_one_hot.values = one_hot(train.y, 2)
-        valid_y_one_hot = valid.y.expand_dims({"dummy": 2}, axis=1)
-        valid_y_one_hot.values = one_hot(valid.y, 2)
-        test_y_one_hot = test.y.expand_dims({"dummy": 2}, axis=1)
-        test_y_one_hot.values = one_hot(test.y, 2)
+        n_labels = len(np.unique(train.y))
+        train_y_one_hot = train.y.expand_dims({"dummy": n_labels}, axis=1)
+        train_y_one_hot.values = one_hot(train.y, n_labels)
+        valid_y_one_hot = valid.y.expand_dims({"dummy": n_labels}, axis=1)
+        valid_y_one_hot.values = one_hot(valid.y, n_labels)
+        test_y_one_hot = test.y.expand_dims({"dummy": n_labels}, axis=1)
+        test_y_one_hot.values = one_hot(test.y, n_labels)
 
         train = train._replace(y=train_y_one_hot)
         valid = valid._replace(y=valid_y_one_hot)
