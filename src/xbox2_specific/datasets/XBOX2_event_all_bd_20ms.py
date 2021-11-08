@@ -5,7 +5,7 @@ from typing import Optional
 import numpy as np
 import xarray as xr
 import h5py
-from sklearn.preprocessing import OneHotEncoder
+from tensorflow import one_hot
 from sklearn.model_selection import train_test_split
 from src.utils.dataset_creator import DatasetCreator
 from src.xbox2_specific.utils import dataset_utils
@@ -150,13 +150,13 @@ class XBOX2EventAllBD20msSelect(DatasetCreator):
             # standard scale training, valid and test separately. Scaling is done for each signal.
             mean = np.mean(train.X, axis=1)
             std = np.std(train.X, axis=1)
-            train_X_scaled = dataset_utils.da_to_numpy_for_ml((train.X - mean) / std)
+            train_X_scaled = (train.X - mean) / std
             mean = np.mean(valid.X, axis=1)
             std = np.std(valid.X, axis=1)
-            valid_X_scaled = dataset_utils.da_to_numpy_for_ml((valid.X - mean) / std)
+            valid_X_scaled = (valid.X - mean) / std
             mean = np.mean(test.X, axis=1)
             std = np.std(test.X, axis=1)
-            test_X_scaled = dataset_utils.da_to_numpy_for_ml((test.X - mean) / std)
+            test_X_scaled = (test.X - mean) / std
 
             train = train._replace(X=train_X_scaled)
             valid = valid._replace(X=valid_X_scaled)
@@ -177,24 +177,20 @@ class XBOX2EventAllBD20msSelect(DatasetCreator):
                     train_X_i = train_X[train_X["run_no"] == i]
                     mean_train = np.mean(train_X_i, axis=0)
                     std_train = np.std(train_X_i, axis=0)
-                    train_X_i_scaled = dataset_utils.da_to_numpy_for_ml((train_X_i - mean_train) / std_train)
+                    train_X_i_scaled = (train_X_i - mean_train) / std_train
                     train_X_scaled[train_X["run_no"] == i] = train_X_i_scaled
                 if any(valid_X["run_no"] == i):
                     valid_X_i = valid_X[valid_X["run_no"] == i]
                     mean_valid = np.mean(valid_X_i, axis=0)
                     std_valid = np.std(valid_X_i, axis=0)
-                    valid_X_i_scaled = dataset_utils.da_to_numpy_for_ml((valid_X_i - mean_valid) / std_valid)
+                    valid_X_i_scaled = (valid_X_i - mean_valid) / std_valid
                     valid_X_scaled[valid_X["run_no"] == i] = valid_X_i_scaled
                 if any(test_X["run_no"] == i):
                     test_X_i = test_X[test_X["run_no"] == i]
                     mean_test = np.mean(test_X_i, axis=0)
                     std_test = np.std(test_X_i, axis=0)
-                    test_X_i_scaled = dataset_utils.da_to_numpy_for_ml((test_X_i - mean_test) / std_test)
+                    test_X_i_scaled = (test_X_i - mean_test) / std_test
                     test_X_scaled[test_X["run_no"] == i] = test_X_i_scaled
-
-            train_X_scaled = dataset_utils.da_to_numpy_for_ml(train_X_scaled)
-            valid_X_scaled = dataset_utils.da_to_numpy_for_ml(valid_X_scaled)
-            test_X_scaled = dataset_utils.da_to_numpy_for_ml(test_X_scaled)
 
             train = train._replace(X=train_X_scaled)
             valid = valid._replace(X=valid_X_scaled)
@@ -205,21 +201,22 @@ class XBOX2EventAllBD20msSelect(DatasetCreator):
     @staticmethod
     def one_hot_encode(train: data, valid: data, test: data) -> tuple:
         """
-        Function transforms the labels from integers to one hot vectors.
-        Note that this function can be overwritten in the concrete dataset selection class.
+        Function transforms the labels to one hot vectors.
         :param train: data for training with type named tuple which has attributes X, y and idx
         :param valid: data for validation with type named tuple which has attributes X, y and idx
         :param test: data for testing with type named tuple which has attributes X, y and idx
         :return: train, valid, test: Tuple containing data with type named tuple which has attributes X, y and idx
         """
-        train_y = dataset_utils.da_to_numpy_for_ml(train.y)
-        valid_y = dataset_utils.da_to_numpy_for_ml(valid.y)
-        test_y = dataset_utils.da_to_numpy_for_ml(test.y)
+        train_y_one_hot = train.y.expand_dims({"dummy": 2}, axis=1)
+        train_y_one_hot.values = one_hot(train.y, 2)
+        valid_y_one_hot = valid.y.expand_dims({"dummy": 2}, axis=1)
+        valid_y_one_hot.values = one_hot(valid.y, 2)
+        test_y_one_hot = test.y.expand_dims({"dummy": 2}, axis=1)
+        test_y_one_hot.values = one_hot(test.y, 2)
 
-        enc = OneHotEncoder(categories='auto').fit(train_y.reshape(-1, 1))
-
-        train = train._replace(y=enc.transform(train_y.reshape(-1, 1)).toarray())
-        valid = valid._replace(y=enc.transform(valid_y.reshape(-1, 1)).toarray())
-        test = test._replace(y=enc.transform(test_y.reshape(-1, 1)).toarray())
+        train = train._replace(y=train_y_one_hot)
+        valid = valid._replace(y=valid_y_one_hot)
+        test = test._replace(y=test_y_one_hot)
 
         return train, valid, test
+
