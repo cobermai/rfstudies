@@ -58,7 +58,7 @@ def sensitivity():
         else:
             scale_by_run = None
         HTCondorRunner.run(hyperparameters=hyperparameters,
-                           dataset=row["datasets"],
+                           dataset_name=row["datasets"],
                            manual_split=str((row["train_runs"], row["val_runs"], row["test_runs"])),
                            manual_scale=str(scale_by_run))
 

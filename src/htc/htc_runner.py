@@ -68,8 +68,8 @@ class HTCondorRunner:
                 file.write(f"python3 {work_dir / main_name} "
                            f"--file_path={work_dir} "
                            f"--hyperparameter_path={output_dir / 'hyperparameters.json'} "
-                           f"--manual_split={manual_split} "
-                           f"--manual_scale={manual_scale} ")
+                           f"--manual_split=\"{manual_split}\" "
+                           f"--manual_scale=\"{manual_scale}\" ")
                 if dataset_name:
                     file.write(f"--dataset_name={dataset_name} ")
             except IOError as e:
