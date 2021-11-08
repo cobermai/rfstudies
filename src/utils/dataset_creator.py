@@ -5,7 +5,6 @@ import typing
 from typing import Optional
 import xarray as xr
 
-
 data = namedtuple("data", ["X", "y", "idx"])
 
 
@@ -71,7 +70,8 @@ class DatasetCreator(ABC):
         """
 
 
-def load_dataset(creator: DatasetCreator, data_path: Path,
+def load_dataset(creator: DatasetCreator,
+                 data_path: Path,
                  splits: Optional[tuple] = None,
                  manual_split: Optional[tuple] = None,
                  manual_scale: Optional[list] = None) -> typing.Tuple:

@@ -36,19 +36,15 @@ def parse_input_arguments(args):
     parser.add_argument('--output_path', required=False, type=Path, help='path of data',
                         default=Path().absolute() / "src/output" / datetime.now().strftime("%Y-%m-%dT%H.%M.%S"))
     parser.add_argument('--dataset_name', required=False, type=str,
-                        help='name of data set', default="ECG200")
+                        help='name of data set', default="XBOX2TrendAllBD20msSelect")
     parser.add_argument('--transform_to_hdf5', required=False, type=bool,
                         help="retransform from original files to hdf5 (True/False)p", default=False)
     parser.add_argument('--calculate_features', required=False, type=bool,
                         help="recalculate features (True/False)", default=False)
     parser.add_argument('--explain_predictions', required=False, type=bool,
                         help="explain predictions(True/False)", default=False)
-    hp_file = open(Path().absolute() / "src/model/default_hyperparameters.json", 'r')
-    hp_dict = json.load(hp_file)
-    parser.add_argument('--hyperparam', required=False, type=json.loads, help='dict of hyperparameters',
-                        default=hp_dict)
-    parser.add_argument('--dataset', required=False, type=object, help='class object to create dataset',
-                        default=XBOX2TrendFollowupBD20msSelect())
+    parser.add_argument('--hyperparameter_path', required=False, type=str, help='path to hyperparameters',
+                        default="src/model/default_hyperparameters.json")
     parser.add_argument('--manual_split', required=False, type=ast.literal_eval,
                         help='tuple of manual split index', default=([1, 7, 2, 4, 9, 5], [6, 8], [3]))
     parser.add_argument('--manual_scale', required=False, type=json.loads, help='list of manual scale index',
@@ -83,8 +79,11 @@ def feature_handling(work_dir: Path):
     creator.manage_features()
 
 
-def modeling(train_set, valid_set, test_set, hp_dict: dict, output_dir: Path, fit_classifier: bool = True):
+def modeling(train_set, valid_set, test_set, hp_path: str, output_dir: Path, fit_classifier: bool = True):
     """MODELING"""
+    hp_file = open(Path().absolute() / hp_path, 'r')
+    hp_dict = json.load(hp_file)
+
     clf = Classifier(input_shape=train_set.X.shape, output_directory=output_dir, **hp_dict)
     if fit_classifier:
         clf.fit_classifier(train_set, valid_set)
@@ -103,13 +102,28 @@ if __name__ == '__main__':
     if args_in.calculate_features:
         feature_handling(work_dir=args_in.data_path)
 
-    train, valid, test = load_dataset(creator=args_in.dataset,
+    if args_in.dataset_name == "XBOX2EventAllBD20msSelect":
+        dataset_creator = XBOX2EventAllBD20msSelect()
+    elif args_in.dataset_name == "XBOX2EventPrimoBD20msSelect":
+        dataset_creator = XBOX2EventPrimoBD20msSelect()
+    elif args_in.dataset_name == "XBOX2EventFollowupBD20msSelect":
+        dataset_creator = XBOX2EventFollowupBD20msSelect()
+    elif args_in.dataset_name == "XBOX2TrendAllBD20msSelect":
+        dataset_creator = XBOX2TrendAllBD20msSelect()
+    elif args_in.dataset_name == "XBOX2TrendPrimoBD20msSelect":
+        dataset_creator = XBOX2TrendPrimoBD20msSelect()
+    elif args_in.dataset_name == "XBOX2TrendFollowupBD20msSelect":
+        dataset_creator = XBOX2TrendFollowupBD20msSelect()
+    else:
+        raise AssertionError("Datset name does not exist")
+
+    train, valid, test = load_dataset(creator=dataset_creator,
                                       data_path=args_in.data_path,
                                       manual_split=args_in.manual_split,
                                       manual_scale=args_in.manual_scale)
 
     clf = modeling(train_set=train, valid_set=valid, test_set=test,
-                   hp_dict=args_in.hyperparam, output_dir=args_in.output_path)
+                   hp_path=args_in.hyperparameter_path, output_dir=args_in.output_path)
 
     if args_in.explain_predictions:
         explanation = explain_samples(explainer=ShapGradientExplainer(), model=clf.model,

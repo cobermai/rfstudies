@@ -13,8 +13,6 @@ from src.utils import hdf_tools
 from src.datasets.ECG200 import ECG200
 from src.model.explainer import explain_samples
 from src.model.sample_explainers.gradient_shap import ShapGradientExplainer
-from src.model.concept_explainers.concept_shap import ShapConceptExplainer
-
 
 def parse_input_arguments(args):
     """
