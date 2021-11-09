@@ -90,16 +90,31 @@ def modeling(train_set, valid_set, test_set, hp_path: str, output_dir: Path, fit
     if fit_classifier:
         clf.fit_classifier(train_set, valid_set)
     clf.model.load_weights(output_dir / 'best_model.hdf5')
+
     results = clf.model.evaluate(x=test_set.X, y=test_set.y, return_dict=True)
-    df_results = pd.DataFrame.from_dict(results, orient='index').T
-    df_hp = pd.DataFrame.from_dict(hp_dict,  orient='index').T
-    df_results = pd.concat([df_results, df_hp], axis=1)
-    df_results.to_csv(output_dir / "results.csv", index=False)
+
+    log_to_csv(logging_path=output_dir / "results.csv", **hp_dict)
+    log_to_csv(logging_path=output_dir / "results.csv", **results)
     return clf
+
+
+def log_to_csv(logging_path, **kwargs):
+    if logging_path.is_file():
+        df = pd.read_csv(logging_path)
+        df_new = pd.DataFrame(kwargs, index=[0])
+        df = pd.concat([df, df_new], axis=1)
+    else:
+        logging_path.parent.mkdir(parents=True, exist_ok=True)
+        df = pd.DataFrame(kwargs, index=[0])
+    df.to_csv(logging_path, index=False)
 
 
 if __name__ == '__main__':
     args_in = parse_input_arguments(args=sys.argv[1:])
+    log_to_csv(logging_path=args_in.output_path / "results.csv",
+               dataset_name=args_in.dataset_name,
+               manual_split=str(args_in.manual_split),
+               manual_scale=str(args_in.manual_scale))
 
     if args_in.transform_to_hdf5:
         transformation(work_dir=args_in.data_path)
@@ -125,19 +140,10 @@ if __name__ == '__main__':
     train, valid, test = load_dataset(creator=dataset_creator,
                                       data_path=args_in.data_path,
                                       manual_split=args_in.manual_split,
-                                      manual_scale=[1, 2, 3, 4, 5, 6, 7, 8, 9])#args_in.manual_scale)
+                                      manual_scale=args_in.manual_scale)
     train_numpy, valid_numpy, test_numpy = da_to_numpy_for_ml(train, valid, test)
     clf = modeling(train_set=train_numpy, valid_set=valid_numpy, test_set=test_numpy,
                    hp_path=args_in.hyperparameter_path, output_dir=args_in.output_path)
-    results = pd.read_csv(args_in.output_path / "results.csv")
-    results["dataset"] = args_in.dataset_name
-    results["manual_split"] = 0
-    results["manual_split"] = results["manual_split"].astype(object)
-    results.at[0, "manual_split"] = args_in.manual_split
-    results["manual_scale"] = 0
-    results["manual_scale"] = results["manual_scale"].astype(object)
-    results.at[0, "manual_scale"] = args_in.manual_scale
-    results.to_csv("results.csv", index=False)
 
     if args_in.explain_predictions:
         explanation = explain_samples(explainer=ShapGradientExplainer(), model=clf.model,
