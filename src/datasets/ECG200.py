@@ -80,6 +80,7 @@ class ECG200(DatasetCreator):
         :return: labels of selected events
         """
         y_data_array = data_array[:, -1]
+        y_data_array[y_data_array == -1] = 0
         return y_data_array
 
     @staticmethod

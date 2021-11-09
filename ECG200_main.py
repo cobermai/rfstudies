@@ -91,8 +91,8 @@ def explanation(classifier, train_set, valid_set, test_set, output_dir: Path):
                                                             N=256)
 
         fig, ax = mpl.pyplot.subplots(figsize=(7, 5))
-        ax.plot(X_to_explain[(y_pred.argmax(axis=1) == 0), :, :].mean(axis=0), linewidth=3, c="b")
-        ax.plot(X_to_explain[(y_pred.argmax(axis=1) == 1), :, :].mean(axis=0), linewidth=3, c="r")
+        ax.plot(X_to_explain[(y_pred.argmax(axis=1) == 0), :, 0].mean(axis=0), linewidth=3, c="b")
+        ax.plot(X_to_explain[(y_pred.argmax(axis=1) == 1), :, 0].mean(axis=0), linewidth=3, c="r")
 
         extent = [0, len(X_to_explain[0]), ax.get_ylim()[0], ax.get_ylim()[1]]
         im1 = ax.imshow(explanation[0].mean(axis=0).T, cmap=cmap, aspect="auto", alpha=0.8, extent=extent)
