@@ -1,3 +1,4 @@
+import ast
 import sys
 from pathlib import Path
 import os
@@ -35,9 +36,7 @@ def sensitivity():
 
     # Set parameter grid
     param_grid = {
-        'train_runs': train_runs,
-        'val_runs': val_runs,
-        'test_runs': test_runs,
+        "data_split": [str((t, v, te)) for t, v, te in zip(train_runs, val_runs, test_runs)],
         'model': ["fcn", "fcn_2dropout", "resnet", "cnn", "inception"],
         'datasets': ["XBOX2EventAllBD20msSelect",
                      "XBOX2EventPrimoBD20msSelect",
@@ -46,9 +45,9 @@ def sensitivity():
                      "XBOX2TrendPrimoBD20msSelect",
                      "XBOX2TrendFollowupBD20msSelect"]
     }
+
     vary_values = list(map(param_grid.get, param_grid.keys()))
     meshgrid = np.array(np.meshgrid(*vary_values)).T.reshape(-1, len(param_grid.keys()))
-
     df_meshgrid = pd.DataFrame(meshgrid, columns=param_grid.keys())
     for index, row in df_meshgrid.iterrows():
         hyperparameters["model"] = row["model"]
@@ -57,9 +56,10 @@ def sensitivity():
             scale_by_run = [1, 2, 3, 4, 5, 6, 7, 8, 9]
         else:
             scale_by_run = None
+
         HTCondorRunner.run(hyperparameters=hyperparameters,
                            dataset_name=row["datasets"],
-                           manual_split=str((row["train_runs"], row["val_runs"], row["test_runs"])),
+                           manual_split=str(row["data_split"]),
                            manual_scale=str(scale_by_run))
 
 
