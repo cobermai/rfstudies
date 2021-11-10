@@ -53,7 +53,7 @@ def sensitivity():
     for index, row in df_meshgrid.iterrows():
         hyperparameters["model"] = row["model"]
 
-        if "trend" in str(row["datasets"]):
+        if "Trend" in str(row["datasets"]):
             scale_by_run = [1, 2, 3, 4, 5, 6, 7, 8, 9]
         else:
             scale_by_run = None
@@ -61,6 +61,7 @@ def sensitivity():
                            dataset_name=row["datasets"],
                            manual_split=str((row["train_runs"], row["val_runs"], row["test_runs"])),
                            manual_scale=str(scale_by_run))
+
 
 if __name__ == '__main__':
     sensitivity()

@@ -13,6 +13,7 @@ from src.transformation import transform
 from src.utils.dataset_creator import load_dataset
 from src.utils.dataset_creator import da_to_numpy_for_ml
 from src.utils import hdf_tools
+from src.utils.logging_tools import log_to_csv
 from src.xbox2_specific.datasets.XBOX2_event_all_bd_20ms import XBOX2EventAllBD20msSelect
 from src.xbox2_specific.datasets.XBOX2_event_primo_bd_20ms import XBOX2EventPrimoBD20msSelect
 from src.xbox2_specific.datasets.XBOX2_event_followup_bd_20ms import XBOX2EventFollowupBD20msSelect
@@ -49,7 +50,7 @@ def parse_input_arguments(args):
                         default="src/model/default_hyperparameters.json")
     parser.add_argument('--manual_split', required=False, type=ast.literal_eval,
                         help='tuple of manual split index', default=([1, 7, 2, 4, 9, 5], [6, 8], [3]))
-    parser.add_argument('--manual_scale', required=False, type=json.loads, help='list of manual scale index',
+    parser.add_argument('--manual_scale', required=False, type=ast.literal_eval, help='list of manual scale index',
                         default=None)
     return parser.parse_args(args)
 
@@ -96,17 +97,6 @@ def modeling(train_set, valid_set, test_set, hp_path: str, output_dir: Path, fit
     log_to_csv(logging_path=output_dir / "results.csv", **hp_dict)
     log_to_csv(logging_path=output_dir / "results.csv", **results)
     return clf
-
-
-def log_to_csv(logging_path, **kwargs):
-    if logging_path.is_file():
-        df = pd.read_csv(logging_path)
-        df_new = pd.DataFrame(kwargs, index=[0])
-        df = pd.concat([df, df_new], axis=1)
-    else:
-        logging_path.parent.mkdir(parents=True, exist_ok=True)
-        df = pd.DataFrame(kwargs, index=[0])
-    df.to_csv(logging_path, index=False)
 
 
 if __name__ == '__main__':
