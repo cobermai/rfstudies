@@ -72,9 +72,9 @@ class XBOX2TrendAllBD20msSelect(DatasetCreator):
             # Read selected features
             data = np.empty(shape=(sum(trend_selection), 3, len(feature_list)))
             for feature_ind, feature in enumerate(feature_list):
-                data[:, 0, feature_ind] = dataset_utils.read_hdf_dataset(file, feature)[trend_selection]
+                data[:, 0, feature_ind] = dataset_utils.read_hdf_dataset(file, feature)[trend_selection_two_before]
                 data[:, 1, feature_ind] = dataset_utils.read_hdf_dataset(file, feature)[trend_selection_one_before]
-                data[:, 2, feature_ind] = dataset_utils.read_hdf_dataset(file, feature)[trend_selection_two_before]
+                data[:, 2, feature_ind] = dataset_utils.read_hdf_dataset(file, feature)[trend_selection]
 
         # Create xarray DataArray
         dim_names = ["event", "sample", "feature"]
