@@ -101,10 +101,6 @@ def modeling(train_set, valid_set, test_set, hp_path: str, output_dir: Path, fit
 
 if __name__ == '__main__':
     args_in = parse_input_arguments(args=sys.argv[1:])
-    log_to_csv(logging_path=args_in.output_path / "results.csv",
-               dataset_name=args_in.dataset_name,
-               manual_split=str(args_in.manual_split),
-               manual_scale=str(args_in.manual_scale))
 
     if args_in.transform_to_hdf5:
         transformation(work_dir=args_in.data_path)
@@ -134,6 +130,11 @@ if __name__ == '__main__':
     train_numpy, valid_numpy, test_numpy = da_to_numpy_for_ml(train, valid, test)
     clf = modeling(train_set=train_numpy, valid_set=valid_numpy, test_set=test_numpy,
                    hp_path=args_in.hyperparameter_path, output_dir=args_in.output_path)
+
+    log_to_csv(logging_path=args_in.output_path / "results.csv",
+               dataset_name=args_in.dataset_name,
+               manual_split=str(args_in.manual_split),
+               manual_scale=str(args_in.manual_scale))
 
     if args_in.explain_predictions:
         explanation = explain_samples(explainer=ShapGradientExplainer(), model=clf.model,

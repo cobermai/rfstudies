@@ -45,5 +45,6 @@ if (__name__ == '__main__'):
     args = parser.parse_args()
 
     eos_path = Path("/eos/project-m/ml-for-alarm-system/private/CLIC_data_transfert/sensitivity_analysis/")
+    eos_path = Path("/home/cobermai/PycharmProjects/mlframework/src/output/")
     files_to_load = "../output/*/results.csv"
     gather_csv(output_file_path=eos_path / (args.output + ".csv"), input_file_regex=files_to_load)

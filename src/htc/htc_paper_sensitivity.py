@@ -50,7 +50,7 @@ def sensitivity():
     meshgrid = np.array(np.meshgrid(*vary_values)).T.reshape(-1, len(param_grid.keys()))
     df_meshgrid = pd.DataFrame(meshgrid, columns=param_grid.keys())
     for index, row in df_meshgrid.iterrows():
-        hyperparameters["model"] = row["model"]
+        hyperparameters["classifier_name"] = row["model"]
 
         if "Trend" in str(row["datasets"]):
             scale_by_run = [1, 2, 3, 4, 5, 6, 7, 8, 9]
