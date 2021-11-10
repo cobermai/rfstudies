@@ -66,8 +66,8 @@ class XBOX2TrendAllBD20msSelect(DatasetCreator):
             trend_selection = np.in1d(trend_timestamp, timestamp_trend_selection)
 
             # Create filter for selecting two previous trend data
-            trend_selection_one_before = dataset_utils.shift_values(trend_selection, 1, fill_value=False)
-            trend_selection_two_before = dataset_utils.shift_values(trend_selection, 2, fill_value=False)
+            trend_selection_one_before = dataset_utils.shift_values(trend_selection, -1, fill_value=False)
+            trend_selection_two_before = dataset_utils.shift_values(trend_selection, -2, fill_value=False)
 
             # Read selected features
             data = np.empty(shape=(sum(trend_selection), 3, len(feature_list)))
