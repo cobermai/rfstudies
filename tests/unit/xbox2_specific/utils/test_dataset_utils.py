@@ -93,21 +93,6 @@ def test__read_hdf_dataset_selection_error(tmpdir):
             dataset_utils.read_hdf_dataset_selection(f, test_key, [True])
 
 
-def test_da_to_numpy_for_ml():
-    """
-    Function that tests test_da_to_numpy_for_ml
-    """
-    # ARRANGE
-    data_expected = np.ones(4)
-    x = xr.DataArray(data=data_expected)
-
-    # ACT
-    data_out = dataset_utils.da_to_numpy_for_ml(x)
-
-    # ASSERT
-    assert data_out == data_expected
-
-
 def test__select_trend_data_events():
     """
     Test select_trend_data_events() function
@@ -163,6 +148,7 @@ def test__select_events_from_list(tmpdir):
         f.create_dataset("run_no", data=dataset)
         f.create_dataset("test1", data=dataset)
         f.create_dataset("test2", data=dataset)
+        f.create_dataset("PSI Amplitude/pulse_amplitude", data=dataset)
 
     selection_list = ["test1", "test2"]
 
@@ -176,27 +162,8 @@ def test__select_events_from_list(tmpdir):
     assert (selection_out == selection_expected).all()
 
 
-
-# def test__select_features_from_list():
-#     """
-#     Test select_features_from_list()
-#     """
-#     # ARRANGE
-#     X = np.ones((10, ))
-#     X_expected = X[..., np.newaxis]
-#     X_expected = np.nan_to_num(X_expected)
-#
-#     df = pd.DataFrame({
-#         "data": X,
-#     })
-#
-#     selection_list = ["data"]
-#
-#     # ACT
-#     X_out = dataset_utils.select_features_from_list(df, selection_list)
-#
-#     # ASSERT
-#     assert (X_expected == X_out).all
+def test_event_ext_link_hdf_to_da_timestamp(tmp_dir):
+    dataset_utils.event_ext_link_hdf_to_da_timestamp(tmp_dir, [], feature_list)
 
 
 @pytest.mark.skip(reason="not finished")

@@ -1,7 +1,9 @@
+from collections import namedtuple
 from unittest.mock import MagicMock
 from unittest.mock import patch
 import h5py
 import numpy as np
+import xarray as xr
 import pytest
 from src.utils import dataset_creator
 
@@ -87,3 +89,30 @@ def test__load_dataset(tmpdir):
 
     # ASSERT
     assert splits == splits_expected
+
+
+def test_da_to_numpy_for_ml():
+    """
+    Function that tests test_da_to_numpy_for_ml
+    """
+    # ARRANGE
+    data = namedtuple("data", ["X", "y", "idx"])
+    data_expected = np.ones(4)
+    X = xr.DataArray(data=data_expected)
+    y = xr.DataArray(data=data_expected)
+    idx = xr.DataArray(data=data_expected)
+
+    train, valid, test = data(X, y, idx), data(X, y, idx), data(X, y, idx)
+    # ACT
+    train_out, valid_out, test_out = dataset_creator.da_to_numpy_for_ml(train, valid, test)
+
+    # ASSERT
+    assert (train_out.X == data_expected).all()
+    assert (train_out.y == data_expected).all()
+    assert (train_out.idx == data_expected).all()
+    assert (valid_out.X == data_expected).all()
+    assert (valid_out.y == data_expected).all()
+    assert (valid_out.idx == data_expected).all()
+    assert (test_out.X == data_expected).all()
+    assert (test_out.y == data_expected).all()
+    assert (test_out.idx == data_expected).all()
