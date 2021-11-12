@@ -53,7 +53,7 @@ class HTCondorRunner:
         if "venv" in os.listdir():
             venv_exists = True
 
-        master_bash_filename = htc_dir / "htc_run.sh"
+        master_bash_filename = output_dir / "htc_run.sh"
         with open(master_bash_filename, 'w') as file:
             try:
                 file.write("#!/bin/bash\n")
@@ -78,7 +78,7 @@ class HTCondorRunner:
         os.system(f"chmod +x {master_bash_filename}")
 
         # creating the master sub file
-        master_sub_filename = htc_dir / "htc_submit.sub"
+        master_sub_filename = output_dir / "htc_submit.sub"
         with open(master_sub_filename, 'w') as file:
             try:
                 content_of_sub = (f"executable = {master_bash_filename}\n"
@@ -97,7 +97,7 @@ class HTCondorRunner:
                 logging.info(f"I/O error({e.errno}): {e.strerror}")
 
         # submitting a unique request to HTCondor
-        command = f"cd {htc_dir} ; condor_submit  {master_sub_filename}; condor_q"
+        command = f"cd {output_dir} ; condor_submit  {master_sub_filename}; condor_q"
         logging.debug(f"Executing HTCondor command {command}")
         os.system(command)
 
