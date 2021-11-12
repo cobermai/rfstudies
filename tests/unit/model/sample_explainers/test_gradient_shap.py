@@ -26,7 +26,7 @@ def test__build_explainer():
         tf.keras.layers.Flatten(input_shape=(2, 2)),
         tf.keras.layers.Dense(2, activation='relu')
     ])
-    X_reference = np.ones(shape=(200, 4))
+    X_reference = np.ones(shape=(200, 2, 2))
     explainer = gradient_shap.ShapGradientExplainer()
 
     background_size = 100
