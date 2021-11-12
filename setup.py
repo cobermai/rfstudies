@@ -20,7 +20,8 @@ REQUIREMENTS: dict = {
         'scikit-learn>=0.24.2',
         'tensorflow>=2.5.0',
         'shap',
-        'pydot'
+        'pydot',
+        'xarray'
     ],
     'test': [
         'pytest',
