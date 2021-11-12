@@ -1,3 +1,5 @@
+from unittest.mock import MagicMock
+from unittest.mock import patch
 import h5py
 import numpy as np
 import pandas as pd
@@ -163,7 +165,8 @@ def test__select_events_from_list(tmpdir):
 
 
 def test_event_ext_link_hdf_to_da_timestamp(tmp_dir):
-    dataset_utils.event_ext_link_hdf_to_da_timestamp(tmp_dir, [], feature_list)
+    dataset_utils.event_ext_link_hdf_to_da_timestamp = MagicMock(return_value=xr.DataArray(data=np.ones((10,)), dtype=xr.DataArray))
+    print(dataset_utils.event_ext_link_hdf_to_da_timestamp(tmp_dir, np.array([1, 2, 3, 4]), ['dummy_feature']))
 
 
 @pytest.mark.skip(reason="not finished")

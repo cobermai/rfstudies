@@ -117,20 +117,17 @@ def event_ext_link_hdf_to_da_timestamp(file_path: Path, timestamps: np.ndarray, 
     with h5py.File(file_path, "r") as file:
         # find name of groups to be read
         groups_list = list(file.keys())
-        # list_of_events = list(compress(groups_list, selection))
 
         # buffer for data
         data = np.empty(shape=(len(timestamps), 1600, len(feature_list)))
-        timestamps2 = []
+        timestamps_found = []
         for event_ind, event in enumerate(groups_list):
             timestamp = np.datetime64(file[event].attrs["Timestamp"].decode('utf8'))
             if timestamp in timestamps:
                 # read features
-                timestamps2.append(timestamp)
+                timestamps_found.append(timestamp)
                 for feature_ind, feature in enumerate(feature_list):
                     data_feature = file[event][feature][:]
-                    if ((feature=='DC Down') or (feature=='DC Up')) and np.any(data_feature < -0.05):
-                        print("breakdown!")
                     data_feature = scale_signal(data_feature, feature)
                     ts_length = len(data_feature)
                     # Interpolate if time series is not 3200 points
@@ -151,7 +148,7 @@ def event_ext_link_hdf_to_da_timestamp(file_path: Path, timestamps: np.ndarray, 
                               dims=dim_names,
                               coords={"feature": feature_names}
                               )
-    data_array = data_array.assign_coords(timestamp_event=("event", np.array(timestamps2)))
+    data_array = data_array.assign_coords(timestamp_event=("event", np.array(timestamps_found)))
     return data_array
 
 
