@@ -37,7 +37,7 @@ def sensitivity():
     # Set parameter grid
     param_grid = {
         "data_split": [str((t, v, te)) for t, v, te in zip(train_runs, val_runs, test_runs)],
-        'model': ["fcn", "fcn_2dropout", "resnet", "cnn", "inception"],
+        'model': ["fcn", "fcn_2dropout", "resnet", "time_cnn", "inception"],
         'datasets': ["XBOX2EventAllBD20msSelect",
                      "XBOX2EventPrimoBD20msSelect",
                      "XBOX2EventFollowupBD20msSelect",

@@ -11,7 +11,6 @@ def log_to_csv(logging_path: Path, **kwargs):
     :param logging_path: path to log csv file
     :param kwargs: arguments to write into the csv file
     """
-    print(f"log_to_csv OUTPUT_PATH: {logging_path}")
     if logging_path.is_file():
         df = pd.read_csv(logging_path)
         df_new = pd.DataFrame(kwargs, index=[0])

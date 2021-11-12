@@ -1,6 +1,7 @@
 """example code how to select from context data and prepare data for machine learning. """
 import argparse
 import ast
+import os
 from datetime import datetime
 import json
 from pathlib import Path
@@ -86,6 +87,7 @@ def modeling(train_set, valid_set, test_set, hp_path: str, output_dir: Path, fit
     """MODELING"""
     hp_file = open(Path().absolute() / hp_path, 'r')
     hp_dict = json.load(hp_file)
+    os.environ["HDF5_USE_FILE_LOCKING"] = "FALSE"
 
     clf = Classifier(input_shape=train_set.X.shape, output_directory=output_dir, **hp_dict)
     if fit_classifier:
@@ -101,7 +103,6 @@ def modeling(train_set, valid_set, test_set, hp_path: str, output_dir: Path, fit
 
 if __name__ == '__main__':
     args_in = parse_input_arguments(args=sys.argv[1:])
-    print(f"OUTPUT_PATH: {args_in.output_path}")
 
     if args_in.transform_to_hdf5:
         transformation(work_dir=args_in.data_path)
