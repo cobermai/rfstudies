@@ -94,7 +94,7 @@ def select_events_from_list(context_data_file_path: Path, selection_list: typing
         # also select 2.5% of the healthy pulses randomly
         selection[is_healthy] = np.random.choice(a=[True, False], size=(sum(is_healthy),), p=[0.025, 0.975])
 
-        # filter data on
+        # filter data on PSI Amplitude
         scaling_coeff1 = -1317300
         scaling_coeff2 = 7.8582e7
         PSI_amplitude_event = read_hdf_dataset(file, "PSI Amplitude/pulse_amplitude")
@@ -107,30 +107,27 @@ def select_events_from_list(context_data_file_path: Path, selection_list: typing
     return selection
 
 
-def event_ext_link_hdf_to_da_timestamp(file_path, timestamps, feature_list) -> xr.DataArray:
+def event_ext_link_hdf_to_da_timestamp(file_path: Path, timestamps: np.ndarray, feature_list: list) -> xr.DataArray:
     """
     Function that reads features from external link hdf file and returns data as xarray DataArray
     :param file_path: path to data files
-    :param selection: boolean array for selecting groups in external link file
+    :param timestamps: array with timestamps to select in external link file
     :param feature_list: list of feature names to be included in data
     """
     with h5py.File(file_path, "r") as file:
         # find name of groups to be read
         groups_list = list(file.keys())
-        # list_of_events = list(compress(groups_list, selection))
 
         # buffer for data
         data = np.empty(shape=(len(timestamps), 1600, len(feature_list)))
-        timestamps2 = []
+        timestamps_found = []
         for event_ind, event in enumerate(groups_list):
             timestamp = np.datetime64(file[event].attrs["Timestamp"].decode('utf8'))
             if timestamp in timestamps:
                 # read features
-                timestamps2.append(timestamp)
+                timestamps_found.append(timestamp)
                 for feature_ind, feature in enumerate(feature_list):
                     data_feature = file[event][feature][:]
-                    if ((feature=='DC Down') or (feature=='DC Up')) and np.any(data_feature < -0.05):
-                        print("breakdown!")
                     data_feature = scale_signal(data_feature, feature)
                     ts_length = len(data_feature)
                     # Interpolate if time series is not 3200 points
@@ -151,20 +148,26 @@ def event_ext_link_hdf_to_da_timestamp(file_path, timestamps, feature_list) -> x
                               dims=dim_names,
                               coords={"feature": feature_names}
                               )
-    data_array = data_array.assign_coords(timestamp_event=("event", np.array(timestamps2)))
+    data_array = data_array.assign_coords(timestamp_event=("event", np.array(timestamps_found)))
     return data_array
 
 
-def shift_values(arr, num, fill_value=np.nan):
-    result = np.empty_like(arr)
+def shift_values(array: np.ndarray, num: int, fill_value=np.nan):
+    """
+    Function for shifting values of a 1D array
+    :param array: The array which elements should be shifted
+    :param num: The number of times the array should be shifted (positive -> right, negative -> left).
+    :param fill_value: The value to fill in the spots shifted into the array.
+    """
+    result = np.empty_like(array)
     if num > 0:
         result[:num] = fill_value
-        result[num:] = arr[:-num]
+        result[num:] = array[:-num]
     elif num < 0:
         result[num:] = fill_value
-        result[:num] = arr[-num:]
+        result[:num] = array[-num:]
     else:
-        result[:] = arr
+        result[:] = array
     return result
 
 
