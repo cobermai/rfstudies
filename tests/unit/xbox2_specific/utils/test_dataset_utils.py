@@ -169,22 +169,16 @@ def test_event_ext_link_hdf_to_da_timestamp(tmp_dir):
     print(dataset_utils.event_ext_link_hdf_to_da_timestamp(tmp_dir, np.array([1, 2, 3, 4]), ['dummy_feature']))
 
 
-@pytest.mark.skip(reason="not finished")
-def test__get_labels():
-    """
-    Test select_labels_from_df()
-    """
+@pytest.mark.parametrize("input_array, shift_value, fill_value, output_expected",
+                         [(np.array([1, 2, 3, 4, 5, 6, 7, 8, 9]), 2, 0, np.array([0, 0, 1, 2, 3, 4, 5, 6, 7])),
+                          (np.array([1, 2, 3, 4, 5, 6, 7, 8, 9]), -2, 0, np.array([3, 4, 5, 6, 7, 8, 9, 0, 0])),
+                          (np.array([1, 2, 3, 4, 5, 6, 7, 8, 9]), 0, 0, np.array([1, 2, 3, 4, 5, 6, 7, 8, 9]))]
+                         )
+def test__shift_values(input_array, shift_value, fill_value, output_expected):
     # ARRANGE
-    y = np.ones((10, ))
-    y_expected = y[..., np.newaxis]
-    y_expected = np.nan_to_num(y_expected)
-    label = "healthy"
-    df = pd.DataFrame({
-        label: y,
-    })
 
     # ACT
-    y_out = dataset_utils.get_labels(df=df, label=label)
+    output = dataset_utils.shift_values(array=input_array, num=shift_value, fill_value=fill_value)
 
     # ASSERT
-    assert (y_expected == y_out).all
+    assert all(output == output_expected)
