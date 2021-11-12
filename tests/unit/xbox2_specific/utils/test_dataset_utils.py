@@ -163,7 +163,7 @@ def test__select_events_from_list(tmpdir):
     # ASSERT
     assert (selection_out == selection_expected).all()
 
-
+@pytest.mark.skip(reason="not finished")
 def test_event_ext_link_hdf_to_da_timestamp(tmp_dir):
     dataset_utils.event_ext_link_hdf_to_da_timestamp = MagicMock(return_value=xr.DataArray(data=np.ones((10,)), dtype=xr.DataArray))
     print(dataset_utils.event_ext_link_hdf_to_da_timestamp(tmp_dir, np.array([1, 2, 3, 4]), ['dummy_feature']))
