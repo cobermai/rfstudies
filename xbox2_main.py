@@ -101,6 +101,7 @@ def modeling(train_set, valid_set, test_set, hp_path: str, output_dir: Path, fit
 
 if __name__ == '__main__':
     args_in = parse_input_arguments(args=sys.argv[1:])
+    print(f"OUTPUT_PATH: {args_in.output_path}")
 
     if args_in.transform_to_hdf5:
         transformation(work_dir=args_in.data_path)
@@ -128,6 +129,7 @@ if __name__ == '__main__':
                                       manual_split=args_in.manual_split,
                                       manual_scale=args_in.manual_scale)
     train_numpy, valid_numpy, test_numpy = da_to_numpy_for_ml(train, valid, test)
+
     clf = modeling(train_set=train_numpy, valid_set=valid_numpy, test_set=test_numpy,
                    hp_path=args_in.hyperparameter_path, output_dir=args_in.output_path)
 
