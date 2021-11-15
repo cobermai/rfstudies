@@ -46,6 +46,13 @@ def sensitivity():
                      "XBOX2TrendFollowupBD20msSelect"]
     }
 
+    # Set parameter grid
+    param_grid = {
+        "data_split": [str((t, v, te)) for t, v, te in zip(train_runs, val_runs, test_runs)],
+        'model': ["fcn"],
+        'datasets': ["XBOX2EventAllBD20msSelect"]
+    }
+
     vary_values = list(map(param_grid.get, param_grid.keys()))
     meshgrid = np.array(np.meshgrid(*vary_values)).T.reshape(-1, len(param_grid.keys()))
     df_meshgrid = pd.DataFrame(meshgrid, columns=param_grid.keys())
