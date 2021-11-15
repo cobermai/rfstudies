@@ -122,7 +122,10 @@ def event_ext_link_hdf_to_da_timestamp(file_path: Path, timestamps: np.ndarray, 
         data = np.empty(shape=(len(timestamps), 1600, len(feature_list)))
         timestamps_found = []
         for event_ind, event in enumerate(groups_list):
+            print(f"file path: {file_path}")
+            print(f"event: {event}")
             timestamp = np.datetime64(file[event].attrs["Timestamp"].decode('utf8'))
+            print(f"timestamp: {timestamp}")
             if timestamp in timestamps:
                 # read features
                 timestamps_found.append(timestamp)
