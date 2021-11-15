@@ -40,7 +40,7 @@ def parse_input_arguments(args):
     parser.add_argument('--output_path', required=False, type=Path, help='path of data',
                         default=Path().absolute() / "src/output" / datetime.now().strftime("%Y-%m-%dT%H.%M.%S"))
     parser.add_argument('--dataset_name', required=False, type=str,
-                        help='name of data set', default="XBOX2TrendAllBD20msSelect")
+                        help='name of data set', default="XBOX2EventAllBD20msSelect")
     parser.add_argument('--transform_to_hdf5', required=False, type=bool,
                         help="retransform from original files to hdf5 (True/False)p", default=False)
     parser.add_argument('--calculate_features', required=False, type=bool,
@@ -137,7 +137,8 @@ if __name__ == '__main__':
     log_to_csv(logging_path=args_in.output_path / "results.csv",
                dataset_name=args_in.dataset_name,
                manual_split=str(args_in.manual_split),
-               manual_scale=str(args_in.manual_scale))
+               manual_scale=str(args_in.manual_scale),
+               output_path=str(args_in.output_path))
 
     if args_in.explain_predictions:
         explanation = explain_samples(explainer=ShapGradientExplainer(), model=clf.model,
