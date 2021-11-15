@@ -114,6 +114,7 @@ def event_ext_link_hdf_to_da_timestamp(file_path: Path, timestamps: np.ndarray, 
     :param timestamps: array with timestamps to select in external link file
     :param feature_list: list of feature names to be included in data
     """
+    file_path = r'{}'.format(file_path)
     with h5py.File(file_path, "r") as file:
         # find name of groups to be read
         groups_list = list(file.keys())
@@ -122,6 +123,7 @@ def event_ext_link_hdf_to_da_timestamp(file_path: Path, timestamps: np.ndarray, 
         data = np.empty(shape=(len(timestamps), 1600, len(feature_list)))
         timestamps_found = []
         for event_ind, event in enumerate(groups_list):
+            print(h5py.__version__)
             print(f"file path: {file_path}")
             print(f"event: {event}")
             timestamp = np.datetime64(file[event].attrs["Timestamp"].decode('utf8'))
