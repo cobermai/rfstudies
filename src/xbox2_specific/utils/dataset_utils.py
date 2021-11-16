@@ -126,6 +126,7 @@ def event_ext_link_hdf_to_da_timestamp(file_path: Path, timestamps: np.ndarray, 
             print(h5py.__version__)
             print(f"file path: {file_path}")
             print(f"event: {event}")
+            print(f"event index: {event_ind}")
             timestamp = np.datetime64(file[event].attrs["Timestamp"].decode('utf8'))
             print(f"timestamp: {timestamp}")
             if timestamp in timestamps:
