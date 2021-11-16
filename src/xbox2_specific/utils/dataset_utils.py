@@ -176,18 +176,21 @@ def determine_followup(bd_label: np.ndarray, timestamp: np.ndarray, threshold: t
     Function that takes breakdown labels and timestamps as input and
     returns a boolean array with 1's representing followup breakdowns.
     :param bd_label: boolean array specifying whether a breakdown happened.
-    :param timestamp: an array if timestamps for bd_label.
-    :param threshold: threshold in second for followup bds.
+    :param timestamp: an array of timestamps for bd_label.
+    :param threshold: threshold in seconds for followup bds.
     :return: boolean array which specifies whether bd_label indexes are followup bds.
     """
     is_followup = np.zeros_like(bd_label)
     ind_last_bd_in_20ms = 0
     for index in range(1, len(bd_label)):
+        print(bd_label[index])
         if bd_label[index]:
             if (ind_last_bd_in_20ms != 0) \
                     and ((timestamp[index] - timestamp[ind_last_bd_in_20ms]) < np.timedelta64(threshold, 's')):
                 is_followup[index] = True
             ind_last_bd_in_20ms = index
+            print(ind_last_bd_in_20ms)
+            print((timestamp[index] - timestamp[ind_last_bd_in_20ms]))
     return is_followup
 
 
