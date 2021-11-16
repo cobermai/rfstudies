@@ -1,6 +1,7 @@
 """example code how to select from context data and prepare data for machine learning. """
 import argparse
 import ast
+import os
 from datetime import datetime
 import json
 from pathlib import Path
@@ -39,7 +40,7 @@ def parse_input_arguments(args):
     parser.add_argument('--output_path', required=False, type=Path, help='path of data',
                         default=Path().absolute() / "src/output" / datetime.now().strftime("%Y-%m-%dT%H.%M.%S"))
     parser.add_argument('--dataset_name', required=False, type=str,
-                        help='name of data set', default="XBOX2TrendAllBD20msSelect")
+                        help='name of data set', default="XBOX2EventAllBD20msSelect")
     parser.add_argument('--transform_to_hdf5', required=False, type=bool,
                         help="retransform from original files to hdf5 (True/False)p", default=False)
     parser.add_argument('--calculate_features', required=False, type=bool,
@@ -86,6 +87,7 @@ def modeling(train_set, valid_set, test_set, hp_path: str, output_dir: Path, fit
     """MODELING"""
     hp_file = open(Path().absolute() / hp_path, 'r')
     hp_dict = json.load(hp_file)
+    os.environ["HDF5_USE_FILE_LOCKING"] = "FALSE"
 
     clf = Classifier(input_shape=train_set.X.shape, output_directory=output_dir, **hp_dict)
     if fit_classifier:
@@ -101,7 +103,6 @@ def modeling(train_set, valid_set, test_set, hp_path: str, output_dir: Path, fit
 
 if __name__ == '__main__':
     args_in = parse_input_arguments(args=sys.argv[1:])
-    print(f"OUTPUT_PATH: {args_in.output_path}")
 
     if args_in.transform_to_hdf5:
         transformation(work_dir=args_in.data_path)
@@ -136,7 +137,8 @@ if __name__ == '__main__':
     log_to_csv(logging_path=args_in.output_path / "results.csv",
                dataset_name=args_in.dataset_name,
                manual_split=str(args_in.manual_split),
-               manual_scale=str(args_in.manual_scale))
+               manual_scale=str(args_in.manual_scale),
+               output_path=str(args_in.output_path))
 
     if args_in.explain_predictions:
         explanation = explain_samples(explainer=ShapGradientExplainer(), model=clf.model,

@@ -46,7 +46,7 @@ class XBOX2EventAllBD20msSelect(DatasetCreator):
 
         # read label and metadata
         label_name = "is_bd_in_20ms"
-        with h5py.File(data_path / "context.hdf") as file:
+        with h5py.File(data_path / "context.hdf", 'r') as file:
             is_bd_in_20ms = dataset_utils.read_hdf_dataset(file, label_name)[selection]
             timestamp = dataset_utils.read_hdf_dataset(file, "Timestamp")[selection]
             run_no = dataset_utils.read_hdf_dataset(file, "run_no")[selection]
