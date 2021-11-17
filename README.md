@@ -11,7 +11,7 @@ This is a framework for machine learning. It consists of three steps:
    * calculate features: extract features for machine learning
    * data exploration: unsupervised machine learning for data analysis
 3) **Modelling**: 
-   * (un)supervised machine learning
+   * supervised machine learning
    * explain results and validate by application
     
 
@@ -78,16 +78,21 @@ Repository structure
 │   │   └── htc_submit.sub      < script for submitting htc job
 │   ├── model                   < model specification
 │   │   ├── classifier.py       < creates Tensorflow model
-│   │   └── classifiers         < library of Tensorflow models
-│   │       ├── layers          < custom Tensorflow layers
-│   │       │   ├── cnn.py          < CNN layer
-│   │       │   ├── cnn_dropout.py  < CNN Dropout layer
-│   │       │   └── shortcut        < shortcut layer
-│   │       ├── fcn.py          < FCN model
-│   │       ├── fcn_2dropout.py < FCN with dropout model
-│   │       ├── inception.py    < Inception model
-│   │       ├── resnet.py       < Resnet model
-│   │       └── time_cnn.py     < TimeCNN model
+│   │   ├── classifiers         < library of Tensorflow models
+│   │   │   ├── layers          < custom Tensorflow layers
+│   │   │   │   ├── cnn.py          < CNN layer
+│   │   │   │   ├── cnn_dropout.py  < CNN Dropout layer
+│   │   │   │   └── shortcut        < shortcut layer
+│   │   │   ├── fcn.py          < FCN model
+│   │   │   ├── fcn_2dropout.py < FCN with dropout model
+│   │   │   ├── inception.py    < Inception model
+│   │   │   ├── resnet.py       < Resnet model
+│   │   │   └── time_cnn.py     < TimeCNN model
+│   │   ├── explainer.py        < creates explainer for model explanation
+│   │   ├── sample_explainers   < here the sample explainers are found
+│   │   │   ├── deep_shap.py       < DeepSHAP explainer
+│   │   │   └── gradient_shap.py   < GradientShap explainer
+│   │   └── default_hyperparameters.json < hyperparameter settings file
 │   ├── utils                   < utilities
 │   │   ├── hdf_tools.py        < tools to handle hdf files
 │   │   ├── handler_tools       < combines data without copying it
@@ -98,6 +103,7 @@ Repository structure
 │   │   └── hdf_tool.py         < tools for hdf files
 │   ├── xbox2_specific          < files specific to the xbox2 experiment
 │   │   ├── datasets            < dataset specification files for xbox2
+│   │   ├── utils               < utilities for xbox2 dataset selection
 │   │   └── feature_definition  < feature definitions for xbox2
 │   ├── handler.py              < handles creation of context file from data
 │   └── transformation.py       < tranforms data in special formats into a handy format (ex.: .tdms -> .hdf)
@@ -105,5 +111,6 @@ Repository structure
 │   ├── integration             < tests from start to beginning (also called end to end test), NOT IMPLEMENTED YET
 │   ├── unit                    < tests every function/class (also called atomic test)
 │   └── utils                   < utilyties for the testing suite (ex. creating test files)
-└── xbox2_main.py                   < the main runfile for using xbox2 data
+├── xbox2_main.py                   < the main runfile for using xbox2 data
+└── ECG200_main.py                  < the main runfile for using ECG200 data
 ```
