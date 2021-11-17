@@ -110,7 +110,7 @@ Repository structure
 ├── tests                       <<< tests for main code in the source directory
 │   ├── integration             < tests from start to beginning (also called end to end test), NOT IMPLEMENTED YET
 │   ├── unit                    < tests every function/class (also called atomic test)
-│   └── utils                   < utilyties for the testing suite (ex. creating test files)
+│   └── utils                   < utilities for the testing suite (ex. creating test files)
 ├── xbox2_main.py                   < the main runfile for using xbox2 data
 └── ECG200_main.py                  < the main runfile for using ECG200 data
 ```
