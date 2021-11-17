@@ -107,11 +107,11 @@ def select_events_from_list(context_data_file_path: Path, selection_list: typing
     return selection
 
 
-def event_ext_link_hdf_to_da_timestamp(file_path: Path, timestamps: np.ndarray, feature_list: list) -> xr.DataArray:
+def event_ext_link_hdf_to_da_timestamp(file_path: Path, ext_link_index: np.ndarray, feature_list: list) -> xr.DataArray:
     """
     Function that reads features from external link hdf file and returns data as xarray DataArray
     :param file_path: path to data files
-    :param timestamps: array with timestamps to select in external link file
+    :param ext_link_index: array with index of events to select in external link file
     :param feature_list: list of feature names to be included in data
     """
     file_path = r'{}'.format(file_path)
@@ -120,32 +120,27 @@ def event_ext_link_hdf_to_da_timestamp(file_path: Path, timestamps: np.ndarray, 
         groups_list = list(file.keys())
 
         # buffer for data
-        data = np.empty(shape=(len(timestamps), 1600, len(feature_list)))
+        data = np.empty(shape=(len(ext_link_index), 1600, len(feature_list)))
         timestamps_found = []
-        for event_ind, event in enumerate(groups_list):
-            print(h5py.__version__)
-            print(f"file path: {file_path}")
-            print(f"event: {event}")
-            print(f"event index: {event_ind}")
+        events = np.array(groups_list)[ext_link_index]
+        for ind, event in enumerate(events):
             timestamp = np.datetime64(file[event].attrs.__getitem__("Timestamp").decode('utf8'))
-            print(f"timestamp: {timestamp}")
-            if timestamp in timestamps:
-                # read features
-                timestamps_found.append(timestamp)
-                for feature_ind, feature in enumerate(feature_list):
-                    data_feature = file[event][feature][:]
-                    data_feature = scale_signal(data_feature, feature)
-                    ts_length = len(data_feature)
-                    # Interpolate if time series is not 3200 points
-                    if ts_length < 3200:
-                        x_low = np.linspace(0, 1, num=ts_length, endpoint=True)
-                        x_high = np.linspace(0, 1, num=3200, endpoint=True)
-                        interpolate = interp1d(x_low, data_feature, kind='linear')
-                        data_feature = interpolate(x_high)
-                    # Downsample by taking every 2nd sample
-                    # TODO: better way to do this?
-                    data_feature = data_feature[::2]
-                    data[np.where(timestamp == timestamps), :, feature_ind] = data_feature
+            # read features
+            timestamps_found.append(timestamp)
+            for feature_ind, feature in enumerate(feature_list):
+                data_feature = file[event][feature][:]
+                data_feature = scale_signal(data_feature, feature)
+                ts_length = len(data_feature)
+                # Interpolate if time series is not 3200 points
+                if ts_length < 3200:
+                    x_low = np.linspace(0, 1, num=ts_length, endpoint=True)
+                    x_high = np.linspace(0, 1, num=3200, endpoint=True)
+                    interpolate = interp1d(x_low, data_feature, kind='linear')
+                    data_feature = interpolate(x_high)
+                # Downsample by taking every 2nd sample
+                # TODO: better way to do this?
+                data_feature = data_feature[::2]
+                data[ind, :, feature_ind] = data_feature
 
     # Create xarray DataArray
     dim_names = ["event", "sample", "feature"]
@@ -189,14 +184,11 @@ def determine_followup(bd_label: np.ndarray, timestamp: np.ndarray, threshold: t
     is_followup = np.zeros_like(bd_label)
     ind_last_bd_in_20ms = 0
     for index in range(1, len(bd_label)):
-        print(bd_label[index])
         if bd_label[index]:
             if (ind_last_bd_in_20ms != 0) \
                     and ((timestamp[index] - timestamp[ind_last_bd_in_20ms]) < np.timedelta64(threshold, 's')):
                 is_followup[index] = True
             ind_last_bd_in_20ms = index
-            print(ind_last_bd_in_20ms)
-            print((timestamp[index] - timestamp[ind_last_bd_in_20ms]))
     return is_followup
 
 
