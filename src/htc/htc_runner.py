@@ -49,9 +49,7 @@ class HTCondorRunner:
             json.dump(hyperparameters, fp)
 
         # creating the master bash file
-        venv_exists = False
-        if "venv" in os.listdir():
-            venv_exists = True
+        venv_exists = "venv" in os.listdir()
 
         master_bash_filename = output_dir / "htc_run.sh"
         with open(master_bash_filename, 'w') as file:
