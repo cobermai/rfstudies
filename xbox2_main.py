@@ -36,11 +36,11 @@ def parse_input_arguments(args):
     parser.add_argument('--data_path', required=False, type=Path,
                         help='path of data',
                         default=Path(
-                            "/eos/project/m/ml-for-alarm-system/private/CLIC_data_transfert/Xbox2_hdf_new2/"))
+                            "/afs/cern.ch/work/h/hbovbjer/public/Xbox2_hdf_new2/"))
     parser.add_argument('--output_path', required=False, type=Path, help='path of data',
                         default=Path().absolute() / "src/output" / datetime.now().strftime("%Y-%m-%dT%H.%M.%S"))
     parser.add_argument('--dataset_name', required=False, type=str,
-                        help='name of data set', default="XBOX2EventAllBD20msSelect")
+                        help='name of data set', default="XBOX2EventFollowupBD20msSelect")
     parser.add_argument('--transform_to_hdf5', required=False, type=bool,
                         help="retransform from original files to hdf5 (True/False)p", default=False)
     parser.add_argument('--calculate_features', required=False, type=bool,
