@@ -1,3 +1,4 @@
+from pathlib import Path
 import numpy as np
 import h5py
 
@@ -46,3 +47,18 @@ def get_run_no(file: h5py.File):
     timestamps = file["Timestamp"]
     run_no = assign_run_no(timestamps)
     return run_no
+
+
+def get_event_timestamp_ext_link_index(ext_link_file: h5py.File, timestamps: np.ndarray):
+    # find name of groups to be read
+    groups_list = list(ext_link_file.keys())
+    timestamps_ext_link = []
+    for event_ind, event in enumerate(groups_list):
+        timestamps_ext_link.append(np.datetime64(ext_link_file[event].attrs.__getitem__("Timestamp").decode('utf8')))
+    timestamps_ext_link = np.array(timestamps_ext_link)
+    ext_link_index = np.empty_like(timestamps, dtype=int)
+    for index, timestamp in enumerate(timestamps):
+        ext_link_index[index] = np.where(timestamp == timestamps_ext_link)[0]
+    return ext_link_index
+
+

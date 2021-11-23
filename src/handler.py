@@ -14,6 +14,7 @@ from tqdm import tqdm
 from src.utils.handler_tools.context_data_creator import ContextDataCreator
 from src.utils.handler_tools.context_data_writer import ColumnWiseContextDataWriter, RowWiseContextDataWriter
 from src.utils.handler_tools.post_processing import get_run_no
+from src.utils.handler_tools.post_processing import get_event_timestamp_ext_link_index
 from src.utils.hdf_tools import hdf_path_combine, sort_by
 from src.xbox2_specific.feature_definition.attribute import get_event_attribute_features
 from src.xbox2_specific.feature_definition.event import get_event_data_features
@@ -102,7 +103,7 @@ class XBox2ContextDataCreator(ContextDataCreator):
     def feature_post_processing(self):
         """After the other features have been calculated, some new features will be added resulting from the ones
         already calculated."""
-        sort_by(self.dest_file_path, "Timestamp")
+        # sort_by(self.dest_file_path, "Timestamp")
         with h5py.File(self.dest_file_path, "r+") as file:
             clic_label = file["/clic_label"]
 
@@ -120,6 +121,12 @@ class XBox2ContextDataCreator(ContextDataCreator):
             file.create_dataset(name="is_bd_in_40ms", data=np.append(is_bd[2:], [False, False]))
             file.create_dataset(name="is_healthy", data=file["clic_label/is_healthy"])
             file.create_dataset(name="run_no", data=get_run_no(file))
+            timestamps = file["Timestamp"][:]
+            ext_link_file = h5py.File(self.ed_file_path, 'r')
+            file.create_dataset(name="event_ext_link_index",
+                                data=get_event_timestamp_ext_link_index(ext_link_file=ext_link_file,
+                                                                        timestamps=timestamps))
+            ext_link_file.close()
 
 
 if __name__ == "__main__":
