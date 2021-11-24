@@ -21,10 +21,10 @@ def transform(tdms_dir: Path, hdf_dir: Path) -> None:
     :param tdms_dir: input directory with tdms files
     :param hdf_dir: output directory with hdf files
     """
-    cpu_count = psutil.cpu_count(logical=False)
 
     Path(hdf_dir, "data").mkdir(parents=False, exist_ok=True)
 
+    cpu_count = psutil.cpu_count(logical=False)
     # read tdms files, convert them to hdf5 and write them into hdf_dir/data/
     Convert(check_already_converted=True, num_processes=cpu_count) \
         .from_tdms(tdms_dir) \
@@ -32,8 +32,22 @@ def transform(tdms_dir: Path, hdf_dir: Path) -> None:
 
     # combine all Events and TrendData sets into one hdf5 file with external links if the time series segments
     # are healthy
+    create_trend_ext_link(hdf_dir=hdf_dir)
+    create_event_ext_link(hdf_dir=hdf_dir)
 
+
+def create_trend_ext_link(hdf_dir: Path):
+    """
+    Function that creates hdf5 file with external links to trend data
+    :param hdf_dir: path to raw data converted to hdf
+    """
     def td_func_to_fulfill(file_path: Path, hdf_path: str) -> bool:
+        """
+        Function for validating the correctness of event data groups
+        :param file_path: path of trend data hdf5 files
+        :param hdf_path: hdf5 path of event group
+        :return: bool that specifies whether the event group has passed the validation
+        """
         with h5py.File(file_path, "r") as file:
             grp = file[hdf_path]
             ch_shapes = [ch.shape[0] for ch in grp.values()]
@@ -41,11 +55,24 @@ def transform(tdms_dir: Path, hdf_dir: Path) -> None:
             num_of_samples = 35
             return len_equal and len(ch_shapes) == num_of_samples
 
+    cpu_count = psutil.cpu_count(logical=False)
     Gatherer(if_fulfills=td_func_to_fulfill, on_error=False, num_processes=cpu_count)\
         .gather(src_file_paths=hdf_dir.glob("data/Trend*.hdf"),
                 dest_file_path=hdf_dir / "TrendDataExtLinks.hdf")
 
+
+def create_event_ext_link(hdf_dir: Path):
+    """
+    Function that creates hdf5 file with external links to event data
+    :param hdf_dir: path to raw data converted to hdf
+    """
     def ed_func_to_fulfill(file_path: Path, hdf_path: str) -> bool:
+        """
+        Function for validating the correctness of event data groups
+        :param file_path: path of event data hdf5 files
+        :param hdf_path: hdf5 path of event group
+        :return: bool that specifies whether the event group has passed the validation
+        """
         with h5py.File(file_path, "r") as file:
             grp = file[hdf_path]
             ch_len = [ch.shape[0] for ch in grp.values()]
@@ -70,6 +97,7 @@ def transform(tdms_dir: Path, hdf_dir: Path) -> None:
                 and ch_len.count(num_of_values_ni5761) == number_of_signals_monitored_with_ni5761 \
                 and not any(has_smelly_values(ch[:]) for ch in grp.values())
 
+    cpu_count = psutil.cpu_count(logical=False)
     Gatherer(if_fulfills=ed_func_to_fulfill, on_error=False, num_processes=cpu_count)\
         .gather(src_file_paths=hdf_dir.glob("data/EventData*.hdf"),
                 dest_file_path=hdf_dir / "EventDataExtLinks.hdf")
