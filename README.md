@@ -1,3 +1,5 @@
+![Framework overview](docu/ml_framework_overview.png)
+
 # Machine Learning Framework ( = mlframework)
 ## INTRODUCTION
 
