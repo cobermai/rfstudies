@@ -10,7 +10,7 @@ from src.handler import XBox2ContextDataCreator
 from src.model.classifier import Classifier
 from src.transformation import transform
 from src.utils.dataset_creator import load_dataset
-from src.utils.dataset_creator import da_to_numpy_for_ml
+from src.utils.dataset_creator import data_array_to_numpy
 from src.utils import hdf_tools
 from src.datasets.ECG200 import ECG200
 from src.model.explainer import explain_samples
@@ -125,7 +125,7 @@ if __name__ == '__main__':
 
     train, valid, test = load_dataset(creator=ECG200(),
                                       data_path=args_in.data_path)
-    train_numpy, valid_numpy, test_numpy = da_to_numpy_for_ml(train=train, valid=valid, test=test)
+    train_numpy, valid_numpy, test_numpy = data_array_to_numpy(train=train, valid=valid, test=test)
     clf = modeling(train_set=train_numpy, valid_set=valid_numpy, test_set=test_numpy,
                    param_dir=args_in.file_path / "src/model" / args_in.param_name, output_dir=args_in.output_path)
 
