@@ -7,7 +7,7 @@
 
 This framework serves as a template for machine learning for failure prediction use cases.
 It contains domain specific and domain independent building blocks.
-An example use case is given for predicting breakdowns in CLIC RF cavities [1].
+Two example use cases are given for predicting breakdowns in CLIC RF cavities [1] and to classify heartbeats [2].
 
 1) **Domain Specific: Transformation**:
    * Data Reader: reading of source data from input sources (e.g. LabVIEW)
@@ -126,3 +126,4 @@ Repository structure
 
 ### References
 [1]  C. Obermair et al., “Machine Learning Models for Breakdown Prediction in RF Cavities for Accelerators,” in Proc. IPAC’21, 2021, no. 12, pp. 1068–1071, Available: https://jacow.org/ipac2021/papers/mopab344.pdf.
+[2]  R. T. Olszewski, Generalized feature extraction for structural pattern recognition in time-series data. Carnegie Mellon University, 2001.
