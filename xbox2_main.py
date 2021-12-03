@@ -12,15 +12,10 @@ from src.handler import XBox2ContextDataCreator
 from src.model.classifier import Classifier
 from src.transformation import transform
 from src.utils.dataset_creator import load_dataset
-from src.utils.dataset_creator import da_to_numpy_for_ml
+from src.utils.dataset_creator import data_array_to_numpy
 from src.utils import hdf_tools
 from src.utils.logging_tools import log_to_csv
-from src.xbox2_specific.datasets.XBOX2_event_all_bd_20ms import XBOX2EventAllBD20msSelect
-from src.xbox2_specific.datasets.XBOX2_event_primo_bd_20ms import XBOX2EventPrimoBD20msSelect
-from src.xbox2_specific.datasets.XBOX2_event_followup_bd_20ms import XBOX2EventFollowupBD20msSelect
-from src.xbox2_specific.datasets.XBOX2_trend_all_bd_20ms import XBOX2TrendAllBD20msSelect
-from src.xbox2_specific.datasets.XBOX2_trend_primo_bd_20ms import XBOX2TrendPrimoBD20msSelect
-from src.xbox2_specific.datasets.XBOX2_trend_followup_bd_20ms import XBOX2TrendFollowupBD20msSelect
+from src import datasets
 from src.model.explainer import explain_samples
 from src.model.sample_explainers.gradient_shap import ShapGradientExplainer
 
@@ -111,17 +106,17 @@ if __name__ == '__main__':
         feature_handling(work_dir=args_in.data_path)
 
     if args_in.dataset_name == "XBOX2EventAllBD20msSelect":
-        dataset_creator = XBOX2EventAllBD20msSelect()
+        dataset_creator = datasets.XBOX2EventAllBD20msSelect()
     elif args_in.dataset_name == "XBOX2EventPrimoBD20msSelect":
-        dataset_creator = XBOX2EventPrimoBD20msSelect()
+        dataset_creator = datasets.XBOX2EventPrimoBD20msSelect()
     elif args_in.dataset_name == "XBOX2EventFollowupBD20msSelect":
-        dataset_creator = XBOX2EventFollowupBD20msSelect()
+        dataset_creator = datasets.XBOX2EventFollowupBD20msSelect()
     elif args_in.dataset_name == "XBOX2TrendAllBD20msSelect":
-        dataset_creator = XBOX2TrendAllBD20msSelect()
+        dataset_creator = datasets.XBOX2TrendAllBD20msSelect()
     elif args_in.dataset_name == "XBOX2TrendPrimoBD20msSelect":
-        dataset_creator = XBOX2TrendPrimoBD20msSelect()
+        dataset_creator = datasets.XBOX2TrendPrimoBD20msSelect()
     elif args_in.dataset_name == "XBOX2TrendFollowupBD20msSelect":
-        dataset_creator = XBOX2TrendFollowupBD20msSelect()
+        dataset_creator = datasets.XBOX2TrendFollowupBD20msSelect()
     else:
         raise AssertionError("Dataset name does not exist")
 
@@ -129,7 +124,7 @@ if __name__ == '__main__':
                                       data_path=args_in.data_path,
                                       manual_split=args_in.manual_split,
                                       manual_scale=args_in.manual_scale)
-    train_numpy, valid_numpy, test_numpy = da_to_numpy_for_ml(train, valid, test)
+    train_numpy, valid_numpy, test_numpy = data_array_to_numpy(train, valid, test)
 
     clf = modeling(train_set=train_numpy, valid_set=valid_numpy, test_set=test_numpy,
                    hp_path=args_in.hyperparameter_path, output_dir=args_in.output_path)

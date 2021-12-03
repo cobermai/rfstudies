@@ -121,10 +121,10 @@ class Classifier:
         :param y: one hot encoded labels of train set
         return: dict with class weight for each label
         """
-        y_integers = np.argmax(y, axis=1)
+        label_indices = np.argmax(y, axis=1)
         class_weights = class_weight.compute_class_weight(class_weight='balanced',
-                                                          classes=np.unique(y_integers),
-                                                          y=y_integers)
+                                                          classes=np.unique(label_indices),
+                                                          y=label_indices)
         class_weights_dict = dict(enumerate(class_weights))
         return class_weights_dict
 

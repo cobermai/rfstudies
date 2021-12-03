@@ -104,7 +104,7 @@ def test_da_to_numpy_for_ml():
 
     train, valid, test = data(X, y, idx), data(X, y, idx), data(X, y, idx)
     # ACT
-    train_out, valid_out, test_out = dataset_creator.da_to_numpy_for_ml(train, valid, test)
+    train_out, valid_out, test_out = dataset_creator.data_array_to_numpy(train, valid, test)
 
     # ASSERT
     assert (train_out.X == data_expected).all()
