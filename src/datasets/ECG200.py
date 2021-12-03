@@ -29,10 +29,10 @@ class ECG200(DatasetCreator):
         """
 
         def read_arff(file_path: Path, encoding: str):
-            f = open(file_path, 'rt', encoding=encoding)
-            data = f.read()
-            f.close()
-            stream = StringIO(data)
+            with open(file_path, 'rt', encoding=encoding) as f:
+                data_read = f.read()
+
+            stream = StringIO(data_read)
             return arff.loadarff(stream)
 
         data_train = read_arff(data_path / "ECG200_TRAIN.arff", encoding="utf-8")
@@ -40,20 +40,20 @@ class ECG200(DatasetCreator):
 
         data_train_list = data_train[0]
         data_train_array = np.empty(shape=(len(data_train_list), (len(data_train_list[0]))))
-        for ind, signal in enumerate(data_train_list):
-            data_train_array[ind, :] = list(signal)
-        ind_train = list(range(len(data_train_list)))
+        for index, signal in enumerate(data_train_list):
+            data_train_array[index, :] = list(signal)
+        index_train = list(range(len(data_train_list)))
 
         data_test_list = data_test[0]
         data_test_array = np.empty(shape=(len(data_test_list), (len(data_test_list[0]))))
-        for ind, signal in enumerate(data_test_list):
-            data_test_array[ind, :] = list(signal)
-        ind_test = list(range(ind_train[-1] + 1, ind_train[-1] + 1 + len(data_train_list)))
+        for index, signal in enumerate(data_test_list):
+            data_test_array[index, :] = list(signal)
+        index_test = list(range(index_train[-1] + 1, index_train[-1] + 1 + len(data_train_list)))
 
         data = np.concatenate([data_train_array, data_test_array])
 
         is_train = np.ones(shape=(len(data)), dtype=bool)
-        is_train[ind_test] = False
+        is_train[index_test] = False
 
         data_array = xr.DataArray(data=data,
                                   dims=["event", "sample"])
@@ -69,7 +69,8 @@ class ECG200(DatasetCreator):
         :param data_array: xarray DataArray with data
         :return: xarray DataArray with features of selected events
         """
-        X_data_array = data_array[:, 0:96]
+        # Select all data but last columns which are labels
+        X_data_array = data_array[:, :-1]
         return X_data_array
 
     @staticmethod
@@ -79,7 +80,9 @@ class ECG200(DatasetCreator):
         :param data_array: xarray data array of data from selected events
         :return: labels of selected events
         """
+        # Select last columns which are class labels
         y_data_array = data_array[:, -1]
+        # Set reassign label -1 to 0
         y_data_array[y_data_array == -1] = 0
         return y_data_array
 
@@ -93,7 +96,7 @@ class ECG200(DatasetCreator):
         :param X_data_array: input data array of shape (event, sample, feature)
         :param y_data_array: output data array of shape (event)
         :param splits: tuple specifying splitting fractions (training, validation, test)
-        :param manual_split: tuple of lists specifying which runs to put in different sets (train, valid, test).
+        :param manual_split: inherited from superclass but unused
         :return: Tuple with data of type named tuple
         """
         idx = np.arange(len(X_data_array))
@@ -125,7 +128,7 @@ class ECG200(DatasetCreator):
         :param train: data for training of type named tuple
         :param valid: data for validation of type named tuple
         :param test: data for testing of type named tuple
-        :param manual_scale: list that specifies groups which are scaled separately
+        :param manual_scale: inherited from superclass but unused
         :return: train, valid, test: Tuple with data of type named tuple
         """
         mean = train.X.mean()
