@@ -131,7 +131,7 @@ def test__train_valid_test_split():
     X_data_array = dummy_data_array.drop_vars("is_bd_in_20ms")
     y_data_array = dummy_data_array["is_bd_in_20ms"]
 
-    splits_expected = (0.7, 0.20, 0.10)
+    splits_expected = (0.7, 0.2, 0.1)
     manual_split = None
     # ACT
     train_out, valid_out, test_out = selector.train_valid_test_split(X_data_array, y_data_array,
