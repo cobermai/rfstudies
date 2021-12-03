@@ -5,8 +5,9 @@
 
 ![Framework overview](docu/ml_framework_overview.png)
 
-This framework serves as a template for machine learning for failure prediction use cases. 
+This framework serves as a template for machine learning for failure prediction use cases.
 It contains domain specific and domain independent building blocks.
+An example use case is given for predicting breakdowns in CLIC RF cavities [1].
 
 1) **Domain Specific: Transformation**:
    * Data Reader: reading of source data from input sources (e.g. LabVIEW)
@@ -122,3 +123,6 @@ Repository structure
 ├── xbox2_main.py                   < the main runfile for using xbox2 data
 └── ECG200_main.py                  < the main runfile for using ECG200 data
 ```
+
+### References
+[1]  C. Obermair et al., “Machine Learning Models for Breakdown Prediction in RF Cavities for Accelerators,” in Proc. IPAC’21, 2021, no. 12, pp. 1068–1071, Available: https://jacow.org/ipac2021/papers/mopab344.pdf.
