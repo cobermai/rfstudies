@@ -118,15 +118,15 @@ class XBOX2EventAllBD20msSelect(DatasetCreator):
 
             idx = np.arange(len(X_data_array["event"]))
 
-            X_train = X_data_array[X_data_array["run_no"].isin(train_runs)]
-            y_train = y_data_array[y_data_array["run_no"].isin(train_runs)]
-            idx_train = idx[X_data_array["run_no"].isin(train_runs)]
-            X_valid = X_data_array[X_data_array["run_no"].isin(valid_runs)]
-            y_valid = y_data_array[y_data_array["run_no"].isin(valid_runs)]
-            idx_valid = idx[X_data_array["run_no"].isin(valid_runs)]
-            X_test = X_data_array[X_data_array["run_no"].isin(test_runs)]
-            y_test = y_data_array[y_data_array["run_no"].isin(test_runs)]
-            idx_test = idx[X_data_array["run_no"].isin(test_runs)]
+            def get_data_in_runs(X: xr.DataArray, y: xr.DataArray, idx: np.ndarray, runs):
+                X_in_runs = X[X["run_no"].isin(runs)]
+                y_in_runs = y[y["run_no"].isin(runs)]
+                idx_in_runs = idx[X["run_no"].isin(runs)]
+                return X_in_runs, y_in_runs, idx_in_runs
+
+            X_train, y_train, idx_train = get_data_in_runs(X_data_array, y_data_array, idx, train_runs)
+            X_valid, y_valid, idx_valid = get_data_in_runs(X_data_array, y_data_array, idx, valid_runs)
+            X_test, y_test, idx_test = get_data_in_runs(X_data_array, y_data_array, idx, test_runs)
 
         train = data(X_train, y_train, idx_train)
         valid = data(X_valid, y_valid, idx_valid)
@@ -146,17 +146,22 @@ class XBOX2EventAllBD20msSelect(DatasetCreator):
         :param manual_scale: list that specifies groups which are scaled separately
         :return: train, valid, test: Tuple with data of type named tuple
         """
+
+        def standard_scale(X, axis=1):
+            """
+            Function for standard scaling array data
+            :param X: numpy-like array with data to be scaled
+            :return: array with standard scaled values
+            """
+            mean = np.mean(X, axis=axis)
+            std = np.std(X, axis=axis)
+            return (X - mean) / std
+
         if manual_scale is None:
             # standard scale training, valid and test separately. Scaling is done for each signal.
-            mean = np.mean(train.X, axis=1)
-            std = np.std(train.X, axis=1)
-            train_X_scaled = (train.X - mean) / std
-            mean = np.mean(valid.X, axis=1)
-            std = np.std(valid.X, axis=1)
-            valid_X_scaled = (valid.X - mean) / std
-            mean = np.mean(test.X, axis=1)
-            std = np.std(test.X, axis=1)
-            test_X_scaled = (test.X - mean) / std
+            train_X_scaled = standard_scale(train.X, axis=1)
+            valid_X_scaled = standard_scale(valid.X, axis=1)
+            test_X_scaled = standard_scale(test.X, axis=1)
 
             train = train._replace(X=train_X_scaled)
             valid = valid._replace(X=valid_X_scaled)
@@ -172,26 +177,19 @@ class XBOX2EventAllBD20msSelect(DatasetCreator):
             test_X_scaled = test_X
 
             # standard scale each run included in manual scale separately
-            for i in manual_scale:
-                if any(train_X["run_no"] == i):
-                    train_X_i = train_X[train_X["run_no"] == i]
-                    mean_train = np.mean(train_X_i, axis=0)
-                    std_train = np.std(train_X_i, axis=0)
-                    train_X_i_scaled = (train_X_i - mean_train) / std_train
-                    train_X_scaled[train_X["run_no"] == i] = train_X_i_scaled
-                if any(valid_X["run_no"] == i):
-                    valid_X_i = valid_X[valid_X["run_no"] == i]
-                    mean_valid = np.mean(valid_X_i, axis=0)
-                    std_valid = np.std(valid_X_i, axis=0)
-                    valid_X_i_scaled = (valid_X_i - mean_valid) / std_valid
-                    valid_X_scaled[valid_X["run_no"] == i] = valid_X_i_scaled
-                if any(test_X["run_no"] == i):
-                    test_X_i = test_X[test_X["run_no"] == i]
-                    mean_test = np.mean(test_X_i, axis=0)
-                    std_test = np.std(test_X_i, axis=0)
-                    test_X_i_scaled = (test_X_i - mean_test) / std_test
-                    test_X_scaled[test_X["run_no"] == i] = test_X_i_scaled
-
+            for run in manual_scale:
+                if any(train_X["run_no"] == run):
+                    train_X_run = train_X[train_X["run_no"] == run]
+                    train_X_run_scaled = standard_scale(train_X_run, axis=0)
+                    train_X_scaled[train_X["run_no"] == run] = train_X_run_scaled
+                if any(valid_X["run_no"] == run):
+                    valid_X_run = valid_X[valid_X["run_no"] == run]
+                    valid_X_run_scaled = standard_scale(valid_X_run, axis=0)
+                    valid_X_scaled[valid_X["run_no"] == run] = valid_X_run_scaled
+                if any(test_X["run_no"] == run):
+                    test_X_run = test_X[test_X["run_no"] == run]
+                    test_X_run_scaled = standard_scale(test_X_run, axis=0)
+                    test_X_scaled[test_X["run_no"] == run] = test_X_run_scaled
             train = train._replace(X=train_X_scaled)
             valid = valid._replace(X=valid_X_scaled)
             test = test._replace(X=test_X_scaled)
@@ -207,17 +205,22 @@ class XBOX2EventAllBD20msSelect(DatasetCreator):
         :param test: data for testing with type named tuple which has attributes X, y and idx
         :return: train, valid, test: Tuple containing data with type named tuple which has attributes X, y and idx
         """
-        n_labels = len(np.unique(train.y))
-        train_y_one_hot = train.y.expand_dims({"dummy": n_labels}, axis=1)
-        train_y_one_hot.values = one_hot(train.y, n_labels)
-        valid_y_one_hot = valid.y.expand_dims({"dummy": n_labels}, axis=1)
-        valid_y_one_hot.values = one_hot(valid.y, n_labels)
-        test_y_one_hot = test.y.expand_dims({"dummy": n_labels}, axis=1)
-        test_y_one_hot.values = one_hot(test.y, n_labels)
+        def expand_and_onehot(y: xr.DataArray):
+            """
+            :param y: array of class labels
+            :return: namedtuples train, valid and test with onehot encoded y
+            """
+            n_labels = len(np.unique(y))
+            y_one_hot = y.expand_dims({"dummy": n_labels}, axis=1)
+            y_one_hot.values = one_hot(y, n_labels)
+            return y_one_hot
+
+        train_y_one_hot = expand_and_onehot(train.y)
+        valid_y_one_hot = expand_and_onehot(valid.y)
+        test_y_one_hot = expand_and_onehot(test.y)
 
         train = train._replace(y=train_y_one_hot)
         valid = valid._replace(y=valid_y_one_hot)
         test = test._replace(y=test_y_one_hot)
 
         return train, valid, test
-
