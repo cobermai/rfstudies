@@ -132,7 +132,8 @@ def event_ext_link_hdf_to_da_timestamp(file_path: Path, ext_link_index: np.ndarr
                 data_feature = scale_signal(data_feature, feature)
                 ts_length = len(data_feature)
                 # Interpolate if time series is not 3200 points
-                if ts_length < 3200:
+                standard_signal_length = 3200
+                if ts_length < standard_signal_length:
                     x_low = np.linspace(0, 1, num=ts_length, endpoint=True)
                     x_high = np.linspace(0, 1, num=3200, endpoint=True)
                     interpolate = interp1d(x_low, data_feature, kind='linear')
