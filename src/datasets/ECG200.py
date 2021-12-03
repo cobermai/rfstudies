@@ -24,7 +24,7 @@ class ECG200(DatasetCreator):
     def select_events(data_path: Path) -> xr.DataArray:
         """
         selection of events in data
-        :param data_path: path to context data file
+        :param data_path: path to "ECG200_TRAIN.arff" and "ECG200_TEST.arff" file
         :return: data array with data of selected events
         """
 
