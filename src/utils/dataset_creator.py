@@ -100,11 +100,13 @@ def load_dataset(creator: DatasetCreator,
     return train, valid, test
 
 
-def da_to_numpy_for_ml(train, valid, test) -> tuple:
+def data_array_to_numpy(train: data, valid: data, test: data) -> tuple:
     """
     Function that takes raw values of xarray, replaces NaN with zero and infinity with large finite numbers
-    :param data_array: xarray DataArray
-    :return: numpy array ready for machine learning algorithms
+    :param train: namedtuple (X, y, idx) where X and y are xarray DataArrays
+    :param valid: namedtuple (X, y, idx) where X and y are xarray DataArrays
+    :param test: namedtuple (X, y, idx) where X and y are xarray DataArrays
+    :return: train, valid, test with X and y convereted to numpy arrays
     """
     train_X = np.nan_to_num(train.X.values)
     train_y = np.nan_to_num(train.y.values)
