@@ -40,7 +40,7 @@ def assign_run_no(timestamps: np.datetime64):
 
 def get_run_no(file: h5py.File):
     """
-    returns the run_number of timestamps in hdf file
+    Returns the run_number of timestamps in hdf file
     :param file: an h5py.File
     :return: array with assigned run numbers
     """
@@ -50,6 +50,12 @@ def get_run_no(file: h5py.File):
 
 
 def get_event_timestamp_ext_link_index(ext_link_file: h5py.File, timestamps: np.ndarray):
+    """
+    Function which generates an index map from timestamps to index in external link file
+    :param ext_link_file: external link file as h5py.File object
+    :param timestamps: array of timestamps
+    :return: map of indexes in timestamps to indexes in ext_link_file
+    """
     # find name of groups to be read
     groups_list = list(ext_link_file.keys())
     timestamps_ext_link = []
