@@ -28,7 +28,7 @@ def gather_csv(output_file_path: Path, input_file_regex: str):
     :param input_file_regex: regex string to load data from
     """
     files = sorted(glob.glob(input_file_regex))
-    if len(files) > 0:
+    if files:
         df = pd.concat(map(pd.read_csv, files))
     else:
         df = pd.read_csv(files)
