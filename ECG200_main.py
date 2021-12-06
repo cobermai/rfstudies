@@ -84,7 +84,7 @@ def modeling(train_set, valid_set, test_set, param_dir: Path, output_dir: Path, 
     return clf
 
 
-def explanation(classifier, train_set, valid_set, test_set, output_dir: Path):
+def explanation(classifier, train_set, test_set, output_dir: Path):
 
     def plot_importance(X_to_explain, y_pred, explanation):
         cmap = mpl.colors.LinearSegmentedColormap.from_list('shap', [mpl.cm.cool(0), (1, 1, 1, 1), mpl.cm.cool(256)],
@@ -134,5 +134,5 @@ if __name__ == '__main__':
     results.to_csv("results.csv", index=False)
 
     y_pred = clf.model.predict(x=test_numpy.X)
-    explanation(classifier=clf, train_set=train_numpy, valid_set=valid_numpy, test_set=test_numpy,
+    explanation(classifier=clf, train_set=train_numpy, test_set=test_numpy,
                 output_dir=args_in.output_path)
