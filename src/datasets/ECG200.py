@@ -43,20 +43,20 @@ class ECG200(DatasetCreator):
         data_train_array = np.empty(shape=(len(data_train_list), (len(data_train_list[0]))))
         for index, signal in enumerate(data_train_list):
             data_train_array[index, :] = list(signal)
-        index_train = list(range(len(data_train_list)))
+        index_train = np.arange(len(data_train_list))
 
         data_test_list = data_test[0]
         data_test_array = np.empty(shape=(len(data_test_list), (len(data_test_list[0]))))
         for index, signal in enumerate(data_test_list):
             data_test_array[index, :] = list(signal)
-        index_test = list(range(index_train[-1] + 1, index_train[-1] + 1 + len(data_train_list)))
+        index_test = np.arange(len(index_train), len(index_train) + len(data_test_list))
 
-        data = np.concatenate([data_train_array, data_test_array])
+        data_combined = np.concatenate([data_train_array, data_test_array])
 
-        is_train = np.ones(shape=(len(data)), dtype=bool)
+        is_train = np.ones(shape=(len(data_combined)), dtype=bool)
         is_train[index_test] = False
 
-        data_array = xr.DataArray(data=data,
+        data_array = xr.DataArray(data=data_combined,
                                   dims=["event", "sample"])
 
         data_array = data_array.assign_coords(is_train=("event", is_train))
@@ -70,7 +70,7 @@ class ECG200(DatasetCreator):
         :param data_array: xarray DataArray with data
         :return: xarray DataArray with features of selected events
         """
-        # Select all data but last columns which are labels
+        # Select all data but last column which is labels
         X_data_array = data_array[:, :-1]
         return X_data_array
 
@@ -81,7 +81,7 @@ class ECG200(DatasetCreator):
         :param data_array: xarray data array of data from selected events
         :return: labels of selected events
         """
-        # Select last columns which are class labels
+        # Select last column which is the class labels
         y_data_array = data_array[:, -1]
         # Set reassign label -1 to 0
         y_data_array[y_data_array == -1] = 0
@@ -96,7 +96,7 @@ class ECG200(DatasetCreator):
         can be overwritten in the concrete dataset selection.
         :param X_data_array: input data array of shape (event, sample, feature)
         :param y_data_array: output data array of shape (event)
-        :param splits: tuple specifying splitting fractions (training, validation, test)
+        :param splits: inherited from superclass but unused
         :param manual_split: inherited from superclass but unused
         :return: Tuple with data of type named tuple
         """
