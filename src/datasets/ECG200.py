@@ -18,6 +18,7 @@ class ECG200(DatasetCreator):
     """
     Subclass of DatasetCreator to specify dataset selection. None of the abstract functions from abstract class can
     be overwritten.
+    For more information about the dataset visit http://www.timeseriesclassification.com/description.php?Dataset=ECG200
     """
 
     @staticmethod
