@@ -21,7 +21,8 @@ REQUIREMENTS: dict = {
         'tensorflow>=2.5.0',
         'shap',
         'pydot',
-        'xarray'
+        'xarray',
+        'matplotlib'
     ],
     'test': [
         'pytest',

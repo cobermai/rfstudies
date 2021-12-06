@@ -18,3 +18,4 @@ psutil>=5.8.0
 setuptools>=57.0.0
 pydot>=1.4.2
 graphviz>=0.18
+matplotlib>=3.4.3
