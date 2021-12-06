@@ -8,9 +8,8 @@ from datetime import datetime
 import logging
 import json
 import os
-from pathlib import Path
 
-hyperparameters = {
+default_hyperparameters = {
     "classifier_name": "fcn",
     "num_classes": 2,
     "monitor": "loss",
@@ -24,10 +23,12 @@ hyperparameters = {
     "min_lr": 0.0001
 }
 
+
 class HTCondorRunner:
     """
     class used to run simulations on a cluster interfaced by HTCondor
     """
+
     @staticmethod
     def run(hyperparameters,
             dataset_name=None,
@@ -39,7 +40,6 @@ class HTCondorRunner:
         2) submitting all the analysis in one job, requesting as many cores as analysis
         """
         work_dir = Path.cwd().parent.parent
-        htc_dir = work_dir / "src/htc"
         output_dir = work_dir / "src/output" / datetime.now().strftime("%Y-%m-%dT%H.%M.%S")
         output_dir.mkdir(parents=True, exist_ok=True)
         main_name = "xbox2_main.py"
@@ -99,8 +99,9 @@ class HTCondorRunner:
         logging.debug(f"Executing HTCondor command {command}")
         os.system(command)
 
+
 if __name__ == '__main__':
     HTCondorRunner().run(
-        hyperparameters=hyperparameters,
+        hyperparameters=default_hyperparameters,
         manual_split="([1, 7, 2, 4, 9, 5], [6, 8], [3])",
         manual_scale="[1, 2, 3, 4, 5, 6, 7, 8, 9]")
