@@ -25,13 +25,13 @@ hyperparameters = {
 
 def sensitivity():
     # For leave one out crossval with runs
-    run_pairs = [[1, 7], [2], [4, 9], [5], [6, 8]]
+    run_groups = [[1, 7], [2], [4, 9], [5], [6, 8]]
     train_runs = []
     val_runs = []
     test_runs = []
-    for i, pair in enumerate(run_pairs):
-        train_runs.append(sum([r for r in run_pairs if r != pair], []))
-        val_runs.append(pair)
+    for i, group in enumerate(run_groups):
+        train_runs.append(sum([r for r in run_groups if r != group], []))
+        val_runs.append(group)
         test_runs.append([3])
 
     # Set parameter grid
@@ -60,7 +60,7 @@ def sensitivity():
         hyperparameters["classifier_name"] = row["model"]
 
         if "Trend" in str(row["datasets"]):
-            scale_by_run = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+            scale_by_run = list(np.arange(1, 10))
         else:
             scale_by_run = None
 
