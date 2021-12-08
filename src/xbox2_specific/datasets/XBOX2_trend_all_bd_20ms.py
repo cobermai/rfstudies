@@ -15,7 +15,6 @@ class XBOX2TrendAllBD20msSelect(XBOX2Abstract):
     Subclass of XBOX2Abstract to specify dataset selection. None of the abstract functions from abstract class can
     be overwritten.
     """
-
     @staticmethod
     def select_events(data_path: Path) -> list:
         """
@@ -63,20 +62,20 @@ class XBOX2TrendAllBD20msSelect(XBOX2Abstract):
             trend_selection = np.in1d(trend_timestamp, timestamp_trend_selection)
 
             # Create filter for selecting two previous trend data
-            trend_selection_one_before = dataset_utils.shift_values(trend_selection, -1, fill_value=False)
-            trend_selection_two_before = dataset_utils.shift_values(trend_selection, -2, fill_value=False)
+            trend_selection_one_before = dataset_utils.shift_values(np.array(trend_selection), -1, fill_value=False)
+            trend_selection_two_before = dataset_utils.shift_values(np.array(trend_selection), -2, fill_value=False)
 
             # Read selected features
-            data = np.empty(shape=(sum(trend_selection), 3, len(feature_list)))
+            data_read = np.empty(shape=(np.sum(trend_selection), 3, len(feature_list)))
             for feature_ind, feature in enumerate(feature_list):
-                data[:, 0, feature_ind] = dataset_utils.read_hdf_dataset(file, feature)[trend_selection_two_before]
-                data[:, 1, feature_ind] = dataset_utils.read_hdf_dataset(file, feature)[trend_selection_one_before]
-                data[:, 2, feature_ind] = dataset_utils.read_hdf_dataset(file, feature)[trend_selection]
+                data_read[:, 0, feature_ind] = dataset_utils.read_hdf_dataset(file, feature)[trend_selection_two_before]
+                data_read[:, 1, feature_ind] = dataset_utils.read_hdf_dataset(file, feature)[trend_selection_one_before]
+                data_read[:, 2, feature_ind] = dataset_utils.read_hdf_dataset(file, feature)[trend_selection]
 
         # Create xarray DataArray
         dim_names = ["event", "sample", "feature"]
         feature_names = [feature.replace("/", "__").replace(" ", "_") for feature in feature_list]
-        data_array = xr.DataArray(data=data,
+        data_array = xr.DataArray(data=data_read,
                                   dims=dim_names,
                                   coords={"feature": feature_names})
         # add label to data_array

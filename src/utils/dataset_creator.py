@@ -106,7 +106,7 @@ def data_array_to_numpy(train: data, valid: data, test: data) -> tuple:
     :param train: namedtuple (X, y, idx) where X and y are xarray DataArrays
     :param valid: namedtuple (X, y, idx) where X and y are xarray DataArrays
     :param test: namedtuple (X, y, idx) where X and y are xarray DataArrays
-    :return: train, valid, test with X and y convereted to numpy arrays
+    :return: train, valid, test with X and y converted to numpy arrays
     """
     train_X = np.nan_to_num(train.X.values)
     train_y = np.nan_to_num(train.y.values)

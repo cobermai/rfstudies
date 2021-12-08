@@ -1,11 +1,11 @@
 from pathlib import Path
 import typing
-from itertools import compress
 import h5py
 import numpy as np
 import pandas as pd
 import xarray as xr
 from scipy.interpolate import interp1d
+from typing import List
 
 
 def read_hdf_dataset(file: h5py.File, key: str):
@@ -76,13 +76,6 @@ def select_events_from_list(context_data_file_path: Path, selection_list: typing
 
         selection = bd_selection & stable_run  # selected breakdowns
 
-        # make sure no potential breakdowns are selected
-        # dc_up_threshold_reached = read_hdf_dataset(file, "dc_up_threshold_reached")
-        # dc_down_threshold_reached = read_hdf_dataset(file, "dc_down_threshold_reached")
-        # dc_up_threshold_reached_one_before = shift_values(dc_up_threshold_reached, 2, fill_value=False)
-        # dc_down_threshold_reached_one_before = shift_values(dc_down_threshold_reached, 2, fill_value=False)
-        # selection = selection & (~dc_up_threshold_reached_one_before | ~dc_down_threshold_reached_one_before)
-
         # load timestamps for filtering healthy events
         event_timestamps = read_hdf_dataset(file, "Timestamp")
         trend_timestamp = read_hdf_dataset(file, "PrevTrendData/Timestamp")
@@ -100,7 +93,7 @@ def select_events_from_list(context_data_file_path: Path, selection_list: typing
         PSI_amplitude_event = read_hdf_dataset(file, "PSI Amplitude/pulse_amplitude")
         PSI_amplitude_event_recomputed = (scaling_coeff1 * PSI_amplitude_event) + \
                                          (scaling_coeff2 * (PSI_amplitude_event ** 2))
-        PSI_filter_threshold = 650000  # defined by Lee 08.06.2020
+        PSI_filter_threshold = 650000  # defined by XBOX2 expert William Lee Millar 08.06.2020
         PSI_amplitude_filter = PSI_amplitude_event_recomputed > PSI_filter_threshold
         selection = selection & PSI_amplitude_filter
 
@@ -214,7 +207,7 @@ def scale_signal(signal, feature_name):
         coeff0 = 0
         coeff1 = -1317300
         coeff2 = 7.8582e7
-        return coeff0 + (coeff1*signal) + (coeff2*(signal**2))
+        return coeff0 + (coeff1 * signal) + (coeff2 * (signal ** 2))
     elif feature_name == "PSR Amplitude":
         return signal  # no scaling
     elif feature_name == "PKI Amplitude":
@@ -226,3 +219,20 @@ def scale_signal(signal, feature_name):
         return signal  # no scaling
     elif feature_name == "DC Down":
         return signal  # no scaling
+
+
+def read_features_from_selection(data_path: Path, feature_list: List[str], selection: List[bool]) -> xr.DataArray:
+    with h5py.File(data_path / "context.hdf", 'r') as file:
+        ext_link_index = read_hdf_dataset(file, "event_ext_link_index")[selection]
+    data_array = event_ext_link_hdf_to_da_timestamp(file_path=data_path / "EventDataExtLinks.hdf",
+                                                    ext_link_index=ext_link_index,
+                                                    feature_list=feature_list)
+    return data_array
+
+
+def read_label_and_meta_data_from_selection(data_path: Path, label_name: str, selection: List[bool]):
+    with h5py.File(data_path / "context.hdf", 'r') as file:
+        is_bd_in_20ms = read_hdf_dataset(file, label_name)[selection]
+        timestamp = read_hdf_dataset(file, "Timestamp")[selection]
+        run_no = read_hdf_dataset(file, "run_no")[selection]
+    return is_bd_in_20ms, timestamp, run_no

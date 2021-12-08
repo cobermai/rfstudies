@@ -2,7 +2,6 @@
 from collections import namedtuple
 from pathlib import Path
 import xarray as xr
-import h5py
 from src.xbox2_specific.utils import dataset_utils
 from src.xbox2_specific.datasets.XBOX2_abstract import XBOX2Abstract
 
@@ -34,18 +33,14 @@ class XBOX2EventAllBD20msSelect(XBOX2Abstract):
                         "PKI Amplitude",
                         "DC Up",
                         "DC Down"]
-        with h5py.File(data_path / "context.hdf", 'r') as file:
-            ext_link_index = dataset_utils.read_hdf_dataset(file, "event_ext_link_index")[selection]
-        data_array = dataset_utils.event_ext_link_hdf_to_da_timestamp(file_path=data_path / "EventDataExtLinks.hdf",
-                                                                      ext_link_index=ext_link_index,
-                                                                      feature_list=feature_list)
+        data_array = dataset_utils.read_features_from_selection(data_path, feature_list, selection)
+
 
         # read label and metadata
         label_name = "is_bd_in_20ms"
-        with h5py.File(data_path / "context.hdf", 'r') as file:
-            is_bd_in_20ms = dataset_utils.read_hdf_dataset(file, label_name)[selection]
-            timestamp = dataset_utils.read_hdf_dataset(file, "Timestamp")[selection]
-            run_no = dataset_utils.read_hdf_dataset(file, "run_no")[selection]
+        is_bd_in_20ms, timestamp, run_no = dataset_utils.read_label_and_meta_data_from_selection(data_path,
+                                                                                                 label_name,
+                                                                                                 selection)
 
         # add label to data_array
         data_array = data_array.assign_coords(is_bd_in_20ms=("event", is_bd_in_20ms))
