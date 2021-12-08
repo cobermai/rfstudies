@@ -38,7 +38,7 @@ def gather_csv(output_file_path: Path, input_file_regex: str):
     print(df)
 
 
-if (__name__ == '__main__'):
+if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='input parameter')
     parser.add_argument('--output', required=False, type=str,
                         help='name of output directory', default=str(datetime.datetime.now()))
