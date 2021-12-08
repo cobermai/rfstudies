@@ -1,8 +1,9 @@
-import pytest
 import numpy as np
-import tensorflow as tf
+import pytest
 import shap
+import tensorflow as tf
 from shap.explainers._deep import Deep
+
 from src.model.sample_explainers import deep_shap
 
 

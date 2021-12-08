@@ -2,10 +2,12 @@
 from abc import ABC
 from collections import namedtuple
 from typing import Optional
+
 import numpy as np
 import xarray as xr
-from tensorflow import one_hot
 from sklearn.model_selection import train_test_split
+from tensorflow import one_hot
+
 from src.utils.dataset_creator import DatasetCreator
 
 data = namedtuple("data", ["X", "y", "idx"])

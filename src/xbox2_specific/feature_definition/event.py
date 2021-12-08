@@ -1,7 +1,9 @@
 """This module contains the definition and gathering of EventDataFeatures for the XBox2 data set."""
-from functools import partial
 import typing
+from functools import partial
+
 import numpy as np
+
 from src.utils.handler_tools.feature_class import EventDataFeature
 
 

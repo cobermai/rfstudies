@@ -1,8 +1,8 @@
-import pytest
 import numpy as np
+import shap
 import tensorflow as tf
 from tensorflow import keras
-import shap
+
 from src.model.sample_explainers import gradient_shap
 
 

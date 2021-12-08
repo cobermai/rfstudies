@@ -1,7 +1,9 @@
 import typing
-import shap
+
 import numpy as np
+import shap
 from tensorflow.keras import Model
+
 from src.model.explainer import ExplainerCreator
 
 

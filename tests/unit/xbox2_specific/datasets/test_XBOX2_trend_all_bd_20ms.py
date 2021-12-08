@@ -1,8 +1,10 @@
 from collections import namedtuple
+
 import h5py
 import numpy as np
-import xarray as xr
 import pytest
+import xarray as xr
+
 from src.utils import dataset_creator
 from src.xbox2_specific.datasets import XBOX2_trend_all_bd_20ms
 

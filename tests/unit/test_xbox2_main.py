@@ -2,7 +2,9 @@
 tests the main module
 """
 from pathlib import Path
+
 import pytest
+
 import xbox2_main
 
 

@@ -1,20 +1,18 @@
 """example code how to select from context data and prepare data for machine learning. """
 import argparse
-from datetime import datetime
 import json
-from pathlib import Path
 import sys
+from datetime import datetime
+from pathlib import Path
+
 import matplotlib as mpl
 import pandas as pd
-from src.handler import XBox2ContextDataCreator
-from src.model.classifier import Classifier
-from src.transformation import transform
-from src.utils.dataset_creator import load_dataset
-from src.utils.dataset_creator import data_array_to_numpy
-from src.utils import hdf_tools
+
 from src.datasets.ECG200 import ECG200
+from src.model.classifier import Classifier
 from src.model.explainer import explain_samples
 from src.model.sample_explainers.gradient_shap import ShapGradientExplainer
+from src.utils.dataset_creator import data_array_to_numpy, load_dataset
 
 
 def parse_input_arguments(args):

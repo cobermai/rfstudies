@@ -1,5 +1,6 @@
 import typing
 from abc import ABC, abstractmethod
+
 import numpy as np
 from tensorflow.keras import Model
 

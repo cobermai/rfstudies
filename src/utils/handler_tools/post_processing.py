@@ -1,6 +1,5 @@
-from pathlib import Path
-import numpy as np
 import h5py
+import numpy as np
 
 
 def assign_run_no(timestamps: np.datetime64):

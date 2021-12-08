@@ -1,6 +1,8 @@
 """creating XBox2 like event data for testing"""
 from pathlib import Path
+
 import numpy as np
+
 from tests.utils.data_creator.file_creator_for_testing import CreatorTestFiles
 
 

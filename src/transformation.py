@@ -3,11 +3,13 @@ This module applies conversion and gathering on xbox2 data.
 """
 import argparse
 import logging
-import psutil
 from pathlib import Path
+
 import coloredlogs
 import h5py
 import numpy as np
+import psutil
+
 from src.utils.transf_tools.convert import Convert
 from src.utils.transf_tools.gather import Gatherer
 

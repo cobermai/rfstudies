@@ -1,15 +1,16 @@
 """Selection of data for ECG200 dataset. """
 from collections import namedtuple
 from io import StringIO
-from typing import Optional, NamedTuple
 from pathlib import Path
+from typing import Optional
+
 import numpy as np
-from tensorflow import one_hot
 import xarray as xr
 from scipy.io import arff
-from src.utils.dataset_creator import DatasetCreator
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import OneHotEncoder
+from tensorflow import one_hot
+
+from src.utils.dataset_creator import DatasetCreator
 
 data = namedtuple("data", ["X", "y", "idx"])
 

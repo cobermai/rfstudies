@@ -1,8 +1,10 @@
 """This module contains the definition and gathering of TrendDataFeatures for the XBox2 data set."""
-from pathlib import Path
 import typing
+from pathlib import Path
+
 import h5py
 import numpy as np
+
 from src.utils.handler_tools.feature_class import TrendDataFeature
 
 

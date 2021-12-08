@@ -1,10 +1,10 @@
 from unittest.mock import MagicMock
-from unittest.mock import patch
+
 import h5py
 import numpy as np
-import pandas as pd
-import xarray as xr
 import pytest
+import xarray as xr
+
 from src.xbox2_specific.utils import dataset_utils
 
 

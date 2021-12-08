@@ -1,6 +1,7 @@
 from abc import ABC
-from tensorflow.keras import layers
-from tensorflow.keras import Model
+
+from tensorflow.keras import Model, layers
+
 from src.model.classifiers.layers.shortcut import ShortcutBlock
 
 

@@ -1,9 +1,11 @@
 """Selecting from context data and prepare dataset XBOX2_event_bd20ms for machine learning. """
 from collections import namedtuple
 from pathlib import Path
+
 import xarray as xr
-from src.xbox2_specific.utils import dataset_utils
+
 from src.xbox2_specific.datasets.XBOX2_abstract import XBOX2Abstract
+from src.xbox2_specific.utils import dataset_utils
 
 data = namedtuple("data", ["X", "y", "idx"])
 

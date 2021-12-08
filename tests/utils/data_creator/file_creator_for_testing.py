@@ -3,8 +3,10 @@ class for creating tdms and hdf files for testing simultaneously. The hdf files 
 transformation.
 """
 from pathlib import Path
+
 import h5py
 import numpy as np
+
 from tests.utils.data_creator.tdms_file_creator import CreatorTdmsFile
 
 

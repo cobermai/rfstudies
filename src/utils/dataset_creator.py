@@ -1,8 +1,9 @@
+import typing
 from abc import ABC, abstractmethod
 from collections import namedtuple
 from pathlib import Path
-import typing
 from typing import Optional
+
 import numpy as np
 import xarray as xr
 

@@ -1,10 +1,12 @@
 """This module contains a class class that defines machine learning features. The Feature class contains the functions
 apply and write."""
-from dataclasses import dataclass, field
 import logging
 import typing
+from dataclasses import dataclass, field
+
 import h5py
 import numpy as np
+
 from src.utils.hdf_tools import hdf_path_combine
 
 log = logging.getLogger(__name__)

@@ -1,10 +1,11 @@
 from collections import namedtuple
-from unittest.mock import MagicMock
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
+
 import h5py
 import numpy as np
-import xarray as xr
 import pytest
+import xarray as xr
+
 from src.utils import dataset_creator
 
 

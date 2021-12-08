@@ -2,15 +2,14 @@
 model setup according to https://www.tensorflow.org/guide/keras/custom_layers_and_models
 """
 from pathlib import Path
+
 import numpy as np
+from sklearn.utils import class_weight
 from tensorflow import keras
 from tensorflow.keras import Input
-from sklearn.utils import class_weight
-from src.model.classifiers import fcn
-from src.model.classifiers import fcn_2dropout
-from src.model.classifiers import inception
-from src.model.classifiers import resnet
-from src.model.classifiers import time_cnn
+
+from src.model.classifiers import (fcn, fcn_2dropout, inception, resnet,
+                                   time_cnn)
 
 
 class Classifier:

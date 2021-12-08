@@ -1,6 +1,6 @@
 from abc import ABC
-from tensorflow.keras import layers
-from tensorflow.keras import Model
+
+from tensorflow.keras import Model, layers
 
 
 class TimeCNNBlock(Model, ABC):

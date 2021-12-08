@@ -1,8 +1,9 @@
-from pathlib import Path
-import glob
-import pandas as pd
 import argparse
 import datetime
+import glob
+from pathlib import Path
+
+import pandas as pd
 
 
 def log_to_csv(logging_path: Path, **kwargs):
