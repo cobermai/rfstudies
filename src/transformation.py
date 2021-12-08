@@ -106,13 +106,22 @@ def create_event_ext_link(hdf_dir: Path):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Transforms all hdf files from src_dir to dest_dir and gather them"
-                                                 "with external links.")
-    parser.add_argument("src_dir", type=Path, help="source directory where tdms files are located")
-    parser.add_argument("dest_dir", type=Path, help="destination directory where hdf files will be placed")
-    parser.add_argument("-v", "--verbose", action="store_true", help="print debug log messages")
+    parser = argparse.ArgumentParser(
+        description=
+        "Transforms all hdf files from src_dir to dest_dir and gather them"
+        "with external links.")
+    parser.add_argument("src_dir",
+                        type=Path,
+                        help="source directory where tdms files are located")
+    parser.add_argument(
+        "dest_dir",
+        type=Path,
+        help="destination directory where hdf files will be placed")
+    parser.add_argument("-v",
+                        "--verbose",
+                        action="store_true",
+                        help="print debug log messages")
     args = parser.parse_args()
     coloredlogs.install(level="INFO" if args.verbose else "DEBUG")
     logger = logging.getLogger(__name__)
-    transform(tdms_dir=args.src_dir.resolve(),
-              hdf_dir=args.dest_dir.resolve())
+    transform(tdms_dir=args.src_dir.resolve(), hdf_dir=args.dest_dir.resolve())
