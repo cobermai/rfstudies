@@ -33,38 +33,7 @@ def parse_input_arguments(args):
                         help='name of data set', default="ECG200")
     parser.add_argument('--param_name', required=False, type=str,
                         help='name of hyperparameter file', default="default_hyperparameters.json")
-    parser.add_argument('--transform_to_hdf5', required=False, type=bool,
-                        help="retransform from original files to hdf5 (True/False)p", default=False)
-    parser.add_argument('--calculate_features', required=False, type=bool,
-                        help="recalculate features (True/False)", default=False)
     return parser.parse_args(args)
-
-
-def transformation(work_dir: Path):
-    """TRANSFORMATION"""
-    src_dir = Path("/eos/project/m/ml-for-alarm-system/private/CLIC_data_transfert/CLIC_DATA_Xbox2_T24PSI_2")
-    transform(tdms_dir=src_dir,
-              hdf_dir=work_dir)
-
-    gathered_trend_data = work_dir / "TrendDataExtLinks.hdf"
-    combined_trend_data_path = work_dir / "combined.hdf"
-
-    hdf_tools.merge(source_file_path=gathered_trend_data,
-                    dest_file_path=combined_trend_data_path)
-    hdf_tools.convert_iso8601_to_datetime(file_path=combined_trend_data_path)
-    hdf_tools.sort_by(file_path=combined_trend_data_path, sort_by_name="Timestamp")
-
-
-def feature_handling(work_dir: Path):
-    """DATA HANDLING"""
-    gathered_event_data_path = work_dir / "EventDataExtLinks.hdf"
-    context_data_file_path = work_dir / "context.hdf"
-    combined_trend_data_path = work_dir / "combined.hdf"
-
-    creator = XBox2ContextDataCreator(ed_file_path=gathered_event_data_path,
-                                      td_file_path=combined_trend_data_path,
-                                      dest_file_path=context_data_file_path)
-    creator.manage_features()
 
 
 def modeling(train_set, valid_set, test_set, param_dir: Path, output_dir: Path, fit_classifier: bool = True):
@@ -116,12 +85,6 @@ def explanation(classifier, train_set, test_set, output_dir: Path):
 
 if __name__ == '__main__':
     args_in = parse_input_arguments(args=sys.argv[1:])
-
-    if args_in.transform_to_hdf5:
-        transformation(work_dir=args_in.data_path)
-
-    if args_in.calculate_features:
-        feature_handling(work_dir=args_in.data_path)
 
     train, valid, test = load_dataset(creator=ECG200(),
                                       data_path=args_in.data_path)
