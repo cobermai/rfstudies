@@ -1,8 +1,9 @@
-import pytest
 import numpy as np
-import tensorflow as tf
+import pytest
 import shap
+import tensorflow as tf
 from shap.explainers._deep import Deep
+
 from src.model.sample_explainers import deep_shap
 
 
@@ -29,7 +30,7 @@ def test__build_explainer():
         tf.keras.layers.Flatten(input_shape=(2, 2)),
         tf.keras.layers.Dense(2, activation='relu')
     ])
-    X_reference = np.ones(shape=(200, 4))
+    X_reference = np.ones(shape=(200, 2, 2))
     explainer = deep_shap.ShapDeepExplainer()
     background_size = 100
     background = X_reference[np.random.choice(X_reference.shape[0], background_size, replace=False)]

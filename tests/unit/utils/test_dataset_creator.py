@@ -1,60 +1,34 @@
-from unittest.mock import MagicMock
-from unittest.mock import patch
+from collections import namedtuple
+from unittest.mock import MagicMock, patch
+
 import h5py
 import numpy as np
 import pytest
+import xarray as xr
+
 from src.utils import dataset_creator
 
 
-def test__train_valid_test_split():
+@patch.multiple(dataset_creator.DatasetCreator, __abstractmethods__=set())
+def test__load_dataset(tmpdir):
     """
-    Test train_valid_test_split() function
+    Test load_dataset() function
     """
     # ARRANGE
-    p = patch.multiple(dataset_creator.DatasetCreator, __abstractmethods__=set())
-    p.start()
     creator = dataset_creator.DatasetCreator()
-    p.stop()
-    X = np.array(range(10, 20))
-    y = np.array(range(20, 30))
-    splits_expected = 0.7, 0.1, 0.2
 
     # ACT
-    train, valid, test = creator.train_valid_test_split(X=X, y=y, splits=splits_expected)
 
     # ASSERT
-    assert set(X) == set(train.X).union(valid.X).union(test.X)
-    assert set(y) == set(train.y).union(valid.y).union(test.y)
-    length = len(X)
-    assert set(range(length)) == set(train.idx).union(valid.idx).union(test.idx)
-    splits_output = len(train.X) / length, len(valid.X) / length, len(test.X) / length
-    assert splits_output == splits_expected
+    assert hasattr(creator, "select_events")
+    assert hasattr(creator, "select_features")
+    assert hasattr(creator, "select_labels")
+    assert hasattr(creator, "train_valid_test_split")
+    assert hasattr(creator, "scale_data")
+    assert hasattr(creator, "one_hot_encode")
 
 
-def test__train_valid_test_split_errors():
-    # ARRANGE
-    p = patch.multiple(dataset_creator.DatasetCreator, __abstractmethods__=set())
-    p.start()
-    creator = dataset_creator.DatasetCreator()
-    p.stop()
-    X = np.array(range(10, 20))
-    y = np.array(range(20, 30))
-
-    # ACT
-    with pytest.raises(ValueError):
-        creator.train_valid_test_split(X=X, y=y, splits=(1, 0, 0))
-    with pytest.raises(ValueError):
-        creator.train_valid_test_split(X=X, y=y, splits=(0, 1, 0))
-    with pytest.raises(ValueError):
-        creator.train_valid_test_split(X=X, y=y, splits=(0, 0, 1))
-    with pytest.raises(ValueError):
-        creator.train_valid_test_split(X=X, y=y, splits=(-1, 0, 0))
-    with pytest.raises(ValueError):
-        creator.train_valid_test_split(X=X, y=y, splits=(2, 0, 0))
-    with pytest.raises(ValueError):
-        creator.train_valid_test_split(X=X, y=y, splits=(0.5, 0.5, 0.5))
-
-
+@pytest.mark.skip(reason="not finished")
 @patch.multiple(dataset_creator.DatasetCreator, __abstractmethods__=set(),
                 select_events=MagicMock(return_value=np.ones((10,), dtype=bool)),
                 select_features=MagicMock(return_value=np.ones((10, 10, 10), dtype=bool)),
@@ -116,3 +90,30 @@ def test__load_dataset(tmpdir):
 
     # ASSERT
     assert splits == splits_expected
+
+
+def test_da_to_numpy_for_ml():
+    """
+    Function that tests test_da_to_numpy_for_ml
+    """
+    # ARRANGE
+    data = namedtuple("data", ["X", "y", "idx"])
+    data_expected = np.ones(4)
+    X = xr.DataArray(data=data_expected)
+    y = xr.DataArray(data=data_expected)
+    idx = xr.DataArray(data=data_expected)
+
+    train, valid, test = data(X, y, idx), data(X, y, idx), data(X, y, idx)
+    # ACT
+    train_out, valid_out, test_out = dataset_creator.data_array_to_numpy(train, valid, test)
+
+    # ASSERT
+    assert (train_out.X == data_expected).all()
+    assert (train_out.y == data_expected).all()
+    assert (train_out.idx == data_expected).all()
+    assert (valid_out.X == data_expected).all()
+    assert (valid_out.y == data_expected).all()
+    assert (valid_out.idx == data_expected).all()
+    assert (test_out.X == data_expected).all()
+    assert (test_out.y == data_expected).all()
+    assert (test_out.idx == data_expected).all()

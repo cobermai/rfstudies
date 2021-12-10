@@ -4,8 +4,10 @@ tests for gather module
 from functools import partial
 from pathlib import Path
 from typing import Callable
+
 import h5py
 import pytest
+
 from src.utils.transf_tools import gather
 
 

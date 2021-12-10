@@ -2,20 +2,20 @@
 model setup according to https://www.tensorflow.org/guide/keras/custom_layers_and_models
 """
 from pathlib import Path
+
+import numpy as np
+from sklearn.utils import class_weight
 from tensorflow import keras
 from tensorflow.keras import Input
-from src.model.classifiers import fcn
-from src.model.classifiers import fcn_2dropout
-from src.model.classifiers import inception
-from src.model.classifiers import resnet
-from src.model.classifiers import time_cnn
+
+from src.model.classifiers import (fcn, fcn_2dropout, inception, resnet,
+                                   time_cnn)
 
 
 class Classifier:
     """
     Classifier class which acts as wrapper for tensorflow models.
     """
-
     def __init__(self,
                  input_shape: tuple,
                  output_directory: Path,
@@ -31,8 +31,7 @@ class Classifier:
                  reduce_lr_patience: int,
                  min_lr: float,
                  build=True,
-                 output_model_structure=True
-                 ):
+                 output_model_structure=False):
         """
         Initializes the Classifier with specified settings
         :param output_directory: Directory for model output.
@@ -64,8 +63,11 @@ class Classifier:
             self.model = self.build_classifier()
             self.model.build(input_shape)
             if output_model_structure is True:
-                keras.utils.plot_model(self.model, to_file=output_directory / "plot_model_structure.png",
-                                       show_shapes=True, show_layer_names=True)
+                keras.utils.plot_model(self.model,
+                                       to_file=output_directory /
+                                       "plot_model_structure.png",
+                                       show_shapes=True,
+                                       show_layer_names=True)
 
     def build_classifier(self, **kwargs):
         """
@@ -111,6 +113,22 @@ class Classifier:
 
         return model
 
+    @staticmethod
+    def get_class_weight(y: np.ndarray) -> dict:
+        """
+        Function returns class weight for class imbalanced datasets.
+        The sum of the weights of all examples stays the same.
+        :param y: one hot encoded labels of train set
+        return: dict with class weight for each label
+        """
+        label_indices = np.argmax(y, axis=1)
+        class_weights = class_weight.compute_class_weight(
+            class_weight='balanced',
+            classes=np.unique(label_indices),
+            y=label_indices)
+        class_weights_dict = dict(enumerate(class_weights))
+        return class_weights_dict
+
     def fit_classifier(self, train, valid, **kwargs):
         """
         Trains classifier model on input data
@@ -130,12 +148,12 @@ class Classifier:
             monitor=self.monitor,
             save_best_only=True)
 
-        self.model.fit(
-            x=train.X,
-            y=train.y,
-            batch_size=self.batch_size,
-            epochs=self.epochs,
-            verbose=1,
-            validation_data=(valid.X, valid.y),
-            callbacks=[reduce_lr, model_checkpoint],
-            **kwargs)
+        self.model.fit(x=train.X,
+                       y=train.y,
+                       batch_size=self.batch_size,
+                       epochs=self.epochs,
+                       verbose=1,
+                       validation_data=(valid.X, valid.y),
+                       callbacks=[reduce_lr, model_checkpoint],
+                       class_weight=self.get_class_weight(train.y),
+                       **kwargs)

@@ -1,7 +1,7 @@
 """
 Setup file. Install the mlframework with `pip install mlframework`
 """
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
 
 REQUIREMENTS: dict = {
     'core': [
@@ -20,7 +20,9 @@ REQUIREMENTS: dict = {
         'scikit-learn>=0.24.2',
         'tensorflow>=2.5.0',
         'shap',
-        'pydot'
+        'pydot',
+        'xarray',
+        'matplotlib'
     ],
     'test': [
         'pytest',

@@ -1,8 +1,9 @@
 import os.path
+
 import pytest
 from tensorflow import keras
-from src.model import classifier
 
+from src.model import classifier
 
 
 @pytest.mark.parametrize("build, output_model_structure, model_expected, plot_existence_expected",
