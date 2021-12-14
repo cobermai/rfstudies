@@ -24,6 +24,7 @@ from src.xbox2_specific import datasets
 def parse_input_arguments(args):
     """
     Parses input arguments
+    :param args: List of strings to parse. The default is taken from sys.argv.
     :return: ArgumentParser object which stores input arguments, e.g. path to input data
     """
     parser = argparse.ArgumentParser(description='Input parameters')
@@ -48,7 +49,7 @@ def parse_input_arguments(args):
                         required=False,
                         type=str,
                         help='name of data set',
-                        default="XBOX2EventFollowupBD20msSelect")
+                        default="XBOX2TrendAllBD20msSelect")
     parser.add_argument(
         '--transform_to_hdf5',
         required=False,
@@ -84,15 +85,20 @@ def parse_input_arguments(args):
 
 
 def transformation(work_dir: Path):
-    """TRANSFORMATION"""
+    """
+    Function for converting tdms files into hdf files, creating external link files and combined trend data.
+    :param work_dir: path where EventDataExtLinks.hdf, combined.hdf is found. Context data file is put here.
+    """
     src_dir = Path(
         "/eos/project/m/ml-for-alarm-system/private/CLIC_data_transfert/CLIC_DATA_Xbox2_T24PSI_2"
     )
     transform(tdms_dir=src_dir, hdf_dir=work_dir)
 
+    # Path to gathered trend data
     gathered_trend_data = work_dir / "TrendDataExtLinks.hdf"
+    # Path to put combined trend data
     combined_trend_data_path = work_dir / "combined.hdf"
-
+    # Merge all trend data into one hdf file
     hdf_tools.merge(source_file_path=gathered_trend_data,
                     dest_file_path=combined_trend_data_path)
     hdf_tools.convert_iso8601_to_datetime(file_path=combined_trend_data_path)
@@ -101,7 +107,10 @@ def transformation(work_dir: Path):
 
 
 def feature_handling(work_dir: Path):
-    """DATA HANDLING"""
+    """
+    Function for creating context data file from event data and trend data
+    :param work_dir: path where EventDataExtLinks.hdf, combined.hdf is found. Context data file is put here.
+    """
     gathered_event_data_path = work_dir / "EventDataExtLinks.hdf"
     context_data_file_path = work_dir / "context.hdf"
     combined_trend_data_path = work_dir / "combined.hdf"
@@ -118,7 +127,16 @@ def modeling(train_set,
              hp_path: str,
              output_dir: Path,
              fit_classifier: bool = True):
-    """MODELING"""
+    """
+    Function for creating and potentially training a classifier model
+    :param train_set: training set as namedtuple(X, y, idx)
+    :param valid_set: validation set as namedtuple(X, y, idx)
+    :param test_set: validation set as namedtuple(X, y, idx)
+    :param hp_path: path to hyperparameter .json file
+    :param output_dir: path to output directory
+    :param fit_classifier: bool stating whether the model should be trained
+    :return: instance of classifier model
+    """
     hp_file = open(Path().absolute() / hp_path, 'r')
     hp_dict = json.load(hp_file)
     os.environ["HDF5_USE_FILE_LOCKING"] = "FALSE"
