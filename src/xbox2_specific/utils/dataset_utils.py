@@ -18,7 +18,7 @@ def read_hdf_dataset(file: h5py.File, key: str):
     """
     dataset = file[key]
     if not isinstance(dataset, h5py.Dataset):
-        raise ValueError("Specified key does not yield a hdf dataset")
+        raise ValueError("Specified key does not yield an hdf dataset")
     return dataset[:]
 
 
@@ -185,17 +185,6 @@ def determine_followup(bd_label: np.ndarray, timestamp: np.ndarray, threshold: t
                 is_followup[index] = True
             ind_last_bd_in_20ms = index
     return is_followup
-
-
-def da_to_numpy_for_ml(data_array: xr.DataArray) -> np.ndarray:
-    """
-    Function that takes raw values of xarray, replaces NaN with zero and infinity with large finite numbers
-    :param data_array: xarray DataArray
-    :return: numpy array ready for machine learning algorithms
-    """
-    out = data_array.values
-    out = np.nan_to_num(out)
-    return out
 
 
 def scale_signal(signal, feature_name):
