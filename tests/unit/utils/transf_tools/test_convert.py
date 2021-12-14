@@ -6,7 +6,7 @@ from pathlib import Path
 import h5py
 import pytest
 
-from src.utils.transf_tools import convert
+from src.utils.transf_tools import converter
 from tests.utils.data_creator.file_creator_for_testing import CreatorTestFiles
 from tests.utils.data_creator.tdms_file_creator import CreatorTdmsFile
 
@@ -43,13 +43,13 @@ class TestConvert:
     def test_init():
         """Tests the initialisation of the Convert class"""
         # ARRANGE ACT
-        conv = convert.Convert()
+        conv = convert.Converter()
         # ASSERT
         assert conv.check_already_converted is True
         assert conv.num_processes == 2
 
         # ARRANGE ACT
-        conv = convert.Convert(check_already_converted=False, num_processes=100)
+        conv = convert.Converter(check_already_converted=False, num_processes=100)
         # ASSERT
         assert conv.check_already_converted is False
         assert conv.num_processes == 100
@@ -58,7 +58,7 @@ class TestConvert:
     def test_from_tdms():
         """tests from_tdms"""
         # ARRANGE
-        conv = convert.Convert(check_already_converted=False, num_processes=100)
+        conv = convert.Converter(check_already_converted=False, num_processes=100)
         # ACT
         conv_from_tdms = conv.from_tdms(tdms_dir=Path("/"))
         # ASSERT
@@ -74,7 +74,7 @@ class TestConvertFromTdms:  # pylint: disable=too-few-public-methods
     def test_to_hdf():
         """tests to_hdf"""
         # ARRANGE
-        conv = convert.Convert(num_processes=20, check_already_converted=False)
+        conv = convert.Converter(num_processes=20, check_already_converted=False)
         tdms_dir_path = Path("/path/to/tdms/dir")
         hdf_dir_path = Path("/path/to/hdf/dir")
         conv_from_tdms = conv.from_tdms(tdms_dir=tdms_dir_path)
@@ -105,7 +105,7 @@ class TestConvertFromTdmsToHdf:
         expected = set(tdms_dir_path.glob("*.tdms"))
 
         # ACT
-        conv_tdms2hdf = convert.Convert(check_already_converted=True)\
+        conv_tdms2hdf = convert.Converter(check_already_converted=True)\
             .from_tdms(tdms_dir_path)\
             .to_hdf(hdf_dir_path)
         # ASSERT
@@ -114,7 +114,7 @@ class TestConvertFromTdmsToHdf:
         h5py.File(hdf_dir_path / "test1.hdf", "w").close()
 
         # ACT
-        conv_tdms2hdf = convert.Convert(check_already_converted=False)\
+        conv_tdms2hdf = convert.Converter(check_already_converted=False)\
             .from_tdms(tdms_dir_path)\
             .to_hdf(hdf_dir_path)
         # ASSERT
@@ -123,7 +123,7 @@ class TestConvertFromTdmsToHdf:
         expected = set(tdms_dir_path.glob("*2.tdms")).union(set(tdms_dir_path.glob("*3.tdms")))
 
         # ACT
-        conv_tdms2hdf = convert.Convert(check_already_converted=True) \
+        conv_tdms2hdf = convert.Converter(check_already_converted=True) \
             .from_tdms(tdms_dir_path) \
             .to_hdf(hdf_dir_path)
         # ASSERT
@@ -139,7 +139,7 @@ class TestConvertFromTdmsToHdf:
             CreatorTdmsFile(tdms_dir_path / f"test{index}.tdms", {"root_prop": index}).write()
         for num_processes in [1, 3]:
             # ACT
-            convert.Convert(num_processes=num_processes, check_already_converted=False)\
+            convert.Converter(num_processes=num_processes, check_already_converted=False)\
                 .from_tdms(tdms_dir_path)\
                 .to_hdf(hdf_dir_path)\
                 .run()

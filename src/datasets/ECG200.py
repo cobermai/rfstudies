@@ -10,7 +10,7 @@ from scipy.io import arff
 from sklearn.model_selection import train_test_split
 from tensorflow import one_hot
 
-from src.utils.dataset_creator import DatasetCreator
+from src.dataset_creator import DatasetCreator
 
 data = namedtuple("data", ["X", "y", "idx"])
 

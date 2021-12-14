@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 import xarray as xr
 
-from src.utils import dataset_creator
+import src.dataset_creator
 
 
 @patch.multiple(dataset_creator.DatasetCreator, __abstractmethods__=set())
@@ -84,7 +84,7 @@ def test__load_dataset(tmpdir):
     # ACT
     np.random.seed(42)
 
-    train, valid, test = dataset_creator.load_dataset(creator=creator, data_path=tmpdir/"context.hdf")
+    train, valid, test = dataset_creator.load_dataset(creator=creator, data_path=tmpdir / "context.hdf")
     sum_elements = len(train.idx) + len(valid.idx) + len(test.idx)
     splits = (len(train.idx) / sum_elements, len(valid.idx) / sum_elements, len(test.idx) / sum_elements)
 
@@ -92,7 +92,7 @@ def test__load_dataset(tmpdir):
     assert splits == splits_expected
 
 
-def test_da_to_numpy_for_ml():
+def test_data_array_to_numpy():
     """
     Function that tests test_da_to_numpy_for_ml
     """

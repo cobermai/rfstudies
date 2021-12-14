@@ -5,7 +5,7 @@ import numpy as np
 import pytest
 import xarray as xr
 
-from src.utils import dataset_creator
+import src.dataset_creator
 from src.xbox2_specific.datasets import XBOX2_event_all_bd_20ms
 
 data = namedtuple("data", ["X", "y", "idx"])

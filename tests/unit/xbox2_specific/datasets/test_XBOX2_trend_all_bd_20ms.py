@@ -5,7 +5,7 @@ import numpy as np
 import pytest
 import xarray as xr
 
-from src.utils import dataset_creator
+import src.dataset_creator
 from src.xbox2_specific.datasets import XBOX2_trend_all_bd_20ms
 
 data = namedtuple("data", ["X", "y", "idx"])
@@ -289,7 +289,7 @@ def test__load_dataset(tmpdir):
 
     # ACT
     np.random.seed(42)
-    train, valid, test = dataset_creator.load_dataset(creator=selector, data_path=tmpdir/"context.hdf")
+    train, valid, test = dataset_creator.load_dataset(creator=selector, data_path=tmpdir / "context.hdf")
     sum_elements = len(train.idx) + len(valid.idx) + len(test.idx)
     splits = (len(train.idx)/sum_elements, len(valid.idx)/sum_elements, len(test.idx)/sum_elements)
 

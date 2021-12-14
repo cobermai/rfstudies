@@ -2,7 +2,6 @@
 import argparse
 import ast
 import json
-import os
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -16,7 +15,7 @@ from src.model.explainer import explain_samples
 from src.model.sample_explainers.gradient_shap import ShapGradientExplainer
 from src.transformation import transform
 from src.utils import hdf_tools
-from src.utils.dataset_creator import data_array_to_numpy, load_dataset
+from src.dataset_creator import data_array_to_numpy, load_dataset
 from src.utils.result_logging_tools import log_to_csv
 from src.xbox2_specific import datasets
 

@@ -10,7 +10,7 @@ import h5py
 import numpy as np
 import psutil
 
-from src.utils.transf_tools.convert import Convert
+from src.utils.transf_tools.converter import Converter
 from src.utils.transf_tools.gather import Gatherer
 
 logger = logging.getLogger(__name__)
@@ -28,7 +28,7 @@ def transform(tdms_dir: Path, hdf_dir: Path) -> None:
 
     cpu_count = psutil.cpu_count(logical=False)
     # read tdms files, convert them to hdf5 and write them into hdf_dir/data/
-    Convert(check_already_converted=True, num_processes=cpu_count) \
+    Converter(check_already_converted=True, num_processes=cpu_count) \
         .from_tdms(tdms_dir) \
         .to_hdf(hdf_dir / "data").run()
 
