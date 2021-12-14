@@ -32,29 +32,26 @@ def parse_input_arguments(args):
                         type=Path,
                         help='path of xbox2_main.py file',
                         default=Path().absolute())
-    parser.add_argument(
-        '--data_path',
-        required=False,
-        type=Path,
-        help='path of data',
-        default=Path("/afs/cern.ch/work/h/hbovbjer/public/Xbox2_hdf_new2/"))
+    parser.add_argument('--data_path',
+                        required=False,
+                        type=Path,
+                        help='path of data',
+                        default=Path("/eos/project/m/ml-for-alarm-system/private/CLIC_data_transfert/Xbox2_hdf_new2/"))
     parser.add_argument('--output_path',
                         required=False,
                         type=Path,
                         help='path of data',
-                        default=Path().absolute() / "src/output" /
-                        datetime.now().strftime("%Y-%m-%dT%H.%M.%S"))
+                        default=Path().absolute() / "src/output" / datetime.now().strftime("%Y-%m-%dT%H.%M.%S"))
     parser.add_argument('--dataset_name',
                         required=False,
                         type=str,
                         help='name of data set',
-                        default="XBOX2EventFollowupBD20msSelect")
-    parser.add_argument(
-        '--transform_to_hdf5',
-        required=False,
-        type=bool,
-        help="retransform from original files to hdf5 (True/False)p",
-        default=False)
+                        default="XBOX2TrendAllBD20msSelect")
+    parser.add_argument('--transform_to_hdf5',
+                        required=False,
+                        type=bool,
+                        help="retransform from original files to hdf5 (True/False)p",
+                        default=False)
     parser.add_argument('--calculate_features',
                         required=False,
                         type=bool,
@@ -85,9 +82,7 @@ def parse_input_arguments(args):
 
 def transformation(work_dir: Path):
     """TRANSFORMATION"""
-    src_dir = Path(
-        "/eos/project/m/ml-for-alarm-system/private/CLIC_data_transfert/CLIC_DATA_Xbox2_T24PSI_2"
-    )
+    src_dir = Path("/eos/project/m/ml-for-alarm-system/private/CLIC_data_transfert/CLIC_DATA_Xbox2_T24PSI_2")
     transform(tdms_dir=src_dir, hdf_dir=work_dir)
 
     gathered_trend_data = work_dir / "TrendDataExtLinks.hdf"
@@ -121,7 +116,6 @@ def modeling(train_set,
     """MODELING"""
     hp_file = open(Path().absolute() / hp_path, 'r')
     hp_dict = json.load(hp_file)
-    os.environ["HDF5_USE_FILE_LOCKING"] = "FALSE"
 
     clf = Classifier(input_shape=train_set.X.shape,
                      output_directory=output_dir,
@@ -165,8 +159,7 @@ if __name__ == '__main__':
                                       data_path=args_in.data_path,
                                       manual_split=args_in.manual_split,
                                       manual_scale=args_in.manual_scale)
-    train_numpy, valid_numpy, test_numpy = data_array_to_numpy(
-        train, valid, test)
+    train_numpy, valid_numpy, test_numpy = data_array_to_numpy(train, valid, test)
 
     clf = modeling(train_set=train_numpy,
                    valid_set=valid_numpy,
