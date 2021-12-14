@@ -12,6 +12,7 @@ from src.datasets.ECG200 import ECG200
 from src.model.classifier import Classifier
 from src.model.explainer import explain_samples
 from src.model.sample_explainers.gradient_shap import ShapGradientExplainer
+from src.utils.result_logging_tools import log_to_csv
 from src.utils.dataset_creator import data_array_to_numpy, load_dataset
 
 
@@ -67,10 +68,9 @@ def modeling(train_set,
         clf.fit_classifier(train_set, valid_set)
     clf.model.load_weights(output_dir / 'best_model.hdf5')
     results = clf.model.evaluate(x=test_set.X, y=test_set.y, return_dict=True)
-    df_results = pd.DataFrame.from_dict(results, orient='index').T
-    df_hp = pd.DataFrame.from_dict(hp_dict, orient='index').T
-    df_results = pd.concat([df_results, df_hp], axis=1)
-    df_results.to_csv(output_dir / "results.csv", index=False)
+
+    log_to_csv(logging_path=output_dir / "results.csv", **hp_dict)
+    log_to_csv(logging_path=output_dir / "results.csv", **results)
     return clf
 
 
@@ -130,9 +130,9 @@ if __name__ == '__main__':
                    args_in.param_name,
                    output_dir=args_in.output_path)
 
-    results = pd.read_csv(args_in.output_path / "results.csv")
-    results["dataset"] = args_in.dataset_name
-    results.to_csv("results.csv", index=False)
+    log_to_csv(logging_path=args_in.output_path / "results.csv",
+               dataset_name=args_in.dataset_name,
+               output_path=str(args_in.output_path))
 
     y_pred = clf.model.predict(x=test_numpy.X)
     explanation(classifier=clf,
