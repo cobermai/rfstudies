@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 import xarray as xr
 
-import src.dataset_creator
+from src import dataset_creator
 
 
 @patch.multiple(dataset_creator.DatasetCreator, __abstractmethods__=set())

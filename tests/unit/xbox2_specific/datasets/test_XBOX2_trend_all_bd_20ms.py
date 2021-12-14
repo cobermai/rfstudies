@@ -5,7 +5,7 @@ import numpy as np
 import pytest
 import xarray as xr
 
-import src.dataset_creator
+from src import dataset_creator
 from src.xbox2_specific.datasets import XBOX2_trend_all_bd_20ms
 
 data = namedtuple("data", ["X", "y", "idx"])
@@ -284,12 +284,19 @@ def test__load_dataset(tmpdir):
         f["PrevTrendData/Timestamp"] = dummy_trend_timestamps.astype(h5py.opaque_dtype(dummy_trend_timestamps.dtype))
         f.create_dataset("clic_label/is_healthy", data=dummy_is_healthy_labels)
         f.create_dataset("is_healthy", data=dummy_is_healthy_labels)
+        f.create_dataset("run_no", data=dummy_is_bd_labels)
+
+    path2 = tmpdir.join("context.hdf")
+
+
 
     splits_expected = (0.7, 0.2, 0.1)
 
     # ACT
     np.random.seed(42)
-    train, valid, test = dataset_creator.load_dataset(creator=selector, data_path=tmpdir / "context.hdf")
+    train, valid, test = dataset_creator.load_dataset(creator=selector,
+                                                      data_path=tmpdir,
+                                                      splits=splits_expected)
     sum_elements = len(train.idx) + len(valid.idx) + len(test.idx)
     splits = (len(train.idx)/sum_elements, len(valid.idx)/sum_elements, len(test.idx)/sum_elements)
 

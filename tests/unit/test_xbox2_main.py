@@ -9,7 +9,8 @@ import xbox2_main
 
 
 @pytest.mark.parametrize("transform, features",
-                         [('True', 'False'), ('False', 'True')]
+                         [('True', 'False'), ('False', 'True'),
+                          ('True', 'True'), ('False', 'False')]
                          )
 def test__parse_input_arguments(transform, features):
     # ARRANGE
@@ -35,17 +36,17 @@ def test__parse_input_arguments(transform, features):
     assert args_out.calculate_features == bool(calculate_features_expected)
 
 
-@pytest.mark.skip(reason="no way of currently testing this")
+@pytest.mark.skip(reason="currently no way of testing this")
 def test__transformation():
     assert True
 
 
-@pytest.mark.skip(reason="no way of currently testing this")
+@pytest.mark.skip(reason="currently no way of testing this")
 def test__feature_handling():
     assert True
 
 
-@pytest.mark.skip(reason="no way of currently testing this")
+@pytest.mark.skip(reason="currently no way of testing this")
 def test__modeling():
     assert True
 

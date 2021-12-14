@@ -1,6 +1,5 @@
 """module to test the convert.py"""
 import os
-import sys
 from pathlib import Path
 
 import h5py
@@ -28,7 +27,7 @@ def test__convert_file(tmp_path):
     test_creator.write()
 
     # ACT
-    convert._convert_file(tdms_file_path=tdms_file_path, hdf_dir=data_dir_path)  # pylint: disable=protected-access
+    converter._convert_file(tdms_file_path=tdms_file_path, hdf_dir=data_dir_path)  # pylint: disable=protected-access
 
     # ASSERT
     path_of_output = data_dir_path / tdms_file_path.with_suffix(".hdf").name
@@ -43,13 +42,13 @@ class TestConvert:
     def test_init():
         """Tests the initialisation of the Convert class"""
         # ARRANGE ACT
-        conv = convert.Converter()
+        conv = converter.Converter()
         # ASSERT
         assert conv.check_already_converted is True
         assert conv.num_processes == 2
 
         # ARRANGE ACT
-        conv = convert.Converter(check_already_converted=False, num_processes=100)
+        conv = converter.Converter(check_already_converted=False, num_processes=100)
         # ASSERT
         assert conv.check_already_converted is False
         assert conv.num_processes == 100
@@ -58,11 +57,11 @@ class TestConvert:
     def test_from_tdms():
         """tests from_tdms"""
         # ARRANGE
-        conv = convert.Converter(check_already_converted=False, num_processes=100)
+        conv = converter.Converter(check_already_converted=False, num_processes=100)
         # ACT
         conv_from_tdms = conv.from_tdms(tdms_dir=Path("/"))
         # ASSERT
-        assert isinstance(conv_from_tdms, convert.ConvertFromTdms)
+        assert isinstance(conv_from_tdms, converter.ConvertFromTdms)
         assert conv_from_tdms.tdms_dir == Path("/")
         assert conv_from_tdms.num_processes == 100
         assert conv_from_tdms.check_already_converted is False
@@ -74,7 +73,7 @@ class TestConvertFromTdms:  # pylint: disable=too-few-public-methods
     def test_to_hdf():
         """tests to_hdf"""
         # ARRANGE
-        conv = convert.Converter(num_processes=20, check_already_converted=False)
+        conv = converter.Converter(num_processes=20, check_already_converted=False)
         tdms_dir_path = Path("/path/to/tdms/dir")
         hdf_dir_path = Path("/path/to/hdf/dir")
         conv_from_tdms = conv.from_tdms(tdms_dir=tdms_dir_path)
@@ -83,7 +82,7 @@ class TestConvertFromTdms:  # pylint: disable=too-few-public-methods
         cft2h = conv_from_tdms.to_hdf(hdf_dir_path)
 
         # ASSERT
-        assert isinstance(cft2h, convert.ConvertFromTdmsToHdf)
+        assert isinstance(cft2h, converter.ConvertFromTdmsToHdf)
         assert cft2h.hdf_dir == hdf_dir_path
         assert cft2h.tdms_dir == tdms_dir_path
         assert cft2h.num_processes == 20
@@ -105,7 +104,7 @@ class TestConvertFromTdmsToHdf:
         expected = set(tdms_dir_path.glob("*.tdms"))
 
         # ACT
-        conv_tdms2hdf = convert.Converter(check_already_converted=True)\
+        conv_tdms2hdf = converter.Converter(check_already_converted=True)\
             .from_tdms(tdms_dir_path)\
             .to_hdf(hdf_dir_path)
         # ASSERT
@@ -114,7 +113,7 @@ class TestConvertFromTdmsToHdf:
         h5py.File(hdf_dir_path / "test1.hdf", "w").close()
 
         # ACT
-        conv_tdms2hdf = convert.Converter(check_already_converted=False)\
+        conv_tdms2hdf = converter.Converter(check_already_converted=False)\
             .from_tdms(tdms_dir_path)\
             .to_hdf(hdf_dir_path)
         # ASSERT
@@ -123,7 +122,7 @@ class TestConvertFromTdmsToHdf:
         expected = set(tdms_dir_path.glob("*2.tdms")).union(set(tdms_dir_path.glob("*3.tdms")))
 
         # ACT
-        conv_tdms2hdf = convert.Converter(check_already_converted=True) \
+        conv_tdms2hdf = converter.Converter(check_already_converted=True) \
             .from_tdms(tdms_dir_path) \
             .to_hdf(hdf_dir_path)
         # ASSERT
@@ -139,7 +138,7 @@ class TestConvertFromTdmsToHdf:
             CreatorTdmsFile(tdms_dir_path / f"test{index}.tdms", {"root_prop": index}).write()
         for num_processes in [1, 3]:
             # ACT
-            convert.Converter(num_processes=num_processes, check_already_converted=False)\
+            converter.Converter(num_processes=num_processes, check_already_converted=False)\
                 .from_tdms(tdms_dir_path)\
                 .to_hdf(hdf_dir_path)\
                 .run()

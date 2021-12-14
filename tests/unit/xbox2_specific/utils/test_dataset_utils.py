@@ -214,23 +214,6 @@ def test__determine_followup(bd_array, timestamp_array, threshold, output_expect
     assert all(output == output_expected)
 
 
-@pytest.mark.parametrize("data, output_expected",
-                         [(np.array([1, 2, np.NaN, 4, 5, np.NaN, 7, 8, 9]),
-                           np.array([1, 2, 0, 4, 5, 0, 7, 8, 9])),
-                          (np.array(["Hello_world", "this", "is", "a", "test"]),
-                           np.array(["Hello_world", "this", "is", "a", "test"]))
-                          ])
-def test__da_to_numpy_for_ml(data, output_expected):
-    # ARRANGE
-    data_array = xr.DataArray(data=data)
-
-    # ACT
-    output = dataset_utils.da_to_numpy_for_ml(data_array=data_array)
-
-    # ASSERT
-    assert all(output == output_expected)
-
-
 @pytest.mark.parametrize("signal, feature_name, expected_output",
                          [(np.array([1, 2, 3, 4, 5, 6, 7, 8, 9]),
                            "PEI Amplitude",
