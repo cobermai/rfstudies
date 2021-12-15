@@ -18,7 +18,7 @@ Two example use cases are given for predicting breakdowns in CLIC RF cavities [1
    * Augmentor: augment data to improve results of classifier
    * Classifier: different models for supervised machine learning
    * Explainer: explain results of classifier
-   * Anomaly Detector: different models for unsupervised machine learning (to be added)
+   * Anomaly Detector: different models for unsupervised machine learning
    
 ### System Requirements
 The system requirements of the mlframework are:
@@ -69,7 +69,7 @@ pip install jupyter
 ipython kernel install --user --name=venv
 ```
 
-Repository structure
+### Repository structure
 ```angular2html ( cleanpy .; tree -A -I "__init__.py|venv|__pycache__|log_files")
 .
 ├── CI                          < files specific to continous integration
@@ -111,13 +111,13 @@ Repository structure
 │   │   ├── default_hyperparameters.json < hyperparameter settings file
 │   │   ├── explainer.py        < creates explainer for model explanation
 │   │   └── sample_explainers   < here the sample explainers are found
-│   │       ├── deep_shap.py    < DeepSHAP explainer
+│   │       ├── deep_shap.py     < DeepSHAP explainer
 │   │       └── gradient_shap.py < GradientShap explainer
 │   ├── output                  < output folder to store results, model weigths and explanations
 │   ├── transformation.py       < tranforms data in special formats into a handy format (ex.: .tdms -> .hdf)
 │   ├── utils                   < utilities of functions used in other classes
-│   │   ├── hdf_tools.py        < tools to handle hdf files
-│   │   ├── handler_tools       < combines data without copying it
+│   │   ├── hdf_tools.py            < tools to handle hdf files
+│   │   ├── handler_tools           < combines data without copying it
 │   │   ├── result_logging_tools.py < logging of results into csv 
 │   │   └── transf_tools        < utilities used in the transformation
 │   │       ├── convert.py      < converting tool
