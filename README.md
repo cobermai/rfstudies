@@ -22,7 +22,7 @@ Two example use cases are given for predicting breakdowns in CLIC RF cavities [1
    
 ### System Requirements
 The system requirements of the mlframework are:
-- Linux OS (tested for [Ubuntu](https://ubuntu.com/download/desktop), [CentOS 7](https://www.centos.org/))
+- Linux OS (used on [Ubuntu](https://ubuntu.com/download/desktop), [CentOS 7](https://www.centos.org/)), or Windows
 - [Python](https://www.python.org/) >= 3.8 <4
 - [hdf5 tools](https://support.hdfgroup.org/HDF5/doc/RM/Tools/) >= 3 <4
 
