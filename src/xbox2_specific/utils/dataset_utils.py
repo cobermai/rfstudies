@@ -187,7 +187,13 @@ def determine_followup(bd_label: np.ndarray, timestamp: np.ndarray, threshold: t
     return is_followup
 
 
-def scale_signal(signal, feature_name):
+def scale_signal(signal: np.array, feature_name: str) -> np.array:
+    """
+    Function scales signals based on LabVIEW XBOX2 scaling coefficients
+    :param signal: unscaled data array
+    :param feature_name: name of signal
+    :return: scaled signal
+    """
     if feature_name == "PEI Amplitude":
         coeff0 = 0
         coeff1 = -378810
@@ -212,6 +218,13 @@ def scale_signal(signal, feature_name):
 
 
 def read_features_from_selection(data_path: Path, feature_list: List[str], selection: List[bool]) -> xr.DataArray:
+    """
+    Function reads features from event data external link files using selection array
+    :param data_path: path to event data external link files
+    :param feature_list: list of features signals to read
+    :param selection: list of events to load
+    :return: selected features
+    """
     with h5py.File(data_path / "context.hdf", 'r') as file:
         ext_link_index = read_hdf_dataset(file, "event_ext_link_index")[selection]
     data_array = event_ext_link_hdf_to_da_timestamp(file_path=data_path / "EventDataExtLinks.hdf",
@@ -220,9 +233,16 @@ def read_features_from_selection(data_path: Path, feature_list: List[str], selec
     return data_array
 
 
-def read_label_and_meta_data_from_selection(data_path: Path, label_name: str, selection: List[bool]):
+def read_label_and_meta_data_from_selection(data_path: Path, label_name: str, selection: List[bool]) -> typing.Tuple:
+    """
+    Function reads label and metadata from context data using selection array
+    :param data_path: path to context data file
+    :param label_name: name of signal
+    :param selection: list of events to load
+    :return: label, timestamp, and run number of context data
+    """
     with h5py.File(data_path / "context.hdf", 'r') as file:
-        is_bd_in_20ms = read_hdf_dataset(file, label_name)[selection]
+        label = read_hdf_dataset(file, label_name)[selection]
         timestamp = read_hdf_dataset(file, "Timestamp")[selection]
         run_no = read_hdf_dataset(file, "run_no")[selection]
-    return is_bd_in_20ms, timestamp, run_no
+    return label, timestamp, run_no

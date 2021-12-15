@@ -91,7 +91,12 @@ def create_event_ext_link(hdf_dir: Path):
             num_of_values_ni5761 = acquisition_window * sampling_frequency_ni5761
             number_of_signals_monitored_with_ni5761 = 8
 
-            def has_smelly_values(data) -> bool:
+            def has_smelly_values(data: np.array) -> bool:
+                """
+                Function checks if data contains nan or inf values
+                :param data: array with data
+                :return: bool that specifies whether data contains nan or inf values
+                """
                 return any(np.isnan(data) | np.isinf(data))
 
             return grp.attrs.get("Timestamp", None) is not None \

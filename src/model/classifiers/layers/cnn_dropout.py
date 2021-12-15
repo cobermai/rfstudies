@@ -2,6 +2,7 @@ from tensorflow.keras import layers
 
 
 class CNNDropoutBlock(layers.Layer):
+    """Convolutional Neural Net Block with dropout layer"""
     def __init__(self, filters, kernel_size, dropout_rate):
         super(CNNDropoutBlock, self).__init__()
         self.conv = layers.Conv1D(filters=filters, kernel_size=kernel_size, padding='same', activation='relu')

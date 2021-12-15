@@ -30,10 +30,14 @@ class ECG200(DatasetCreator):
         :return: data array with data of selected events
         """
 
-        def read_arff(file_path: Path, encoding: str):
+        def read_arff(file_path: Path, encoding: str) -> tuple:
+            """
+            reading of arrf files
+            :param file_path: path to file
+            :return: data array with data of selected events
+            """
             with open(file_path, 'rt', encoding=encoding) as f:
                 data_read = f.read()
-
             stream = StringIO(data_read)
             return arff.loadarff(stream)
 

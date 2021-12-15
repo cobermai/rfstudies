@@ -53,11 +53,20 @@ def parse_input_arguments(args):
 def modeling(train_set,
              valid_set,
              test_set,
-             param_dir: Path,
+             hp_path: Path,
              output_dir: Path,
              fit_classifier: bool = True):
-    """MODELING"""
-    hp_file = open(param_dir, 'r')
+    """
+    Function for creating and potentially training a classifier model
+    :param train_set: training set as namedtuple(X, y, idx)
+    :param valid_set: validation set as namedtuple(X, y, idx)
+    :param test_set: validation set as namedtuple(X, y, idx)
+    :param hp_path: path to hyperparameter .json file
+    :param output_dir: path to output directory
+    :param fit_classifier: bool stating whether the model should be trained
+    :return: instance of classifier model
+    """
+    hp_file = open(hp_path, 'r')
     hp_dict = json.load(hp_file)
 
     clf = Classifier(input_shape=train_set.X.shape,
@@ -74,7 +83,20 @@ def modeling(train_set,
 
 
 def explanation(classifier, train_set, test_set, output_dir: Path):
+    """
+    Function explains classifier decisions by plotting importance
+    :param classifier: instance of classifier model
+    :param train_set: training set as namedtuple(X, y, idx)
+    :param test_set: validation set as namedtuple(X, y, idx)
+    :param output_dir: path to output directory
+    """
     def plot_importance(X_to_explain, y_pred, explanation):
+        """
+        Function plots importance of signal
+        :param X_to_explain: dataset array which to plot
+        :param y_pred: labels of prediction
+        :param explanation: explanation array
+        """
         cmap = mpl.colors.LinearSegmentedColormap.from_list(
             'shap',
             [mpl.cm.cool(0),
@@ -125,8 +147,7 @@ if __name__ == '__main__':
     clf = modeling(train_set=train_numpy,
                    valid_set=valid_numpy,
                    test_set=test_numpy,
-                   param_dir=args_in.file_path / "src/model" /
-                   args_in.param_name,
+                   hp_path=args_in.file_path / "src/model" / args_in.param_name,
                    output_dir=args_in.output_path)
 
     log_to_csv(logging_path=args_in.output_path / "results.csv",
