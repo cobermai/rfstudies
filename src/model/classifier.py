@@ -168,7 +168,7 @@ class ToCategoricalMetric(tf.keras.metrics.Metric):
         :param binary_metric: tf.metrics which takes binary inputs
         """
         super(ToCategoricalMetric, self).__init__(**kwargs)
-        self.binary_metric = binary_metric(dtype=tf.float64, **kwargs)
+        self.binary_metric = binary_metric(**kwargs)
         self.prob_dim = prob_dim
 
     def update_state(self, y_true, y_pred, **kwargs):
