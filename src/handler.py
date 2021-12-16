@@ -16,7 +16,7 @@ from tqdm import tqdm
 from src.utils.handler_tools.context_data_creator import ContextDataCreator
 from src.utils.handler_tools.context_data_writer import (
     ColumnWiseContextDataWriter, RowWiseContextDataWriter)
-from src.utils.handler_tools.post_processing import (
+from src.xbox2_specific.feature_definition.post_processing import (
     get_event_timestamp_ext_link_index, get_run_no)
 from src.utils.hdf_tools import hdf_path_combine
 from src.xbox2_specific.feature_definition.attribute import \
