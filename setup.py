@@ -37,7 +37,7 @@ REQUIREMENTS: dict = {
 
 setup(
     name='mlframework',
-    version='0.0.1',
+    version='1.0.0',
     description='Machine learning framework for a broad usecase',
     author='CERN|TE-MPE-CB',
     url='https://gitlab.cern.ch/machine-protection-ml/mlframework/',

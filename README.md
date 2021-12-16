@@ -55,15 +55,11 @@ use:
 virtualenv venv  # init the virtualenv
 source venv/bin/activate  # source project
 ```
-You can install the project via pip directly: 
-```bash
-pip install .
-```
-or install the requirements manually:
+You can install the project via:
 ```bash
 pip install -r requirements.txt
 ```
-To use the virtual environment in jupyter norebooks, use:
+To use the virtual environment in jupyter notebooks, use:
 ```bash
 pip install jupyter
 ipython kernel install --user --name=venv
