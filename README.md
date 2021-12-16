@@ -64,7 +64,21 @@ To use the virtual environment in jupyter notebooks, use:
 pip install jupyter
 ipython kernel install --user --name=venv
 ```
+### Execution
 
+To run the ECG main file, simply use the default input arguments and run:
+```
+python ECG200_main.py
+```
+For the xbox2 main, it is initially necessary to transform the data and calculate the features. 
+This is be done with the following input arguments.
+```
+python xbox2_main.py --transform_to_hdf5 True --raw_data_path $RAWDATAPATH --data_path $DATAPATH --calculate_features True 
+```
+After editing the framework, its functionality can be validated entering the following into the terminal:
+```
+pytest
+```
 ### Repository structure
 ```angular2html ( cleanpy .; tree -A -I "__init__.py|venv|__pycache__|log_files")
 .

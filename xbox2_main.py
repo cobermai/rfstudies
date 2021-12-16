@@ -32,6 +32,11 @@ def parse_input_arguments(args):
                         type=Path,
                         help='path of xbox2_main.py file',
                         default=Path().absolute())
+    parser.add_argument('--raw_data_path',
+                        required=False,
+                        type=Path,
+                        help='path of data',
+                        default=Path("/eos/project/m/ml-for-alarm-system/private/CLIC_data_transfert/CLIC_DATA_Xbox2_T24PSI_2"))
     parser.add_argument('--data_path',
                         required=False,
                         type=Path,
@@ -50,7 +55,7 @@ def parse_input_arguments(args):
     parser.add_argument('--transform_to_hdf5',
                         required=False,
                         type=bool,
-                        help="retransform from original files to hdf5 (True/False)p",
+                        help="retransform from original files to hdf5 (True/False)",
                         default=False)
     parser.add_argument('--calculate_features',
                         required=False,
@@ -80,13 +85,12 @@ def parse_input_arguments(args):
     return parser.parse_args(args)
 
 
-def transformation(work_dir: Path):
+def transformation(raw_data_dir: Path, work_dir: Path):
     """
     Function for converting tdms files into hdf files, creating external link files and combined trend data.
     :param work_dir: path where EventDataExtLinks.hdf, combined.hdf is found. Context data file is put here.
     """
-    src_dir = Path("/eos/project/m/ml-for-alarm-system/private/CLIC_data_transfert/CLIC_DATA_Xbox2_T24PSI_2")
-    transform(tdms_dir=src_dir, hdf_dir=work_dir)
+    transform(tdms_dir=raw_data_dir, hdf_dir=work_dir)
 
     # Path to gathered trend data
     gathered_trend_data = work_dir / "TrendDataExtLinks.hdf"
@@ -151,11 +155,23 @@ def modeling(train_set,
 if __name__ == '__main__':
     args_in = parse_input_arguments(args=sys.argv[1:])
 
+    def print_header(message: str):
+        """
+        Function printing what the main function is doing
+        :param message: message corresponding to the section of the code executed
+        :return: nothing, just print on the stdout
+        """
+        print("\n",'*'*len(message),'\n',message,'\n','*'*len(message),"\n")
+
     if args_in.transform_to_hdf5:
-        transformation(work_dir=args_in.data_path)
+        print_header('* TRANSFORMING RAW DATA *')
+        transformation(raw_data_dir=args_in.raw_data_path, work_dir=args_in.data_path)
 
     if args_in.calculate_features:
+        print_header('* CALCULATING FEATURES *')
         feature_handling(work_dir=args_in.data_path)
+
+    print_header(f"* TRAINING ON {args_in.dataset_name} *")
 
     if args_in.dataset_name == "XBOX2EventAllBD20msSelect":
         dataset_creator = datasets.XBOX2EventAllBD20msSelect()

@@ -24,8 +24,7 @@ def transform(tdms_dir: Path, hdf_dir: Path) -> None:
     :param hdf_dir: output directory with hdf files
     """
 
-    Path(hdf_dir, "data").mkdir(parents=False, exist_ok=True)
-
+    Path(hdf_dir, "data").mkdir(parents=True, exist_ok=True)
     cpu_count = psutil.cpu_count(logical=False)
     # read tdms files, convert them to hdf5 and write them into hdf_dir/data/
     Converter(check_already_converted=True, num_processes=cpu_count) \
