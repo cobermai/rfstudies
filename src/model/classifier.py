@@ -5,9 +5,9 @@ from pathlib import Path
 
 import numpy as np
 from sklearn.utils import class_weight
-from tensorflow import keras
+import tensorflow as tf
+from tensorflow import keras, math
 from tensorflow.keras import Input
-
 from src.model.classifiers import (fcn, fcn_2dropout, inception, resnet,
                                    time_cnn)
 
@@ -89,15 +89,14 @@ class Classifier:
             raise AssertionError("Model name does not exist")
 
         metrics = [
-            keras.metrics.TruePositives(name='tp'),
-            keras.metrics.FalsePositives(name='fp'),
-            keras.metrics.TrueNegatives(name='tn'),
-            keras.metrics.FalseNegatives(name='fn'),
-            keras.metrics.BinaryAccuracy(name='accuracy'),
-            keras.metrics.Precision(name='precision'),
-            keras.metrics.Recall(name='recall'),
-            keras.metrics.AUC(name='auc'),
-            keras.metrics.AUC(name='prc', curve='PR'),
+            ToCategoricalMetric(keras.metrics.TruePositives, name='tp'),
+            ToCategoricalMetric(keras.metrics.FalsePositives, name='fp'),
+            ToCategoricalMetric(keras.metrics.TrueNegatives, name='tn'),
+            ToCategoricalMetric(keras.metrics.FalseNegatives, name='fn'),
+            ToCategoricalMetric(keras.metrics.BinaryAccuracy, name='accuracy'),
+            ToCategoricalMetric(keras.metrics.Precision, name='precision'),
+            ToCategoricalMetric(keras.metrics.Recall, name='recall'),
+            ToCategoricalMetric(keras.metrics.AUC, name='auc', prob_dim=1),
         ]
 
         #  converting the tf subclass model into a functional model. This enables to use the Explainer
@@ -157,3 +156,42 @@ class Classifier:
                        callbacks=[reduce_lr, model_checkpoint],
                        class_weight=self.get_class_weight(train.y),
                        **kwargs)
+
+
+class ToCategoricalMetric(tf.keras.metrics.Metric):
+    """
+    Wrapper function to enable one hot encoded inputs to tf.metrics
+    """
+
+    def __init__(self, binary_metric, prob_dim=False, **kwargs):
+        """
+        :param binary_metric: tf.metrics which takes binary inputs
+        """
+        super(ToCategoricalMetric, self).__init__(**kwargs)
+        self.binary_metric = binary_metric(dtype=tf.float64, **kwargs)
+        self.prob_dim = prob_dim
+
+    def update_state(self, y_true, y_pred, **kwargs):
+        """
+        updates metric state
+        :param y_true: one hot encoded true labels
+        :param y_true: one hot encoded predicted labels
+        """
+        y_true = tf.math.argmax(y_true, axis=-1)
+        y_true = tf.cast(y_true, tf.bool)
+
+        if self.prob_dim:
+            y_pred = y_pred[:, self.prob_dim]
+        else:
+            y_pred = tf.math.argmax(y_pred, axis=-1)
+            y_pred = tf.cast(y_pred, tf.bool)
+
+        self.binary_metric.update_state(y_true, y_pred, **kwargs)
+
+    def reset_states(self):
+        """ resets metric state """
+        return self.binary_metric.reset_states()
+
+    def result(self):
+        """ returns current metric state """
+        return self.binary_metric.result()

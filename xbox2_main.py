@@ -141,7 +141,7 @@ def modeling(train_set,
         clf.fit_classifier(train_set, valid_set)
     clf.model.load_weights(output_dir / 'best_model.hdf5')
 
-    results = clf.model.evaluate(x=test_set.X, y=test_set.y, return_dict=True)
+    results = clf.model.evaluate(x=test_set.X, y=test_set.y, return_dict=True, batch_size=len(test_set.X))
 
     log_to_csv(logging_path=output_dir / "results.csv", **hp_dict)
     log_to_csv(logging_path=output_dir / "results.csv", **results)
