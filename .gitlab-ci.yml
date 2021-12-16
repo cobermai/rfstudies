@@ -44,6 +44,7 @@ test_dev:
   script: 
     - apt update
     - apt install hdf5-tools -y
+    - apt install graphviz -y
     - pytest ${project_root}/tests --junitxml=report.xml
     - pytest --cov-report xml:cov.xml --cov=${project_root}/src
 

@@ -1,6 +1,7 @@
 """Module makes creating tdms files easier. The original creation method is very specific to nptdms."""
-from typing import Union, Set
 from pathlib import Path
+from typing import Set, Union
+
 import nptdms
 
 

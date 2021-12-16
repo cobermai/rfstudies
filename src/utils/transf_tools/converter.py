@@ -1,14 +1,15 @@
 """
 This module does the first step of the transformation. The reading and writing of the data.
 """
-import os
-from time import time
-from pathlib import Path
-import multiprocessing as mp
 import logging
+import multiprocessing as mp
+import os
 from functools import partial
-import nptdms
+from pathlib import Path
+from time import time
+
 import h5py
+import nptdms
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +29,7 @@ def _convert_file(tdms_file_path: Path, hdf_dir: Path) -> None:
         logger.debug("tdms2hdf + writing %40s     took: %10.10s sec", tdms_file_path.stem, time() - t_0)
 
 
-class Convert:  # pylint: disable=too-few-public-methods
+class Converter:  # pylint: disable=too-few-public-methods
     """A very general converter Object, that can be adapted to new data formats."""
 
     def __init__(self,
@@ -53,7 +54,7 @@ class Convert:  # pylint: disable=too-few-public-methods
         return ConvertFromTdms(tdms_dir, self.check_already_converted, self.num_processes)
 
 
-class ConvertFromTdms(Convert):
+class ConvertFromTdms(Converter):
     """Adds the from_directory (source) for Convert"""
 
     def __init__(self, tdms_dir: Path, check_already_converted: bool, num_processes: int):
